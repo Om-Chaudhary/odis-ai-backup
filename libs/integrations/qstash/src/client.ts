@@ -119,6 +119,110 @@ export async function scheduleEmailExecution(
 }
 
 /**
+ * Payload for AI enrichment jobs
+ */
+export interface AIEnrichmentPayload {
+  caseId: string;
+  userId: string;
+  consultation: {
+    id: string;
+    notes?: string;
+    dischargeSummary?: string;
+    productsServices?: string;
+    declinedProductsServices?: string;
+    reason?: string;
+  };
+}
+
+/**
+ * Schedule AI enrichment for a case to run in background
+ *
+ * @param payload - The case and consultation data for AI processing
+ * @returns QStash message ID for tracking
+ */
+export async function scheduleAIEnrichment(
+  payload: AIEnrichmentPayload,
+): Promise<string> {
+  const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/ai-enrich-case`;
+
+  console.log("[QSTASH_CLIENT] Scheduling AI enrichment", {
+    caseId: payload.caseId,
+    userId: payload.userId,
+    hasNotes: !!payload.consultation.notes,
+    hasDischargeSummary: !!payload.consultation.dischargeSummary,
+    webhookUrl,
+  });
+
+  const response = await qstashClient.publishJSON({
+    url: webhookUrl,
+    body: payload,
+    delay: 0, // Execute immediately
+    retries: 2, // Allow some retries for transient failures
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  console.log("[QSTASH_CLIENT] AI enrichment scheduled successfully", {
+    caseId: payload.caseId,
+    messageId: response.messageId,
+  });
+
+  return response.messageId;
+}
+
+/**
+ * Schedule multiple AI enrichment jobs in batch
+ * More efficient than scheduling one at a time
+ *
+ * @param payloads - Array of case and consultation data
+ * @returns Array of QStash message IDs
+ */
+export async function scheduleAIEnrichmentBatch(
+  payloads: AIEnrichmentPayload[],
+): Promise<string[]> {
+  const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/ai-enrich-case`;
+
+  console.log("[QSTASH_CLIENT] Scheduling AI enrichment batch", {
+    count: payloads.length,
+    webhookUrl,
+  });
+
+  const messageIds: string[] = [];
+
+  // QStash batch API has limits, process in chunks of 100
+  const batchSize = 100;
+  for (let i = 0; i < payloads.length; i += batchSize) {
+    const batch = payloads.slice(i, i + batchSize);
+
+    // Use batch endpoint for efficiency
+    const responses = await qstashClient.batchJSON(
+      batch.map((payload) => ({
+        url: webhookUrl,
+        body: payload,
+        retries: 2,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })),
+    );
+
+    for (const response of responses) {
+      if ("messageId" in response) {
+        messageIds.push(response.messageId);
+      }
+    }
+  }
+
+  console.log("[QSTASH_CLIENT] AI enrichment batch scheduled", {
+    requested: payloads.length,
+    scheduled: messageIds.length,
+  });
+
+  return messageIds;
+}
+
+/**
  * Cancel a scheduled QStash job
  *
  * @param messageId - QStash message ID to cancel

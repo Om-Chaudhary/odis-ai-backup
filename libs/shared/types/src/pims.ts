@@ -180,6 +180,13 @@ export interface CaseSyncOptions {
   startDate: Date;
   endDate: Date;
   parallelBatchSize?: number;
+  /**
+   * If true, AI generation (entity extraction, discharge summary, call intelligence)
+   * is queued to QStash for background processing instead of running inline.
+   * This significantly reduces sync duration but AI content is available later.
+   * Default: false (inline processing for backward compatibility)
+   */
+  backgroundAIGeneration?: boolean;
 }
 
 /**

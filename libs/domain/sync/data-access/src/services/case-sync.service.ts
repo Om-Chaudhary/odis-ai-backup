@@ -117,6 +117,8 @@ export class CaseSyncService {
       context?: Record<string, unknown>;
     }> = [];
 
+    const useBackgroundAI = options.backgroundAIGeneration ?? false;
+
     logger.info("Starting case sync", {
       syncId,
       clinicId: this.clinicId,
@@ -125,6 +127,7 @@ export class CaseSyncService {
         start: options.startDate.toISOString(),
         end: options.endDate.toISOString(),
       },
+      backgroundAIGeneration: useBackgroundAI,
     });
 
     const stats: SyncStats = {
@@ -236,48 +239,204 @@ export class CaseSyncService {
           received: consultations.size,
         });
 
-        // Update cases with consultation data
+        // Build list of case-consultation pairs to process
+        const casesToProcess: Array<{
+          caseId: string;
+          consultationId: string;
+          consultation: PimsConsultation;
+        }> = [];
+
         for (const [consultationId, caseIds] of Array.from(
           consultationMap.entries(),
         )) {
           const consultation = consultations.get(consultationId);
+          if (consultation) {
+            for (const caseId of caseIds) {
+              casesToProcess.push({ caseId, consultationId, consultation });
+            }
+          } else {
+            // Consultation not found - mark as skipped
+            stats.skipped += caseIds.length;
+            processedCount += caseIds.length;
+            for (const caseId of caseIds) {
+              logger.debug("Consultation not found for case", {
+                caseId,
+                consultationId,
+              });
+            }
+          }
+        }
 
-          for (const caseId of caseIds) {
-            try {
-              if (consultation) {
-                await this.enrichCaseWithConsultation(caseId, consultation);
-                // Trigger AI generation for enriched cases with clinical notes or discharge summary
-                const hasClinicalContent =
-                  !!consultation.notes || !!consultation.dischargeSummary;
-                if (hasClinicalContent && this.userId) {
+        if (casesToProcess.length > 0) {
+          // Batch fetch all case metadata in one query
+          const caseIdsToEnrich = casesToProcess.map((c) => c.caseId);
+          const metadataMap =
+            await this.batchFetchCaseMetadata(caseIdsToEnrich);
+
+          // Build enriched metadata for all cases
+          const updates: Array<{
+            id: string;
+            metadata: Record<string, unknown>;
+            consultation: PimsConsultation;
+          }> = [];
+
+          for (const { caseId, consultation } of casesToProcess) {
+            const currentMetadata = metadataMap.get(caseId) ?? {};
+            const enrichedMetadata = this.buildEnrichedMetadata(
+              currentMetadata,
+              consultation,
+            );
+            updates.push({
+              id: caseId,
+              metadata: enrichedMetadata,
+              consultation,
+            });
+          }
+
+          // Batch upsert all metadata updates
+          const { succeeded, failed: upsertFailed } =
+            await this.batchUpsertCaseMetadata(updates);
+
+          // Track successes
+          stats.updated += succeeded.length;
+
+          // Track failures
+          for (const failure of upsertFailed) {
+            stats.failed++;
+            errors.push({
+              message: `Failed to enrich case ${failure.id}: ${failure.error}`,
+              context: { caseId: failure.id },
+            });
+            logger.error("Failed to enrich case", {
+              syncId,
+              caseId: failure.id,
+              error: failure.error,
+            });
+          }
+
+          // Update progress after batch enrichment
+          processedCount += casesToProcess.length;
+          const percentage = Math.floor((processedCount / totalCases) * 100);
+          await throttler.queueUpdate(
+            {
+              supabase: this.supabase,
+              syncId,
+              total_items: totalCases,
+              processed_items: processedCount,
+              progress_percentage: percentage,
+            },
+            true,
+          );
+
+          // Trigger AI generation for enriched cases (only for successfully updated cases)
+          const succeededSet = new Set(succeeded);
+          const casesForAI: Array<{
+            caseId: string;
+            consultation: PimsConsultation;
+          }> = [];
+
+          for (const update of updates) {
+            if (!succeededSet.has(update.id)) continue;
+
+            const hasClinicalContent =
+              !!update.consultation.notes ||
+              !!update.consultation.dischargeSummary;
+            if (hasClinicalContent && this.userId) {
+              casesForAI.push({
+                caseId: update.id,
+                consultation: update.consultation,
+              });
+            }
+          }
+
+          if (casesForAI.length > 0) {
+            if (useBackgroundAI) {
+              // Queue AI generation jobs to QStash for background processing
+              await this.queueAIGenerationBatch(casesForAI);
+              logger.info("Queued AI generation jobs to background", {
+                syncId,
+                count: casesForAI.length,
+              });
+            } else {
+              // Run AI generation inline (legacy behavior)
+              for (const { caseId, consultation } of casesForAI) {
+                try {
                   await this.triggerAIGeneration(caseId, consultation);
+                } catch (error) {
+                  // AI generation failures don't affect enrichment success
+                  logger.error("AI generation failed after enrichment", {
+                    caseId,
+                    error:
+                      error instanceof Error ? error.message : String(error),
+                  });
                 }
-                stats.updated++;
-              } else {
-                // Consultation not found - mark as skipped
-                stats.skipped++;
-                logger.debug("Consultation not found for case", {
-                  caseId,
-                  consultationId,
-                });
               }
+            }
+          }
+        }
+      }
+
+      // Phase 2: Generate AI content for cases that have pimsConsultation but no discharge summary
+      if (casesNeedingAI.length > 0) {
+        logger.info("Processing cases needing AI generation", {
+          syncId,
+          count: casesNeedingAI.length,
+          backgroundMode: useBackgroundAI,
+        });
+
+        if (useBackgroundAI) {
+          // Queue all AI generation jobs to QStash for background processing
+          const casesForAI = casesNeedingAI.map((caseData) => ({
+            caseId: caseData.id,
+            consultation: caseData.pimsConsultation,
+          }));
+
+          await this.queueAIGenerationBatch(casesForAI);
+          stats.updated += casesNeedingAI.length;
+          processedCount += casesNeedingAI.length;
+
+          logger.info("Queued Phase 2 AI generation jobs to background", {
+            syncId,
+            count: casesNeedingAI.length,
+          });
+
+          // Update progress after batch queuing
+          const percentage = Math.floor((processedCount / totalCases) * 100);
+          await throttler.queueUpdate(
+            {
+              supabase: this.supabase,
+              syncId,
+              total_items: totalCases,
+              processed_items: processedCount,
+              progress_percentage: percentage,
+            },
+            true,
+          );
+        } else {
+          // Run AI generation inline (legacy behavior)
+          for (const caseData of casesNeedingAI) {
+            try {
+              await this.triggerAIGeneration(
+                caseData.id,
+                caseData.pimsConsultation,
+              );
+              stats.updated++;
             } catch (error) {
               stats.failed++;
               const message =
                 error instanceof Error ? error.message : "Unknown error";
               errors.push({
-                message: `Failed to enrich case ${caseId}: ${message}`,
-                context: { caseId, consultationId },
+                message: `Failed AI generation for case ${caseData.id}: ${message}`,
+                context: { caseId: caseData.id },
               });
-              logger.error("Failed to enrich case", {
+              logger.error("Failed AI generation for case", {
                 syncId,
-                caseId,
-                consultationId,
+                caseId: caseData.id,
                 error: message,
               });
             }
 
-            // Update progress (throttled automatically)
+            // Update progress
             processedCount++;
             const percentage = Math.floor((processedCount / totalCases) * 100);
             await throttler.queueUpdate({
@@ -288,48 +447,6 @@ export class CaseSyncService {
               progress_percentage: percentage,
             });
           }
-        }
-      }
-
-      // Phase 2: Generate AI content for cases that have pimsConsultation but no discharge summary
-      if (casesNeedingAI.length > 0) {
-        logger.info("Processing cases needing AI generation", {
-          syncId,
-          count: casesNeedingAI.length,
-        });
-
-        for (const caseData of casesNeedingAI) {
-          try {
-            await this.triggerAIGeneration(
-              caseData.id,
-              caseData.pimsConsultation,
-            );
-            stats.updated++;
-          } catch (error) {
-            stats.failed++;
-            const message =
-              error instanceof Error ? error.message : "Unknown error";
-            errors.push({
-              message: `Failed AI generation for case ${caseData.id}: ${message}`,
-              context: { caseId: caseData.id },
-            });
-            logger.error("Failed AI generation for case", {
-              syncId,
-              caseId: caseData.id,
-              error: message,
-            });
-          }
-
-          // Update progress
-          processedCount++;
-          const percentage = Math.floor((processedCount / totalCases) * 100);
-          await throttler.queueUpdate({
-            supabase: this.supabase,
-            syncId,
-            total_items: totalCases,
-            processed_items: processedCount,
-            progress_percentage: percentage,
-          });
         }
       }
 
@@ -662,7 +779,178 @@ export class CaseSyncService {
   }
 
   /**
-   * Enrich a case with consultation data
+   * Batch fetch case metadata for multiple cases
+   * Reduces N queries to ceil(N/50) queries
+   */
+  private async batchFetchCaseMetadata(
+    caseIds: string[],
+  ): Promise<Map<string, Record<string, unknown>>> {
+    const metadataMap = new Map<string, Record<string, unknown>>();
+    const batchSize = 50;
+
+    for (let i = 0; i < caseIds.length; i += batchSize) {
+      const batch = caseIds.slice(i, i + batchSize);
+
+      const result = await withRetry(
+        async () => {
+          const { data, error } = await this.supabase
+            .from("cases")
+            .select("id, metadata")
+            .in("id", batch);
+
+          if (error) {
+            throw new Error(`Supabase error: ${error.message}`);
+          }
+          return data;
+        },
+        {
+          maxRetries: 3,
+          baseDelayMs: 1000,
+          maxDelayMs: 5000,
+          shouldRetry: isSupabaseFetchRetryable,
+        },
+      );
+
+      if (!result.success) {
+        throw new Error(
+          `Failed to fetch case metadata: ${result.error instanceof Error ? result.error.message : String(result.error)}`,
+        );
+      }
+
+      for (const row of result.data ?? []) {
+        metadataMap.set(
+          row.id,
+          (row.metadata as Record<string, unknown>) ?? {},
+        );
+      }
+    }
+
+    logger.debug("Batch fetched case metadata", {
+      requested: caseIds.length,
+      received: metadataMap.size,
+    });
+
+    return metadataMap;
+  }
+
+  /**
+   * Build enriched metadata for a case without database operations
+   */
+  private buildEnrichedMetadata(
+    currentMetadata: Record<string, unknown>,
+    consultation: PimsConsultation,
+  ): Record<string, unknown> {
+    const currentEntities = currentMetadata.entities as
+      | Record<string, unknown>
+      | undefined;
+
+    return {
+      ...currentMetadata,
+      pimsConsultation: consultation,
+      entities: {
+        ...currentEntities,
+        clinical: {
+          ...(currentEntities?.clinical as Record<string, unknown> | undefined),
+          clinicalNotes: consultation.notes ?? undefined,
+          visitReason:
+            consultation.reason ??
+            (currentEntities?.clinical as Record<string, unknown>)?.visitReason,
+          productsServicesProvided: consultation.productsServices
+            ? consultation.productsServices.split("; ")
+            : undefined,
+          productsServicesDeclined: consultation.declinedProductsServices
+            ? consultation.declinedProductsServices.split("; ")
+            : undefined,
+        },
+      },
+      dischargeSummary: consultation.dischargeSummary,
+      enrichedAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Batch upsert case metadata updates
+   * Reduces N update queries to ceil(N/50) queries
+   */
+  private async batchUpsertCaseMetadata(
+    updates: Array<{ id: string; metadata: Record<string, unknown> }>,
+  ): Promise<{
+    succeeded: string[];
+    failed: Array<{ id: string; error: string }>;
+  }> {
+    const succeeded: string[] = [];
+    const failed: Array<{ id: string; error: string }> = [];
+    const batchSize = 50;
+    const now = new Date().toISOString();
+
+    for (let i = 0; i < updates.length; i += batchSize) {
+      const batch = updates.slice(i, i + batchSize);
+      const batchNumber = Math.floor(i / batchSize) + 1;
+
+      try {
+        const result = await withRetry(
+          async () => {
+            // Use upsert with onConflict to update existing records
+            const { error } = await this.supabase.from("cases").upsert(
+              batch.map((update) => ({
+                id: update.id,
+                metadata: asCaseUpdateMetadata(update.metadata),
+                updated_at: now,
+              })),
+              { onConflict: "id", ignoreDuplicates: false },
+            );
+
+            if (error) {
+              throw new Error(`Supabase error: ${error.message}`);
+            }
+            return batch.map((u) => u.id);
+          },
+          {
+            maxRetries: 3,
+            baseDelayMs: 1000,
+            maxDelayMs: 5000,
+            shouldRetry: isSupabaseFetchRetryable,
+          },
+        );
+
+        if (result.success && result.data) {
+          succeeded.push(...result.data);
+        } else if (!result.success) {
+          // Mark all in batch as failed
+          for (const update of batch) {
+            failed.push({
+              id: update.id,
+              error:
+                result.error instanceof Error
+                  ? result.error.message
+                  : String(result.error),
+            });
+          }
+        }
+      } catch (err) {
+        logger.error(`Batch ${batchNumber} upsert exception`, {
+          error: err instanceof Error ? err.message : String(err),
+        });
+        for (const update of batch) {
+          failed.push({
+            id: update.id,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+    }
+
+    logger.info("Batch upsert completed", {
+      total: updates.length,
+      succeeded: succeeded.length,
+      failed: failed.length,
+    });
+
+    return { succeeded, failed };
+  }
+
+  /**
+   * Enrich a case with consultation data (legacy single-case method for compatibility)
    */
   private async enrichCaseWithConsultation(
     caseId: string,
@@ -683,35 +971,10 @@ export class CaseSyncService {
       string,
       unknown
     >;
-    const currentEntities = currentMetadata.entities as
-      | Record<string, unknown>
-      | undefined;
-
-    // Build enriched metadata
-    const enrichedMetadata = {
-      ...currentMetadata,
-      pimsConsultation: consultation,
-      entities: {
-        ...currentEntities,
-        clinical: {
-          ...(currentEntities?.clinical as Record<string, unknown> | undefined),
-          // Add consultation-specific fields
-          clinicalNotes: consultation.notes ?? undefined,
-          visitReason:
-            consultation.reason ??
-            (currentEntities?.clinical as Record<string, unknown>)?.visitReason,
-          productsServicesProvided: consultation.productsServices
-            ? consultation.productsServices.split("; ")
-            : undefined,
-          productsServicesDeclined: consultation.declinedProductsServices
-            ? consultation.declinedProductsServices.split("; ")
-            : undefined,
-        },
-      },
-      // Store discharge summary at top level for VAPI
-      dischargeSummary: consultation.dischargeSummary,
-      enrichedAt: new Date().toISOString(),
-    };
+    const enrichedMetadata = this.buildEnrichedMetadata(
+      currentMetadata,
+      consultation,
+    );
 
     // Update case
     const { error: updateError } = await this.supabase
@@ -735,7 +998,53 @@ export class CaseSyncService {
   }
 
   /**
-   * Trigger AI generation for a case after enrichment
+   * Queue AI generation jobs to QStash for background processing
+   * This allows the sync to complete quickly while AI work happens async
+   */
+  private async queueAIGenerationBatch(
+    cases: Array<{ caseId: string; consultation: PimsConsultation }>,
+  ): Promise<void> {
+    if (!this.userId) {
+      logger.debug("Skipping AI queue - no userId available");
+      return;
+    }
+
+    const payloads = cases.map(({ caseId, consultation }) => ({
+      caseId,
+      userId: this.userId!,
+      consultation: {
+        id: consultation.id,
+        notes: consultation.notes ?? undefined,
+        dischargeSummary: consultation.dischargeSummary ?? undefined,
+        productsServices: consultation.productsServices ?? undefined,
+        declinedProductsServices:
+          consultation.declinedProductsServices ?? undefined,
+        reason: consultation.reason ?? undefined,
+      },
+    }));
+
+    type ScheduleBatch = (p: typeof payloads) => Promise<string[]>;
+
+    try {
+      const { scheduleAIEnrichmentBatch } =
+        await import("@odis-ai/integrations/qstash");
+      const scheduleBatch = scheduleAIEnrichmentBatch as ScheduleBatch;
+      const messageIds = await scheduleBatch(payloads);
+      logger.info("Queued AI enrichment batch to QStash", {
+        requested: payloads.length,
+        scheduled: messageIds.length,
+      });
+    } catch (error) {
+      // Log but don't fail the sync - AI generation is best-effort
+      logger.error("Failed to queue AI enrichment batch", {
+        count: payloads.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  /**
+   * Trigger AI generation for a case after enrichment (inline)
    * - Extract entities from clinical notes
    * - Generate structured discharge summary
    * - Generate call intelligence
@@ -784,15 +1093,25 @@ export class CaseSyncService {
         hasDiagnoses: !!entities.clinical.diagnoses?.length,
       });
 
-      // Generate discharge summary
-      const summaryResult = await autoGenerateDischargeSummary(
-        this.supabase as unknown as Parameters<
-          typeof autoGenerateDischargeSummary
-        >[0],
-        this.userId,
-        caseId,
-        entities,
-      );
+      // Generate discharge summary and call intelligence in parallel
+      // Both depend only on entities, not on each other
+      const [summaryResult, intelligenceResult] = await Promise.all([
+        autoGenerateDischargeSummary(
+          this.supabase as unknown as Parameters<
+            typeof autoGenerateDischargeSummary
+          >[0],
+          this.userId,
+          caseId,
+          entities,
+        ),
+        generateAndStoreCallIntelligence(
+          this.supabase as unknown as Parameters<
+            typeof generateAndStoreCallIntelligence
+          >[0],
+          caseId,
+          entities,
+        ),
+      ]);
 
       if (summaryResult) {
         logger.info("Generated discharge summary for PIMS case", {
@@ -800,15 +1119,6 @@ export class CaseSyncService {
           summaryId: summaryResult.summaryId,
         });
       }
-
-      // Generate call intelligence
-      const intelligenceResult = await generateAndStoreCallIntelligence(
-        this.supabase as unknown as Parameters<
-          typeof generateAndStoreCallIntelligence
-        >[0],
-        caseId,
-        entities,
-      );
 
       if (intelligenceResult) {
         logger.info("Generated call intelligence for PIMS case", {
