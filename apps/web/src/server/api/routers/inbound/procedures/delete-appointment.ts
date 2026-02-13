@@ -23,7 +23,7 @@ export const deleteAppointmentRouter = createTRPCRouter({
 
       // First, verify the booking belongs to the user's clinic
       const { data: booking, error: fetchError } = await ctx.supabase
-        .from("vapi_bookings")
+        .from("appointment_bookings")
         .select("id, clinic_id")
         .eq("id", input.id)
         .single();
@@ -45,7 +45,7 @@ export const deleteAppointmentRouter = createTRPCRouter({
 
       // Delete the booking
       const { error: deleteError } = await ctx.supabase
-        .from("vapi_bookings")
+        .from("appointment_bookings")
         .delete()
         .eq("id", input.id);
 

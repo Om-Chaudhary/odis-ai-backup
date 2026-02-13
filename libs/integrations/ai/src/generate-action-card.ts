@@ -14,7 +14,7 @@ import {
   extractApiErrorStatus,
   extractTextFromResponse,
 } from "./llamaindex/utils";
-import { ACTION_CARD_OUTPUT_SCHEMA } from "@odis-ai/integrations/vapi/schemas";
+import { ACTION_CARD_OUTPUT_SCHEMA } from "@odis-ai/shared/types";
 
 /**
  * Action card data structure (matches VAPI structured output schema)

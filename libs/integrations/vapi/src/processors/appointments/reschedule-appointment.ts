@@ -255,9 +255,9 @@ export async function processRescheduleAppointment(
     };
   }
 
-  if (source === "schedule_appointments") {
+  if (source === "pims_appointments") {
     const { error: cancelError } = await supabase
-      .from("schedule_appointments")
+      .from("pims_appointments")
       .update({
         status: "cancelled",
         cancelled_at: new Date().toISOString(),
@@ -278,9 +278,9 @@ export async function processRescheduleAppointment(
           "I apologize, but I couldn't complete the reschedule. Don't worry - your original appointment is still in place. Please call the office directly.",
       };
     }
-  } else if (source === "vapi_bookings") {
+  } else if (source === "appointment_bookings") {
     const { error: cancelError } = await supabase
-      .from("vapi_bookings")
+      .from("appointment_bookings")
       .update({
         status: "cancelled",
         cancelled_at: new Date().toISOString(),
@@ -304,22 +304,40 @@ export async function processRescheduleAppointment(
   }
 
   // 4b. Create new booking record
+  // Build timestamptz range from date + time (clinic timezone)
+  const clinicTimezone = clinic.timezone ?? "America/Los_Angeles";
+
+  // Fetch per-clinic slot duration from schedule config
+  const { data: scheduleConfig } = await supabase
+    .from("clinic_schedule_config")
+    .select("slot_duration_minutes")
+    .eq("clinic_id", clinic.id)
+    .single();
+
+  const slotDuration = scheduleConfig?.slot_duration_minutes ?? 15;
+  const startTimestamp = `${newDate} ${newTime} ${clinicTimezone}`;
+  // Calculate end time by adding slot duration
+  const startDt = new Date(`${newDate}T${newTime}`);
+  const endDt = new Date(startDt.getTime() + slotDuration * 60 * 1000);
+  const endTimeStr = `${String(endDt.getHours()).padStart(2, "0")}:${String(endDt.getMinutes()).padStart(2, "0")}:00`;
+  const endTimestamp = `${newDate} ${endTimeStr} ${clinicTimezone}`;
+
   const { data: newBooking, error: createError } = await supabase
-    .from("vapi_bookings")
+    .from("appointment_bookings")
     .insert({
       clinic_id: clinic.id,
       vapi_call_id: callId,
       client_name: originalAppt.client_name ?? input.client_name,
       client_phone: originalAppt.client_phone ?? input.client_phone,
       patient_name: originalAppt.patient_name ?? input.pet_name,
-      date: newDate,
-      start_time: newTime,
+      time_range: `[${startTimestamp},${endTimestamp})`,
       status: "pending_sync", // Will be updated by background job
       reason: input.reason ?? "Rescheduled appointment",
       provider_name: originalAppt.provider_name,
       appointment_type: originalAppt.appointment_type,
       room_id: originalAppt.room,
-      rescheduled_from_id: source === "vapi_bookings" ? originalId : null,
+      rescheduled_from_id:
+        source === "appointment_bookings" ? originalId : null,
       metadata: {
         rescheduled_from: {
           id: originalId,
@@ -340,9 +358,9 @@ export async function processRescheduleAppointment(
       originalId,
     });
 
-    if (source === "schedule_appointments") {
+    if (source === "pims_appointments") {
       await supabase
-        .from("schedule_appointments")
+        .from("pims_appointments")
         .update({
           status: "scheduled",
           cancelled_at: null,
@@ -352,7 +370,7 @@ export async function processRescheduleAppointment(
         .eq("id", originalId);
     } else {
       await supabase
-        .from("vapi_bookings")
+        .from("appointment_bookings")
         .update({
           status: "confirmed",
           cancelled_at: null,

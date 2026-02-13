@@ -15,7 +15,7 @@
 import type { ToolContext, ToolResult } from "../../core/types";
 import type { CancelAppointmentInput } from "../../schemas/appointments";
 import { processVerifyAppointment } from "./verify-appointment";
-import { parseDateToISO, formatTime12Hour } from "./book-appointment";
+import { parseDateToISO } from "./book-appointment";
 
 /**
  * Process cancel appointment request
@@ -130,9 +130,9 @@ export async function processCancelAppointment(
   // Now TypeScript knows appointment_id is a string
   const appointmentId: string = verificationData.appointment_id;
 
-  if (source === "schedule_appointments") {
+  if (source === "pims_appointments") {
     const { error: updateError } = await supabase
-      .from("schedule_appointments")
+      .from("pims_appointments")
       .update({
         status: "cancelled",
         cancelled_at: new Date().toISOString(),
@@ -142,7 +142,7 @@ export async function processCancelAppointment(
       .eq("id", appointmentId);
 
     if (updateError) {
-      logger.error("Failed to update schedule_appointments", {
+      logger.error("Failed to update pims_appointments", {
         error: updateError,
         appointmentId,
       });
@@ -153,9 +153,9 @@ export async function processCancelAppointment(
           "I apologize, but I'm having some trouble right now. Your appointment is still scheduled. Please call the office directly.",
       };
     }
-  } else if (source === "vapi_bookings") {
+  } else if (source === "appointment_bookings") {
     const { error: updateError } = await supabase
-      .from("vapi_bookings")
+      .from("appointment_bookings")
       .update({
         status: "cancelled",
         cancelled_at: new Date().toISOString(),
@@ -165,7 +165,7 @@ export async function processCancelAppointment(
       .eq("id", appointmentId);
 
     if (updateError) {
-      logger.error("Failed to update vapi_bookings", {
+      logger.error("Failed to update appointment_bookings", {
         error: updateError,
         appointmentId,
       });

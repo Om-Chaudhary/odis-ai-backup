@@ -179,8 +179,8 @@ export function deriveActionCardData(
           ? {
               patient_name: booking.patient_name,
               client_name: booking.client_name,
-              date: booking.date,
-              time: booking.start_time,
+              date: booking.date ?? undefined,
+              time: booking.start_time ?? undefined,
               reason: booking.reason ?? undefined,
             }
           : undefined,
@@ -193,8 +193,8 @@ export function deriveActionCardData(
           ? {
               patient_name: booking.patient_name,
               client_name: booking.client_name,
-              date: booking.date,
-              time: booking.start_time,
+              date: booking.date ?? undefined,
+              time: booking.start_time ?? undefined,
               reason: booking.reason ?? undefined,
             }
           : undefined,
@@ -216,8 +216,8 @@ export function deriveActionCardData(
           ? {
               patient_name: booking.patient_name,
               client_name: booking.client_name,
-              date: booking.date,
-              time: booking.start_time,
+              date: booking.date ?? undefined,
+              time: booking.start_time ?? undefined,
             }
           : undefined,
         cancellation_reason:

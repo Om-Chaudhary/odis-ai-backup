@@ -8,6 +8,9 @@
 // Database types (generated from Supabase)
 export * from "./database.types";
 
+// Action card (shared schema for VAPI + AI)
+export * from "./action-card-output";
+
 // Domain types
 export * from "./case";
 export * from "./clinic-branding";

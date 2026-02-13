@@ -50,10 +50,10 @@ export interface BookingData {
   species: string | null;
   /** Breed (e.g., "British Longhair") */
   breed: string | null;
-  /** Appointment date (YYYY-MM-DD) */
-  date: string;
-  /** Start time (HH:MM:SS) */
-  start_time: string;
+  /** Appointment date (YYYY-MM-DD) — generated from time_range */
+  date: string | null;
+  /** Start time (HH:MM:SS) — generated from time_range */
+  start_time: string | null;
   /** Reason for visit */
   reason: string | null;
   /** Client/owner name */

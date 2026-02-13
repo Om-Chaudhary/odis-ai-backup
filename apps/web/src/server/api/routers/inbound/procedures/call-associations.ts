@@ -22,7 +22,7 @@ export const callAssociationsRouter = createTRPCRouter({
       const supabase = ctx.supabase;
 
       const { data, error } = await supabase
-        .from("vapi_bookings")
+        .from("appointment_bookings")
         .select("id")
         .eq("vapi_call_id", input.callId)
         .limit(1)
@@ -77,7 +77,7 @@ export const callAssociationsRouter = createTRPCRouter({
       const supabase = ctx.supabase;
 
       const { data, error } = await supabase
-        .from("vapi_bookings")
+        .from("appointment_bookings")
         .select(
           "patient_name, species, breed, date, start_time, reason, client_name, client_phone, status, is_new_client, rescheduled_reason, original_date, original_time",
         )
@@ -172,7 +172,7 @@ export const callAssociationsRouter = createTRPCRouter({
       // SECOND: Try to find in vapi_bookings (by client_phone)
       // Select client_name, patient_name, species, breed, and created_at for context
       const { data: appointment } = await supabase
-        .from("vapi_bookings")
+        .from("appointment_bookings")
         .select("client_name, patient_name, species, breed, created_at")
         .or(
           `client_phone.eq.${normalizedPhone},client_phone.eq.+1${normalizedPhone},client_phone.ilike.%${normalizedPhone.slice(-10)}%`,

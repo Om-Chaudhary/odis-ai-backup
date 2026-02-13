@@ -105,7 +105,7 @@ export function notifyAlumRockAppointmentBooked(
 
       // Check if there's a vapi_booking for this call
       const { data: booking, error: fetchError } = await supabase
-        .from("vapi_bookings")
+        .from("appointment_bookings")
         .select("*")
         .eq("vapi_call_id", vapiCallId)
         .limit(1)

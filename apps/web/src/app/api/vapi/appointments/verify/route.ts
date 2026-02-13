@@ -54,8 +54,8 @@ export async function GET() {
     endpoint: "/api/vapi/appointments/verify",
     description: "Verifies appointment exists in local synced data",
     features: [
-      "Queries schedule_appointments (IDEXX sync)",
-      "Falls back to vapi_bookings (recent AI bookings)",
+      "Queries pims_appointments (IDEXX sync)",
+      "Falls back to appointment_bookings (recent AI bookings)",
       "Natural language date parsing",
       "Fast (no IDEXX API calls)",
     ],

@@ -78,7 +78,7 @@ export const getStatsRouter = createTRPCRouter({
 
       // Fetch appointment stats from vapi_bookings
       let appointmentQuery = serviceClient
-        .from("vapi_bookings")
+        .from("appointment_bookings")
         .select("status", { count: "exact" });
 
       if (clinic?.id) {

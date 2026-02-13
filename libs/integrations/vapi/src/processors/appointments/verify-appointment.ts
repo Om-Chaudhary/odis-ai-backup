@@ -5,8 +5,8 @@
  * Used by confirm_appointment, cancel_appointment, and reschedule_appointment.
  *
  * Data Sources (in order):
- * 1. schedule_appointments - Primary source (synced from IDEXX)
- * 2. vapi_bookings - Fallback for same-day bookings not yet synced
+ * 1. pims_appointments - Primary source (synced from IDEXX)
+ * 2. appointment_bookings - Fallback for same-day bookings not yet synced
  */
 
 import type { ToolContext, ToolResult } from "../../core/types";
@@ -15,6 +15,37 @@ import type {
   VerifyAppointmentResult,
 } from "../../schemas/appointments";
 import { parseDateToISO, formatTime12Hour } from "./book-appointment";
+
+/**
+ * Parse a PostgreSQL tstzrange string into start/end ISO time strings (HH:MM:SS).
+ * Example input: '["2024-01-15 09:00:00+00","2024-01-15 09:30:00+00")'
+ */
+function parseTimeRange(timeRange: unknown): {
+  startTime: string | undefined;
+  endTime: string | undefined;
+} {
+  if (!timeRange || typeof timeRange !== "string") {
+    return { startTime: undefined, endTime: undefined };
+  }
+  // Remove range brackets: [, (, ), ]
+  const inner = timeRange.replace(/^[\[(]|[\])]$/g, "");
+  const [lower, upper] = inner
+    .split(",")
+    .map((s) => s.trim().replace(/"/g, ""));
+
+  const toTimeString = (val: string | undefined): string | undefined => {
+    if (!val) return undefined;
+    try {
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return undefined;
+      return d.toISOString().slice(11, 19); // HH:MM:SS
+    } catch {
+      return undefined;
+    }
+  };
+
+  return { startTime: toTimeString(lower), endTime: toTimeString(upper) };
+}
 
 /**
  * Process appointment verification request
@@ -61,9 +92,9 @@ export async function processVerifyAppointment(
     day: "numeric",
   });
 
-  // Step 1: Query schedule_appointments (primary source - synced from IDEXX)
+  // Step 1: Query pims_appointments (primary source - synced from IDEXX)
   const { data: scheduleAppts, error: scheduleError } = await supabase
-    .from("schedule_appointments")
+    .from("pims_appointments")
     .select("*")
     .eq("clinic_id", clinic.id)
     .eq("date", parsedDate)
@@ -73,34 +104,35 @@ export async function processVerifyAppointment(
     .not("status", "in", '("cancelled","no_show")');
 
   if (scheduleError) {
-    logger.error("Failed to query schedule_appointments", {
+    logger.error("Failed to query pims_appointments", {
       error: scheduleError,
       clinicId: clinic.id,
     });
   }
 
-  // Check if we found an appointment in schedule_appointments
+  // Check if we found an appointment in pims_appointments
   if (scheduleAppts && scheduleAppts.length > 0 && scheduleAppts[0]) {
     const appt = scheduleAppts[0];
+    const { startTime, endTime } = parseTimeRange(appt.time_range);
     const result: VerifyAppointmentResult = {
       status: "FOUND",
       appointment_id: appt.id,
       idexx_appointment_id: appt.neo_appointment_id ?? undefined,
-      appointment_time: appt.start_time ?? undefined,
-      appointment_time_end: appt.end_time ?? undefined,
+      appointment_time: startTime,
+      appointment_time_end: endTime,
       appointment_date: appt.date ?? undefined,
       formatted_date: formattedDate,
-      formatted_time: appt.start_time ? formatTime12Hour(appt.start_time) : undefined,
+      formatted_time: startTime ? formatTime12Hour(startTime) : undefined,
       provider_name: appt.provider_name ?? undefined,
       appointment_type: appt.appointment_type ?? undefined,
       room: appt.room_id ?? undefined,
       patient_name: appt.patient_name ?? undefined,
       client_name: appt.client_name ?? undefined,
       client_phone: appt.client_phone ?? undefined,
-      source: "schedule_appointments",
+      source: "pims_appointments",
     };
 
-    logger.info("Appointment found in schedule_appointments", {
+    logger.info("Appointment found in pims_appointments", {
       appointmentId: appt.id,
       neoId: appt.neo_appointment_id,
       clinicId: clinic.id,
@@ -113,9 +145,9 @@ export async function processVerifyAppointment(
     };
   }
 
-  // Step 2: Fallback - Check vapi_bookings for recently booked appointments not yet synced
+  // Step 2: Fallback - Check appointment_bookings for recently booked appointments not yet synced
   const { data: vapiBookings, error: vapiError } = await supabase
-    .from("vapi_bookings")
+    .from("appointment_bookings")
     .select("*")
     .eq("clinic_id", clinic.id)
     .or(`date.eq.${parsedDate}`)
@@ -124,7 +156,7 @@ export async function processVerifyAppointment(
     .in("status", ["pending", "confirmed"]);
 
   if (vapiError) {
-    logger.error("Failed to query vapi_bookings", {
+    logger.error("Failed to query appointment_bookings", {
       error: vapiError,
       clinicId: clinic.id,
     });
@@ -140,17 +172,19 @@ export async function processVerifyAppointment(
       appointment_time_end: booking.end_time ?? undefined,
       appointment_date: booking.date ?? undefined,
       formatted_date: formattedDate,
-      formatted_time: booking.start_time ? formatTime12Hour(booking.start_time) : undefined,
+      formatted_time: booking.start_time
+        ? formatTime12Hour(booking.start_time)
+        : undefined,
       provider_name: booking.provider_name ?? undefined,
       appointment_type: booking.appointment_type ?? undefined,
       room: booking.room_id ?? undefined,
       patient_name: booking.patient_name ?? undefined,
       client_name: booking.client_name ?? undefined,
       client_phone: booking.client_phone ?? undefined,
-      source: "vapi_bookings",
+      source: "appointment_bookings",
     };
 
-    logger.info("Appointment found in vapi_bookings", {
+    logger.info("Appointment found in appointment_bookings", {
       bookingId: booking.id,
       idexxId: booking.idexx_appointment_id,
       clinicId: clinic.id,

@@ -85,7 +85,7 @@ export async function processCheckAvailability(
   const availabilityClinicId = clinic.pims_clinic_id ?? clinic.id;
 
   // Call the V2 database function (time range-based)
-  const { data: slots, error } = await supabase.rpc("get_available_slots_v2", {
+  const { data: slots, error } = await supabase.rpc("get_available_slots", {
     p_clinic_id: availabilityClinicId,
     p_date: input.date,
   });
@@ -131,7 +131,10 @@ export async function processCheckAvailability(
 
   // Format slots for response (V2 returns timestamptz, convert to clinic local time)
   const times = openSlots.map((slot) => {
-    const { time24h, time12h } = slotToLocalTime(slot.slot_start, clinicTimezone);
+    const { time24h, time12h } = slotToLocalTime(
+      slot.slot_start,
+      clinicTimezone,
+    );
     return {
       time_12h: time12h,
       time_24h: time24h,

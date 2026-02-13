@@ -32,7 +32,7 @@ export interface DayHoursConfig {
 export type DailyHours = Record<string, DayHoursConfig>;
 
 // ============================================================================
-// Time Range Scheduling Types (V2)
+// Time Range Scheduling Types
 // ============================================================================
 
 /**
@@ -59,10 +59,10 @@ export type AppointmentStatus =
   | "no_show";
 
 /**
- * V2 Appointment using time ranges instead of separate start/end times
- * Maps to schedule_appointments_v2 table
+ * Appointment using time ranges
+ * Maps to schedule_appointments table
  */
-export interface ScheduleAppointmentV2 {
+export interface PimsAppointmentRecord {
   id: string;
   clinicId: string;
   timeRange: TimeRange;
@@ -89,10 +89,10 @@ export interface ScheduleAppointmentV2 {
 export type VapiBookingStatus = "pending" | "confirmed" | "cancelled";
 
 /**
- * V2 VAPI Booking using time ranges
- * Maps to vapi_bookings_v2 table
+ * VAPI Booking using time ranges
+ * Maps to vapi_bookings table
  */
-export interface VapiBookingV2 {
+export interface AppointmentBooking {
   id: string;
   clinicId: string;
   timeRange: TimeRange;
@@ -118,9 +118,9 @@ export interface VapiBookingV2 {
 }
 
 /**
- * V2 Availability slot returned by get_available_slots_v2
+ * Availability slot returned by get_available_slots
  */
-export interface AvailabilitySlotV2 {
+export interface AvailabilitySlot {
   slotStart: Date;
   slotEnd: Date;
   capacity: number;
@@ -131,9 +131,9 @@ export interface AvailabilitySlotV2 {
 }
 
 /**
- * Result of check_availability_v2 function
+ * Result of check_availability function
  */
-export interface AvailabilityCheckResultV2 {
+export interface AvailabilityCheckResult {
   isAvailable: boolean;
   capacity: number;
   bookedCount: number;
@@ -143,9 +143,9 @@ export interface AvailabilityCheckResultV2 {
 }
 
 /**
- * Result of book_appointment_with_hold_v2 function
+ * Result of book_appointment_with_hold function
  */
-export interface BookingResultV2 {
+export interface BookingResult {
   success: boolean;
   bookingId?: string;
   confirmationNumber?: string;
@@ -155,9 +155,9 @@ export interface BookingResultV2 {
 }
 
 /**
- * Input for creating a V2 appointment
+ * Input for creating an appointment
  */
-export interface CreateAppointmentV2Input {
+export interface CreateAppointmentInput {
   clinicId: string;
   startTime: Date;
   endTime: Date;
@@ -174,9 +174,9 @@ export interface CreateAppointmentV2Input {
 }
 
 /**
- * Input for booking an appointment via VAPI (V2)
+ * Input for booking an appointment via VAPI
  */
-export interface BookAppointmentV2Input {
+export interface BookAppointmentInput {
   clinicId: string;
   startTime: Date;
   endTime: Date;

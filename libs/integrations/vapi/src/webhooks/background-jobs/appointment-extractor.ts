@@ -54,7 +54,7 @@ export function extractAndUpdateAppointmentDate(
     try {
       // Check if there's an associated VAPI booking that we can enrich with date
       const { data: vapiBooking, error: fetchError } = await supabase
-        .from("vapi_bookings")
+        .from("appointment_bookings")
         .select("id, date, start_time")
         .eq("vapi_call_id", vapiCallId)
         .limit(1)
@@ -127,7 +127,7 @@ export function extractAndUpdateAppointmentDate(
 
       // Update VAPI booking
       const { error: updateError } = await supabase
-        .from("vapi_bookings")
+        .from("appointment_bookings")
         .update(updateData)
         .eq("id", vapiBooking.id);
 

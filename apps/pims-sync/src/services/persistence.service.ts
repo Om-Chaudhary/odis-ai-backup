@@ -286,7 +286,7 @@ export class PersistenceService {
   }
 
   /**
-   * Upsert appointments to schedule_appointments table
+   * Upsert appointments to pims_appointments table
    *
    * @deprecated Use ScheduleSyncService for full sync operations.
    * This method is kept for backward compatibility with consultation scraping.
@@ -323,7 +323,7 @@ export class PersistenceService {
           ? this.normalizeTime24(appointment.end_time)
           : startTime;
 
-        const { error } = await supabase.from("schedule_appointments").upsert(
+        const { error } = await supabase.from("pims_appointments").upsert(
           {
             clinic_id: clinicId,
             neo_appointment_id: appointment.neo_appointment_id,
@@ -464,10 +464,10 @@ export class PersistenceService {
     clinicId: string,
     consultation: ScrapedConsultation,
   ): Promise<string | null> {
-    // Try to find by appointment ID in schedule_appointments
+    // Try to find by appointment ID in pims_appointments
     if (consultation.neo_appointment_id) {
       const { data: appointment } = await supabase
-        .from("schedule_appointments")
+        .from("pims_appointments")
         .select("id")
         .eq("clinic_id", clinicId)
         .eq("neo_appointment_id", consultation.neo_appointment_id)

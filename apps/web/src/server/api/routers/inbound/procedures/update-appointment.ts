@@ -24,8 +24,8 @@ export const updateAppointmentRouter = createTRPCRouter({
 
       // First, verify the booking belongs to the user's clinic
       const { data: booking, error: fetchError } = await ctx.supabase
-        .from("vapi_bookings")
-        .select("id, clinic_id, status, metadata")
+        .from("appointment_bookings")
+        .select("id, clinic_id, status, metadata, date, start_time")
         .eq("id", input.id)
         .single();
 
@@ -44,13 +44,12 @@ export const updateAppointmentRouter = createTRPCRouter({
         });
       }
 
-      // Build update object for vapi_bookings table
+      // Build update object for appointment_bookings table
       const updateData: {
         status: string;
         metadata?: Json;
         confirmation_number?: string;
-        date?: string;
-        start_time?: string;
+        time_range?: string;
         updated_at: string;
       } = {
         status: input.status,
@@ -71,24 +70,38 @@ export const updateAppointmentRouter = createTRPCRouter({
         updateData.confirmation_number = input.confirmedAppointmentId;
       }
 
-      // Update date and time if provided (for confirmed bookings)
-      if (input.confirmedDate) {
-        updateData.date = input.confirmedDate;
-      }
+      // Update time_range if date or time is provided (for confirmed bookings)
+      // date and start_time are GENERATED columns derived from time_range
+      if (input.confirmedDate || input.confirmedTime) {
+        // Use provided values or fall back to existing booking data
+        const date = input.confirmedDate ?? booking.date;
+        let time = input.confirmedTime;
 
-      if (input.confirmedTime) {
-        // Normalize time to HH:MM:SS format
-        const timeParts = input.confirmedTime.split(":");
-        const normalizedTime =
-          timeParts.length === 2
-            ? `${input.confirmedTime}:00`
-            : input.confirmedTime;
-        updateData.start_time = normalizedTime;
+        if (time) {
+          // Normalize time to HH:MM:SS format
+          const timeParts = time.split(":");
+          if (timeParts.length === 2) {
+            time = `${time}:00`;
+          }
+        } else {
+          time = booking.start_time ?? undefined;
+        }
+
+        if (date && time) {
+          const startTimestamp = `${date} ${time} America/Los_Angeles`;
+          // Default to 30-minute appointment duration
+          const [hours, minutes, seconds] = time.split(":").map(Number);
+          const endMinutes = minutes ?? 0 + 30;
+          const endHours = hours ?? 0 + Math.floor(endMinutes / 60);
+          const endTime = `${String(endHours).padStart(2, "0")}:${String(endMinutes % 60).padStart(2, "0")}:${String(seconds ?? 0).padStart(2, "0")}`;
+          const endTimestamp = `${date} ${endTime} America/Los_Angeles`;
+          updateData.time_range = `[${startTimestamp},${endTimestamp})`;
+        }
       }
 
       // Update the booking
       const { data: updated, error: updateError } = await ctx.supabase
-        .from("vapi_bookings")
+        .from("appointment_bookings")
         .update(updateData)
         .eq("id", input.id)
         .select()

@@ -93,9 +93,8 @@ syncRouter.post("/inbound/schedule", (req: Request, res: Response) => {
 /**
  * POST /api/sync/inbound/appointments
  *
- * Sync appointments from IDEXX Neo to update schedule availability.
- * Fetches appointments from PIMS, upserts to schedule_appointments,
- * and updates schedule_slots.booked_count for accurate VAPI availability.
+ * Sync appointments from IDEXX Neo to pims_appointments table.
+ * Fetches appointments from PIMS and upserts to pims_appointments.
  */
 syncRouter.post("/inbound/appointments", (req: Request, res: Response) => {
   void handleInboundAppointmentSync(req as AuthenticatedRequest, res);
@@ -767,7 +766,6 @@ async function handleFullSync(
       appointments?: {
         success: boolean;
         appointmentsFound?: number;
-        slotsUpdated?: number;
         durationMs?: number;
         error?: string;
       };
@@ -896,35 +894,11 @@ async function handleFullSync(
             defaultCapacity,
           });
 
-          if (slots.length > 0) {
-            const batchSize = 500;
-            let totalInserted = 0;
-
-            for (let i = 0; i < slots.length; i += batchSize) {
-              const batch = slots.slice(i, i + batchSize);
-              const { data } = await supabase
-                .from("schedule_slots")
-                .upsert(batch, {
-                  onConflict: "clinic_id,date,start_time",
-                  ignoreDuplicates: true,
-                })
-                .select("id");
-
-              totalInserted += data?.length ?? 0;
-            }
-
-            results.inbound.schedule = {
-              success: true,
-              slotsGenerated: totalInserted,
-              durationMs: Date.now() - scheduleStart,
-            };
-          } else {
-            results.inbound.schedule = {
-              success: true,
-              slotsGenerated: 0,
-              durationMs: Date.now() - scheduleStart,
-            };
-          }
+          results.inbound.schedule = {
+            success: true,
+            slotsGenerated: slots.length,
+            durationMs: Date.now() - scheduleStart,
+          };
         }
       } catch (error) {
         const errorMessage =
@@ -1019,15 +993,7 @@ async function handleFullSync(
                 };
               });
 
-              const batchSize = 100;
-              for (let i = 0; i < appointmentRecords.length; i += batchSize) {
-                const batch = appointmentRecords.slice(i, i + batchSize);
-                await supabase.from("schedule_appointments").upsert(batch, {
-                  onConflict: "clinic_id,neo_appointment_id",
-                });
-              }
-
-              // Write to time range-based table
+              // Write to pims_appointments table
               const { data: clinicTzData } = await supabase
                 .from("clinics")
                 .select("timezone")
@@ -1047,25 +1013,9 @@ async function handleFullSync(
               );
             }
 
-            // Update slot booked counts
-            const { data: updateResult } = (await supabase.rpc(
-              "update_slot_booked_counts",
-              {
-                p_clinic_id: clinicId,
-                p_start_date: startDateStr,
-                p_end_date: endDateStr,
-              },
-            )) as {
-              data: { slots_updated: number }[] | null;
-              error: Error | null;
-            };
-
-            const slotsUpdated = updateResult?.[0]?.slots_updated ?? 0;
-
             results.inbound.appointments = {
               success: true,
               appointmentsFound: appointments.length,
-              slotsUpdated,
               durationMs: Date.now() - appointmentStart,
             };
           }
@@ -1298,48 +1248,6 @@ async function handleInboundScheduleSync(
       return;
     }
 
-    // Insert slots in batches (Supabase has limits)
-    const batchSize = 500;
-    let totalInserted = 0;
-    let totalSkipped = 0;
-
-    for (let i = 0; i < slots.length; i += batchSize) {
-      const batch = slots.slice(i, i + batchSize);
-      const { data, error } = await supabase
-        .from("schedule_slots")
-        .upsert(batch, {
-          onConflict: "clinic_id,date,start_time",
-          ignoreDuplicates: true,
-        })
-        .select("id");
-
-      if (error) {
-        logger.error("Failed to insert schedule slots batch", {
-          clinicId,
-          batchIndex: i,
-          error: error.message,
-        });
-        throw error;
-      }
-
-      totalInserted += data?.length ?? 0;
-      totalSkipped += batch.length - (data?.length ?? 0);
-    }
-
-    // Record sync in schedule_syncs table
-    const startDateStr = startDate.toISOString().split("T")[0]!;
-    const endDateStr = endDate.toISOString().split("T")[0]!;
-    await supabase.from("schedule_syncs").insert({
-      clinic_id: clinicId,
-      sync_start_date: startDateStr,
-      sync_end_date: endDateStr,
-      status: "completed",
-      slots_created: totalInserted,
-      started_at: new Date(startTime).toISOString(),
-      completed_at: new Date().toISOString(),
-      duration_ms: Date.now() - startTime,
-    });
-
     logger.info("Inbound schedule sync completed", {
       clinicId,
       clinicName: clinicData.name,
@@ -1350,15 +1258,13 @@ async function handleInboundScheduleSync(
       },
       stats: {
         totalGenerated: slots.length,
-        inserted: totalInserted,
-        skipped: totalSkipped,
       },
       durationMs: Date.now() - startTime,
     });
 
     res.status(200).json({
       success: true,
-      message: `Generated ${totalInserted} schedule slots`,
+      message: `Generated ${slots.length} schedule slots`,
       clinic: {
         id: clinicId,
         name: clinicData.name,
@@ -1370,8 +1276,6 @@ async function handleInboundScheduleSync(
       },
       stats: {
         totalGenerated: slots.length,
-        inserted: totalInserted,
-        skipped: totalSkipped,
         slotDurationMinutes,
         defaultCapacity,
       },
@@ -1537,8 +1441,7 @@ function generateScheduleSlots(options: {
 /**
  * Handle inbound appointment sync request
  *
- * Syncs appointments from IDEXX Neo to update schedule availability.
- * This ensures that schedule_slots.booked_count reflects actual appointments.
+ * Syncs appointments from IDEXX Neo to pims_appointments table.
  */
 async function handleInboundAppointmentSync(
   req: AuthenticatedRequest,
@@ -1646,7 +1549,7 @@ async function handleInboundAppointmentSync(
         appointmentCount: appointments.length,
       });
 
-      // Upsert appointments to schedule_appointments table
+      // Upsert appointments to pims_appointments table
       let appointmentsAdded = 0;
       const appointmentsUpdated = 0; // Reserved for future use when detecting actual updates vs inserts
       let appointmentsRemoved = 0;
@@ -1692,30 +1595,6 @@ async function handleInboundAppointmentSync(
           };
         });
 
-        // Upsert in batches
-        const batchSize = 100;
-        for (let i = 0; i < appointmentRecords.length; i += batchSize) {
-          const batch = appointmentRecords.slice(i, i + batchSize);
-          const { error: upsertError } = await supabase
-            .from("schedule_appointments")
-            .upsert(batch, {
-              onConflict: "clinic_id,neo_appointment_id",
-            });
-
-          if (upsertError) {
-            logger.error("Failed to upsert appointments batch", {
-              clinicId,
-              batchIndex: i,
-              error: upsertError.message,
-            });
-          } else {
-            appointmentsAdded += batch.length;
-          }
-        }
-
-        // ========================================
-        // Write to time range-based table
-        // ========================================
         // Get clinic timezone for accurate time range conversion
         const { data: clinicData } = await supabase
           .from("clinics")
@@ -1725,22 +1604,23 @@ async function handleInboundAppointmentSync(
 
         const clinicTimezone = clinicData?.timezone ?? "America/Los_Angeles";
 
-        // Convert records to time range format
+        // Convert records to time range format and write to pims_appointments
         const timeRangeRecords = convertToV2Records(
           clinicId,
           appointmentRecords,
           clinicTimezone,
         );
 
-        // Write to time range-based table
         const writeResult = await writeAppointmentToV2Table(
           supabase,
           clinicId,
           timeRangeRecords,
         );
 
-        if (!writeResult.success) {
-          logger.warn("Time range table write failed (non-blocking)", {
+        if (writeResult.success) {
+          appointmentsAdded = writeResult.count;
+        } else {
+          logger.warn("pims_appointments write failed", {
             clinicId,
             error: writeResult.error,
           });
@@ -1750,7 +1630,7 @@ async function handleInboundAppointmentSync(
         // (appointments that existed in DB but not returned by IDEXX)
         const syncedIds = appointments.map((a) => a.id);
         const { data: removedData, error: removeError } = await supabase
-          .from("schedule_appointments")
+          .from("pims_appointments")
           .update({
             deleted_at: new Date().toISOString(),
             last_synced_at: new Date().toISOString(),
@@ -1776,39 +1656,6 @@ async function handleInboundAppointmentSync(
         }
       }
 
-      // Call PostgreSQL function to update booked_count in schedule_slots
-      logger.info("Updating slot booked counts", {
-        clinicId,
-        dateRange: { start: startDateStr, end: endDateStr },
-      });
-
-      const { data: updateResult, error: updateError } = (await supabase.rpc(
-        "update_slot_booked_counts",
-        {
-          p_clinic_id: clinicId,
-          p_start_date: startDateStr,
-          p_end_date: endDateStr,
-        },
-      )) as {
-        data: { slots_updated: number; total_appointments: number }[] | null;
-        error: Error | null;
-      };
-
-      let slotsUpdated = 0;
-      if (updateError) {
-        logger.error("Failed to update slot booked counts", {
-          clinicId,
-          error: updateError.message,
-        });
-      } else if (updateResult && updateResult.length > 0) {
-        slotsUpdated = updateResult[0]?.slots_updated ?? 0;
-        logger.info("Updated slot booked counts", {
-          clinicId,
-          slotsUpdated,
-          totalAppointments: updateResult[0]?.total_appointments ?? 0,
-        });
-      }
-
       // Update sync record with success
       if (syncId) {
         await supabase
@@ -1818,7 +1665,6 @@ async function handleInboundAppointmentSync(
             appointments_added: appointmentsAdded,
             appointments_updated: appointmentsUpdated,
             appointments_removed: appointmentsRemoved,
-            slots_updated: slotsUpdated,
             completed_at: new Date().toISOString(),
             duration_ms: Date.now() - startTime,
           })
@@ -1834,7 +1680,6 @@ async function handleInboundAppointmentSync(
           appointmentsAdded,
           appointmentsUpdated,
           appointmentsRemoved,
-          slotsUpdated,
         },
         durationMs: Date.now() - startTime,
       });
@@ -1842,7 +1687,7 @@ async function handleInboundAppointmentSync(
       res.status(200).json({
         success: true,
         syncId,
-        message: `Synced ${appointments.length} appointments, updated ${slotsUpdated} slots`,
+        message: `Synced ${appointments.length} appointments`,
         clinic: { id: clinicId },
         dateRange: { start: startDateStr, end: endDateStr },
         stats: {
@@ -1850,7 +1695,6 @@ async function handleInboundAppointmentSync(
           appointmentsAdded,
           appointmentsUpdated,
           appointmentsRemoved,
-          slotsUpdated,
         },
         durationMs: Date.now() - startTime,
         timestamp: new Date().toISOString(),
@@ -1954,9 +1798,7 @@ interface AppointmentV2Record {
 }
 
 /**
- * Write appointments to schedule_appointments_v2 table (time range-based)
- * This writes to the new v2 table in parallel with the existing table
- * to support gradual migration.
+ * Write appointments to pims_appointments table (time range-based)
  *
  * @param supabase - Supabase client
  * @param clinicId - Clinic UUID
@@ -1978,14 +1820,12 @@ async function writeAppointmentToV2Table(
 
     for (let i = 0; i < appointments.length; i += batchSize) {
       const batch = appointments.slice(i, i + batchSize);
-      const { error } = await supabase
-        .from("schedule_appointments_v2")
-        .upsert(batch, {
-          onConflict: "clinic_id,neo_appointment_id",
-        });
+      const { error } = await supabase.from("pims_appointments").upsert(batch, {
+        onConflict: "clinic_id,neo_appointment_id",
+      });
 
       if (error) {
-        logger.error("Failed to upsert v2 appointments batch", {
+        logger.error("Failed to upsert pims_appointments batch", {
           clinicId,
           batchIndex: i,
           error: error.message,
@@ -1996,7 +1836,7 @@ async function writeAppointmentToV2Table(
       totalUpserted += batch.length;
     }
 
-    logger.info("Appointments written to schedule_appointments_v2", {
+    logger.info("Appointments written to pims_appointments", {
       clinicId,
       count: totalUpserted,
     });
@@ -2005,7 +1845,7 @@ async function writeAppointmentToV2Table(
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    logger.error("Failed to write appointments to v2 table", {
+    logger.error("Failed to write appointments to pims_appointments", {
       clinicId,
       error: errorMessage,
     });
@@ -2040,7 +1880,13 @@ function convertToV2Records(
     let endTime = record.end_time;
     if (record.start_time === record.end_time) {
       const [h, m] = record.start_time.split(":").map(Number);
-      const d = new Date(2000, 0, 1, h ?? 0, (m ?? 0) + DEFAULT_DURATION_MINUTES);
+      const d = new Date(
+        2000,
+        0,
+        1,
+        h ?? 0,
+        (m ?? 0) + DEFAULT_DURATION_MINUTES,
+      );
       endTime = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:00`;
     }
 

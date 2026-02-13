@@ -129,7 +129,7 @@ async function findExistingAppointment(
   // First try: by neo_appointment_id + clinic_id + date
   if (appointment.neo_appointment_id) {
     const { data: existing, error } = await supabase
-      .from("schedule_appointments")
+      .from("pims_appointments")
       .select("id")
       .eq("clinic_id", clinicId)
       .eq("neo_appointment_id", appointment.neo_appointment_id)
@@ -156,7 +156,7 @@ async function findExistingAppointment(
     if (!normalizedTime) return null;
 
     const { data: existing, error } = await supabase
-      .from("schedule_appointments")
+      .from("pims_appointments")
       .select("id")
       .eq("clinic_id", clinicId)
       .eq("date", appointment.date)
@@ -225,13 +225,14 @@ async function processAppointment(
       appointment.neo_appointment_id ??
       `ext-${appointment.date}-${startTime}-${appointment.patient_name ?? "unknown"}`;
 
-    const appointmentData: Database["public"]["Tables"]["schedule_appointments"]["Insert"] =
+    // Build tstzrange from date + start/end times
+    const timeRange = `[${appointment.date} ${startTime},${appointment.date} ${endTime})`;
+
+    const appointmentData: Database["public"]["Tables"]["pims_appointments"]["Insert"] =
       {
         clinic_id: clinicId,
         neo_appointment_id: neoAppointmentId,
-        date: appointment.date,
-        start_time: startTime,
-        end_time: endTime,
+        time_range: timeRange,
         patient_name: appointment.patient_name ?? null,
         client_name: appointment.client_name ?? null,
         client_phone: appointment.client_phone ?? null,
@@ -244,7 +245,7 @@ async function processAppointment(
     if (existingAppointmentId) {
       // Update existing appointment
       const { data: updated, error: updateError } = await supabase
-        .from("schedule_appointments")
+        .from("pims_appointments")
         .update(appointmentData)
         .eq("id", existingAppointmentId)
         .select("id")
@@ -280,7 +281,7 @@ async function processAppointment(
     } else {
       // Insert new appointment
       const { data: inserted, error: insertError } = await supabase
-        .from("schedule_appointments")
+        .from("pims_appointments")
         .insert(appointmentData)
         .select("id")
         .single();

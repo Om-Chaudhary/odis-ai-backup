@@ -113,13 +113,10 @@ export async function processCheckAvailabilityRange(
   while (currentDate <= endDate) {
     const dateStr = currentDate.toISOString().split("T")[0]!;
 
-    const { data: slots, error } = await supabase.rpc(
-      "get_available_slots_v2",
-      {
-        p_clinic_id: availabilityClinicId,
-        p_date: dateStr,
-      },
-    );
+    const { data: slots, error } = await supabase.rpc("get_available_slots", {
+      p_clinic_id: availabilityClinicId,
+      p_date: dateStr,
+    });
 
     if (!error && slots) {
       const typedSlots = slots as AvailableSlot[];
@@ -168,13 +165,10 @@ export async function processCheckAvailabilityRange(
   }> = [];
 
   if (firstAvailable) {
-    const { data: detailedSlots } = await supabase.rpc(
-      "get_available_slots_v2",
-      {
-        p_clinic_id: availabilityClinicId,
-        p_date: firstAvailable.date,
-      },
-    );
+    const { data: detailedSlots } = await supabase.rpc("get_available_slots", {
+      p_clinic_id: availabilityClinicId,
+      p_date: firstAvailable.date,
+    });
 
     if (detailedSlots) {
       const openSlots = (detailedSlots as AvailableSlot[]).filter(

@@ -142,7 +142,7 @@ export interface VerifyAppointmentResult {
   patient_name?: string;
   client_name?: string;
   client_phone?: string;
-  source?: "schedule_appointments" | "vapi_bookings";
+  source?: "pims_appointments" | "appointment_bookings";
   message?: string;
 }
 

@@ -137,7 +137,7 @@ export const overviewRouter = createTRPCRouter({
       // APPOINTMENT STATS (from vapi_bookings)
       // ============================================================================
       let appointmentQuery = ctx.supabase
-        .from("vapi_bookings")
+        .from("appointment_bookings")
         .select("id, status, created_at")
         .gte("created_at", startDateStr)
         .lte("created_at", endDateStr);
@@ -298,7 +298,7 @@ export const overviewRouter = createTRPCRouter({
 
       // Today's appointments
       let todayAppointmentsQuery = ctx.supabase
-        .from("vapi_bookings")
+        .from("appointment_bookings")
         .select("id")
         .gte("created_at", todayStartStr);
 

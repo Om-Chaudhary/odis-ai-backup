@@ -4,4573 +4,4274 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[]
+  | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
-  }
+    PostgrestVersion: "13.0.4";
+  };
   public: {
     Tables: {
       appointment_audit_log: {
         Row: {
-          action: string
-          appointment_id: string | null
-          clinic_id: string
-          created_at: string
-          error_code: string | null
-          error_message: string | null
-          id: string
-          idexx_appointment_id: string | null
-          new_appointment_id: string | null
-          new_datetime: string | null
-          old_appointment_id: string | null
-          old_datetime: string | null
-          performed_by: string | null
-          reason: string | null
-          vapi_booking_id: string | null
-          vapi_call_id: string | null
-        }
+          action: string;
+          appointment_id: string | null;
+          clinic_id: string;
+          created_at: string;
+          error_code: string | null;
+          error_message: string | null;
+          id: string;
+          idexx_appointment_id: string | null;
+          new_appointment_id: string | null;
+          new_datetime: string | null;
+          old_appointment_id: string | null;
+          old_datetime: string | null;
+          performed_by: string | null;
+          reason: string | null;
+          vapi_booking_id: string | null;
+          vapi_call_id: string | null;
+        };
         Insert: {
-          action: string
-          appointment_id?: string | null
-          clinic_id: string
-          created_at?: string
-          error_code?: string | null
-          error_message?: string | null
-          id?: string
-          idexx_appointment_id?: string | null
-          new_appointment_id?: string | null
-          new_datetime?: string | null
-          old_appointment_id?: string | null
-          old_datetime?: string | null
-          performed_by?: string | null
-          reason?: string | null
-          vapi_booking_id?: string | null
-          vapi_call_id?: string | null
-        }
+          action: string;
+          appointment_id?: string | null;
+          clinic_id: string;
+          created_at?: string;
+          error_code?: string | null;
+          error_message?: string | null;
+          id?: string;
+          idexx_appointment_id?: string | null;
+          new_appointment_id?: string | null;
+          new_datetime?: string | null;
+          old_appointment_id?: string | null;
+          old_datetime?: string | null;
+          performed_by?: string | null;
+          reason?: string | null;
+          vapi_booking_id?: string | null;
+          vapi_call_id?: string | null;
+        };
         Update: {
-          action?: string
-          appointment_id?: string | null
-          clinic_id?: string
-          created_at?: string
-          error_code?: string | null
-          error_message?: string | null
-          id?: string
-          idexx_appointment_id?: string | null
-          new_appointment_id?: string | null
-          new_datetime?: string | null
-          old_appointment_id?: string | null
-          old_datetime?: string | null
-          performed_by?: string | null
-          reason?: string | null
-          vapi_booking_id?: string | null
-          vapi_call_id?: string | null
-        }
+          action?: string;
+          appointment_id?: string | null;
+          clinic_id?: string;
+          created_at?: string;
+          error_code?: string | null;
+          error_message?: string | null;
+          id?: string;
+          idexx_appointment_id?: string | null;
+          new_appointment_id?: string | null;
+          new_datetime?: string | null;
+          old_appointment_id?: string | null;
+          old_datetime?: string | null;
+          performed_by?: string | null;
+          reason?: string | null;
+          vapi_booking_id?: string | null;
+          vapi_call_id?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "appointment_audit_log_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "appointment_audit_log_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      appointment_bookings: {
+        Row: {
+          appointment_type: string | null;
+          booked_at_sync_id: string | null;
+          breed: string | null;
+          cancelled_at: string | null;
+          cancelled_reason: string | null;
+          client_name: string;
+          client_phone: string;
+          clinic_id: string;
+          confirmation_number: string | null;
+          created_at: string;
+          date: string | null;
+          end_time: string | null;
+          has_conflict: boolean;
+          hold_expires_at: string | null;
+          id: string;
+          idexx_appointment_id: string | null;
+          idexx_client_id: string | null;
+          idexx_patient_id: string | null;
+          is_new_client: boolean | null;
+          metadata: Json | null;
+          original_date: string | null;
+          original_time: string | null;
+          original_time_range: unknown;
+          patient_name: string;
+          provider_name: string | null;
+          reason: string | null;
+          rescheduled_at: string | null;
+          rescheduled_from_id: string | null;
+          rescheduled_reason: string | null;
+          rescheduled_to_id: string | null;
+          room_id: string | null;
+          slot_id: string | null;
+          species: string | null;
+          start_time: string | null;
+          status: string;
+          sync_freshness_at_booking: string | null;
+          time_range: unknown;
+          updated_at: string;
+          vapi_call_id: string | null;
+        };
+        Insert: {
+          appointment_type?: string | null;
+          booked_at_sync_id?: string | null;
+          breed?: string | null;
+          cancelled_at?: string | null;
+          cancelled_reason?: string | null;
+          client_name: string;
+          client_phone: string;
+          clinic_id: string;
+          confirmation_number?: string | null;
+          created_at?: string;
+          date?: string | null;
+          end_time?: string | null;
+          has_conflict?: boolean;
+          hold_expires_at?: string | null;
+          id?: string;
+          idexx_appointment_id?: string | null;
+          idexx_client_id?: string | null;
+          idexx_patient_id?: string | null;
+          is_new_client?: boolean | null;
+          metadata?: Json | null;
+          original_date?: string | null;
+          original_time?: string | null;
+          original_time_range?: unknown;
+          patient_name: string;
+          provider_name?: string | null;
+          reason?: string | null;
+          rescheduled_at?: string | null;
+          rescheduled_from_id?: string | null;
+          rescheduled_reason?: string | null;
+          rescheduled_to_id?: string | null;
+          room_id?: string | null;
+          slot_id?: string | null;
+          species?: string | null;
+          start_time?: string | null;
+          status?: string;
+          sync_freshness_at_booking?: string | null;
+          time_range: unknown;
+          updated_at?: string;
+          vapi_call_id?: string | null;
+        };
+        Update: {
+          appointment_type?: string | null;
+          booked_at_sync_id?: string | null;
+          breed?: string | null;
+          cancelled_at?: string | null;
+          cancelled_reason?: string | null;
+          client_name?: string;
+          client_phone?: string;
+          clinic_id?: string;
+          confirmation_number?: string | null;
+          created_at?: string;
+          date?: string | null;
+          end_time?: string | null;
+          has_conflict?: boolean;
+          hold_expires_at?: string | null;
+          id?: string;
+          idexx_appointment_id?: string | null;
+          idexx_client_id?: string | null;
+          idexx_patient_id?: string | null;
+          is_new_client?: boolean | null;
+          metadata?: Json | null;
+          original_date?: string | null;
+          original_time?: string | null;
+          original_time_range?: unknown;
+          patient_name?: string;
+          provider_name?: string | null;
+          reason?: string | null;
+          rescheduled_at?: string | null;
+          rescheduled_from_id?: string | null;
+          rescheduled_reason?: string | null;
+          rescheduled_to_id?: string | null;
+          room_id?: string | null;
+          slot_id?: string | null;
+          species?: string | null;
+          start_time?: string | null;
+          status?: string;
+          sync_freshness_at_booking?: string | null;
+          time_range?: unknown;
+          updated_at?: string;
+          vapi_call_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "appointment_bookings_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "appointment_audit_log_vapi_booking_id_fkey"
-            columns: ["vapi_booking_id"]
-            isOneToOne: false
-            referencedRelation: "vapi_bookings"
-            referencedColumns: ["id"]
+            foreignKeyName: "appointment_bookings_rescheduled_from_id_fkey";
+            columns: ["rescheduled_from_id"];
+            isOneToOne: false;
+            referencedRelation: "appointment_bookings";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+          {
+            foreignKeyName: "appointment_bookings_rescheduled_to_id_fkey";
+            columns: ["rescheduled_to_id"];
+            isOneToOne: false;
+            referencedRelation: "appointment_bookings";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       audio_files: {
         Row: {
-          bit_rate: number | null
-          channels: number | null
-          created_at: string | null
-          duration: number
-          file_path: string
-          file_size: number
-          filename: string
-          format: string
-          id: string
-          sample_rate: number | null
-          transcription_id: string | null
-          updated_at: string | null
-        }
+          bit_rate: number | null;
+          channels: number | null;
+          created_at: string | null;
+          duration: number;
+          file_path: string;
+          file_size: number;
+          filename: string;
+          format: string;
+          id: string;
+          sample_rate: number | null;
+          transcription_id: string | null;
+          updated_at: string | null;
+        };
         Insert: {
-          bit_rate?: number | null
-          channels?: number | null
-          created_at?: string | null
-          duration: number
-          file_path: string
-          file_size: number
-          filename: string
-          format: string
-          id?: string
-          sample_rate?: number | null
-          transcription_id?: string | null
-          updated_at?: string | null
-        }
+          bit_rate?: number | null;
+          channels?: number | null;
+          created_at?: string | null;
+          duration: number;
+          file_path: string;
+          file_size: number;
+          filename: string;
+          format: string;
+          id?: string;
+          sample_rate?: number | null;
+          transcription_id?: string | null;
+          updated_at?: string | null;
+        };
         Update: {
-          bit_rate?: number | null
-          channels?: number | null
-          created_at?: string | null
-          duration?: number
-          file_path?: string
-          file_size?: number
-          filename?: string
-          format?: string
-          id?: string
-          sample_rate?: number | null
-          transcription_id?: string | null
-          updated_at?: string | null
-        }
+          bit_rate?: number | null;
+          channels?: number | null;
+          created_at?: string | null;
+          duration?: number;
+          file_path?: string;
+          file_size?: number;
+          filename?: string;
+          format?: string;
+          id?: string;
+          sample_rate?: number | null;
+          transcription_id?: string | null;
+          updated_at?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "audio_files_transcription_id_fkey"
-            columns: ["transcription_id"]
-            isOneToOne: false
-            referencedRelation: "transcriptions"
-            referencedColumns: ["id"]
+            foreignKeyName: "audio_files_transcription_id_fkey";
+            columns: ["transcription_id"];
+            isOneToOne: false;
+            referencedRelation: "transcriptions";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       auto_scheduled_items: {
         Row: {
-          cancellation_reason: string | null
-          cancelled_at: string | null
-          cancelled_by: string | null
-          case_id: string
-          clinic_id: string
-          created_at: string | null
-          id: string
-          run_id: string | null
-          scheduled_call_id: string | null
-          scheduled_config: Json
-          scheduled_email_id: string | null
-          status: string
-        }
+          cancellation_reason: string | null;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          case_id: string;
+          clinic_id: string;
+          created_at: string | null;
+          id: string;
+          run_id: string | null;
+          scheduled_call_id: string | null;
+          scheduled_config: Json;
+          scheduled_email_id: string | null;
+          status: string;
+        };
         Insert: {
-          cancellation_reason?: string | null
-          cancelled_at?: string | null
-          cancelled_by?: string | null
-          case_id: string
-          clinic_id: string
-          created_at?: string | null
-          id?: string
-          run_id?: string | null
-          scheduled_call_id?: string | null
-          scheduled_config?: Json
-          scheduled_email_id?: string | null
-          status?: string
-        }
+          cancellation_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          case_id: string;
+          clinic_id: string;
+          created_at?: string | null;
+          id?: string;
+          run_id?: string | null;
+          scheduled_call_id?: string | null;
+          scheduled_config?: Json;
+          scheduled_email_id?: string | null;
+          status?: string;
+        };
         Update: {
-          cancellation_reason?: string | null
-          cancelled_at?: string | null
-          cancelled_by?: string | null
-          case_id?: string
-          clinic_id?: string
-          created_at?: string | null
-          id?: string
-          run_id?: string | null
-          scheduled_call_id?: string | null
-          scheduled_config?: Json
-          scheduled_email_id?: string | null
-          status?: string
-        }
+          cancellation_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          case_id?: string;
+          clinic_id?: string;
+          created_at?: string | null;
+          id?: string;
+          run_id?: string | null;
+          scheduled_call_id?: string | null;
+          scheduled_config?: Json;
+          scheduled_email_id?: string | null;
+          status?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "auto_scheduled_items_cancelled_by_fkey"
-            columns: ["cancelled_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "auto_scheduled_items_cancelled_by_fkey";
+            columns: ["cancelled_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "auto_scheduled_items_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
+            foreignKeyName: "auto_scheduled_items_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "auto_scheduled_items_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "auto_scheduled_items_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "auto_scheduled_items_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "auto_scheduling_runs"
-            referencedColumns: ["id"]
+            foreignKeyName: "auto_scheduled_items_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "auto_scheduling_runs";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "auto_scheduled_items_scheduled_call_id_fkey"
-            columns: ["scheduled_call_id"]
-            isOneToOne: false
-            referencedRelation: "scheduled_discharge_calls"
-            referencedColumns: ["id"]
+            foreignKeyName: "auto_scheduled_items_scheduled_call_id_fkey";
+            columns: ["scheduled_call_id"];
+            isOneToOne: false;
+            referencedRelation: "scheduled_discharge_calls";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "auto_scheduled_items_scheduled_email_id_fkey"
-            columns: ["scheduled_email_id"]
-            isOneToOne: false
-            referencedRelation: "scheduled_discharge_emails"
-            referencedColumns: ["id"]
+            foreignKeyName: "auto_scheduled_items_scheduled_email_id_fkey";
+            columns: ["scheduled_email_id"];
+            isOneToOne: false;
+            referencedRelation: "scheduled_discharge_emails";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       auto_scheduling_config: {
         Row: {
-          auto_call_enabled: boolean | null
-          auto_email_enabled: boolean | null
-          call_delay_days: number | null
-          clinic_id: string
-          created_at: string | null
-          email_delay_days: number | null
-          id: string
-          is_enabled: boolean | null
-          preferred_call_time: string | null
-          preferred_email_time: string | null
-          scheduling_criteria: Json | null
-          updated_at: string | null
-        }
+          auto_call_enabled: boolean | null;
+          auto_email_enabled: boolean | null;
+          call_delay_days: number | null;
+          clinic_id: string;
+          created_at: string | null;
+          email_delay_days: number | null;
+          id: string;
+          is_enabled: boolean | null;
+          preferred_call_time: string | null;
+          preferred_email_time: string | null;
+          scheduling_criteria: Json | null;
+          updated_at: string | null;
+        };
         Insert: {
-          auto_call_enabled?: boolean | null
-          auto_email_enabled?: boolean | null
-          call_delay_days?: number | null
-          clinic_id: string
-          created_at?: string | null
-          email_delay_days?: number | null
-          id?: string
-          is_enabled?: boolean | null
-          preferred_call_time?: string | null
-          preferred_email_time?: string | null
-          scheduling_criteria?: Json | null
-          updated_at?: string | null
-        }
+          auto_call_enabled?: boolean | null;
+          auto_email_enabled?: boolean | null;
+          call_delay_days?: number | null;
+          clinic_id: string;
+          created_at?: string | null;
+          email_delay_days?: number | null;
+          id?: string;
+          is_enabled?: boolean | null;
+          preferred_call_time?: string | null;
+          preferred_email_time?: string | null;
+          scheduling_criteria?: Json | null;
+          updated_at?: string | null;
+        };
         Update: {
-          auto_call_enabled?: boolean | null
-          auto_email_enabled?: boolean | null
-          call_delay_days?: number | null
-          clinic_id?: string
-          created_at?: string | null
-          email_delay_days?: number | null
-          id?: string
-          is_enabled?: boolean | null
-          preferred_call_time?: string | null
-          preferred_email_time?: string | null
-          scheduling_criteria?: Json | null
-          updated_at?: string | null
-        }
+          auto_call_enabled?: boolean | null;
+          auto_email_enabled?: boolean | null;
+          call_delay_days?: number | null;
+          clinic_id?: string;
+          created_at?: string | null;
+          email_delay_days?: number | null;
+          id?: string;
+          is_enabled?: boolean | null;
+          preferred_call_time?: string | null;
+          preferred_email_time?: string | null;
+          scheduling_criteria?: Json | null;
+          updated_at?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "auto_scheduling_config_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: true
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "auto_scheduling_config_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: true;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       auto_scheduling_runs: {
         Row: {
-          completed_at: string | null
-          created_at: string | null
-          error_message: string | null
-          id: string
-          results: Json | null
-          started_at: string
-          status: string
-          total_calls_scheduled: number | null
-          total_cases_processed: number | null
-          total_emails_scheduled: number | null
-          total_errors: number | null
-        }
+          completed_at: string | null;
+          created_at: string | null;
+          error_message: string | null;
+          id: string;
+          results: Json | null;
+          started_at: string;
+          status: string;
+          total_calls_scheduled: number | null;
+          total_cases_processed: number | null;
+          total_emails_scheduled: number | null;
+          total_errors: number | null;
+        };
         Insert: {
-          completed_at?: string | null
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          results?: Json | null
-          started_at?: string
-          status?: string
-          total_calls_scheduled?: number | null
-          total_cases_processed?: number | null
-          total_emails_scheduled?: number | null
-          total_errors?: number | null
-        }
+          completed_at?: string | null;
+          created_at?: string | null;
+          error_message?: string | null;
+          id?: string;
+          results?: Json | null;
+          started_at?: string;
+          status?: string;
+          total_calls_scheduled?: number | null;
+          total_cases_processed?: number | null;
+          total_emails_scheduled?: number | null;
+          total_errors?: number | null;
+        };
         Update: {
-          completed_at?: string | null
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          results?: Json | null
-          started_at?: string
-          status?: string
-          total_calls_scheduled?: number | null
-          total_cases_processed?: number | null
-          total_emails_scheduled?: number | null
-          total_errors?: number | null
-        }
-        Relationships: []
-      }
+          completed_at?: string | null;
+          created_at?: string | null;
+          error_message?: string | null;
+          id?: string;
+          results?: Json | null;
+          started_at?: string;
+          status?: string;
+          total_calls_scheduled?: number | null;
+          total_cases_processed?: number | null;
+          total_emails_scheduled?: number | null;
+          total_errors?: number | null;
+        };
+        Relationships: [];
+      };
       call_patients: {
         Row: {
-          clinic_name: string | null
-          clinic_phone: string | null
-          created_at: string
-          discharge_summary: string | null
-          id: string
-          owner_name: string
-          owner_phone: string
-          pet_name: string
-          updated_at: string
-          user_id: string
-          vet_name: string | null
-        }
+          clinic_name: string | null;
+          clinic_phone: string | null;
+          created_at: string;
+          discharge_summary: string | null;
+          id: string;
+          owner_name: string;
+          owner_phone: string;
+          pet_name: string;
+          updated_at: string;
+          user_id: string;
+          vet_name: string | null;
+        };
         Insert: {
-          clinic_name?: string | null
-          clinic_phone?: string | null
-          created_at?: string
-          discharge_summary?: string | null
-          id?: string
-          owner_name: string
-          owner_phone: string
-          pet_name: string
-          updated_at?: string
-          user_id: string
-          vet_name?: string | null
-        }
+          clinic_name?: string | null;
+          clinic_phone?: string | null;
+          created_at?: string;
+          discharge_summary?: string | null;
+          id?: string;
+          owner_name: string;
+          owner_phone: string;
+          pet_name: string;
+          updated_at?: string;
+          user_id: string;
+          vet_name?: string | null;
+        };
         Update: {
-          clinic_name?: string | null
-          clinic_phone?: string | null
-          created_at?: string
-          discharge_summary?: string | null
-          id?: string
-          owner_name?: string
-          owner_phone?: string
-          pet_name?: string
-          updated_at?: string
-          user_id?: string
-          vet_name?: string | null
-        }
-        Relationships: []
-      }
+          clinic_name?: string | null;
+          clinic_phone?: string | null;
+          created_at?: string;
+          discharge_summary?: string | null;
+          id?: string;
+          owner_name?: string;
+          owner_phone?: string;
+          pet_name?: string;
+          updated_at?: string;
+          user_id?: string;
+          vet_name?: string | null;
+        };
+        Relationships: [];
+      };
       canonical_patients: {
         Row: {
-          allergies: string[] | null
-          breed: string | null
-          chronic_conditions: string[] | null
-          client_id: string
-          clinic_id: string
-          color: string | null
-          created_at: string
-          date_of_birth: string | null
-          deceased_at: string | null
-          first_visit_at: string | null
-          id: string
-          is_active: boolean
-          is_deceased: boolean | null
-          last_visit_at: string | null
-          metadata: Json | null
-          microchip_id: string | null
-          name: string
-          sex: string | null
-          species: string | null
-          updated_at: string
-          visit_count: number | null
-        }
+          allergies: string[] | null;
+          breed: string | null;
+          chronic_conditions: string[] | null;
+          client_id: string;
+          clinic_id: string;
+          color: string | null;
+          created_at: string;
+          date_of_birth: string | null;
+          deceased_at: string | null;
+          first_visit_at: string | null;
+          id: string;
+          is_active: boolean;
+          is_deceased: boolean | null;
+          last_visit_at: string | null;
+          metadata: Json | null;
+          microchip_id: string | null;
+          name: string;
+          sex: string | null;
+          species: string | null;
+          updated_at: string;
+          visit_count: number | null;
+        };
         Insert: {
-          allergies?: string[] | null
-          breed?: string | null
-          chronic_conditions?: string[] | null
-          client_id: string
-          clinic_id: string
-          color?: string | null
-          created_at?: string
-          date_of_birth?: string | null
-          deceased_at?: string | null
-          first_visit_at?: string | null
-          id?: string
-          is_active?: boolean
-          is_deceased?: boolean | null
-          last_visit_at?: string | null
-          metadata?: Json | null
-          microchip_id?: string | null
-          name: string
-          sex?: string | null
-          species?: string | null
-          updated_at?: string
-          visit_count?: number | null
-        }
+          allergies?: string[] | null;
+          breed?: string | null;
+          chronic_conditions?: string[] | null;
+          client_id: string;
+          clinic_id: string;
+          color?: string | null;
+          created_at?: string;
+          date_of_birth?: string | null;
+          deceased_at?: string | null;
+          first_visit_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          is_deceased?: boolean | null;
+          last_visit_at?: string | null;
+          metadata?: Json | null;
+          microchip_id?: string | null;
+          name: string;
+          sex?: string | null;
+          species?: string | null;
+          updated_at?: string;
+          visit_count?: number | null;
+        };
         Update: {
-          allergies?: string[] | null
-          breed?: string | null
-          chronic_conditions?: string[] | null
-          client_id?: string
-          clinic_id?: string
-          color?: string | null
-          created_at?: string
-          date_of_birth?: string | null
-          deceased_at?: string | null
-          first_visit_at?: string | null
-          id?: string
-          is_active?: boolean
-          is_deceased?: boolean | null
-          last_visit_at?: string | null
-          metadata?: Json | null
-          microchip_id?: string | null
-          name?: string
-          sex?: string | null
-          species?: string | null
-          updated_at?: string
-          visit_count?: number | null
-        }
+          allergies?: string[] | null;
+          breed?: string | null;
+          chronic_conditions?: string[] | null;
+          client_id?: string;
+          clinic_id?: string;
+          color?: string | null;
+          created_at?: string;
+          date_of_birth?: string | null;
+          deceased_at?: string | null;
+          first_visit_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          is_deceased?: boolean | null;
+          last_visit_at?: string | null;
+          metadata?: Json | null;
+          microchip_id?: string | null;
+          name?: string;
+          sex?: string | null;
+          species?: string | null;
+          updated_at?: string;
+          visit_count?: number | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "canonical_patients_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
+            foreignKeyName: "canonical_patients_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "canonical_patients_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "canonical_patients_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       case_sync_audits: {
         Row: {
-          appointments_found: number
-          cases_created: number
-          cases_deleted: number
-          cases_skipped: number
-          cases_updated: number
-          clinic_id: string
-          created_at: string
-          error_message: string | null
-          id: string
-          last_progress_update: string | null
-          processed_items: number | null
-          progress_percentage: number | null
-          status: string
-          sync_type: string
-          total_items: number | null
-          updated_at: string
-        }
+          appointments_found: number;
+          cases_created: number;
+          cases_deleted: number;
+          cases_skipped: number;
+          cases_updated: number;
+          clinic_id: string;
+          created_at: string;
+          error_message: string | null;
+          id: string;
+          last_progress_update: string | null;
+          processed_items: number | null;
+          progress_percentage: number | null;
+          status: string;
+          sync_type: string;
+          total_items: number | null;
+          updated_at: string;
+        };
         Insert: {
-          appointments_found?: number
-          cases_created?: number
-          cases_deleted?: number
-          cases_skipped?: number
-          cases_updated?: number
-          clinic_id: string
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          last_progress_update?: string | null
-          processed_items?: number | null
-          progress_percentage?: number | null
-          status?: string
-          sync_type: string
-          total_items?: number | null
-          updated_at?: string
-        }
+          appointments_found?: number;
+          cases_created?: number;
+          cases_deleted?: number;
+          cases_skipped?: number;
+          cases_updated?: number;
+          clinic_id: string;
+          created_at?: string;
+          error_message?: string | null;
+          id?: string;
+          last_progress_update?: string | null;
+          processed_items?: number | null;
+          progress_percentage?: number | null;
+          status?: string;
+          sync_type: string;
+          total_items?: number | null;
+          updated_at?: string;
+        };
         Update: {
-          appointments_found?: number
-          cases_created?: number
-          cases_deleted?: number
-          cases_skipped?: number
-          cases_updated?: number
-          clinic_id?: string
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          last_progress_update?: string | null
-          processed_items?: number | null
-          progress_percentage?: number | null
-          status?: string
-          sync_type?: string
-          total_items?: number | null
-          updated_at?: string
-        }
+          appointments_found?: number;
+          cases_created?: number;
+          cases_deleted?: number;
+          cases_skipped?: number;
+          cases_updated?: number;
+          clinic_id?: string;
+          created_at?: string;
+          error_message?: string | null;
+          id?: string;
+          last_progress_update?: string | null;
+          processed_items?: number | null;
+          progress_percentage?: number | null;
+          status?: string;
+          sync_type?: string;
+          total_items?: number | null;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "case_sync_audits_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "case_sync_audits_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       cases: {
         Row: {
-          auto_scheduled_at: string | null
-          cadence_source: string | null
-          call_delay_days: number | null
-          call_enabled: boolean | null
-          canonical_patient_id: string | null
-          clinic_id: string | null
-          created_at: string | null
-          created_by: string | null
-          detected_case_type: string | null
-          email_delay_days: number | null
-          email_enabled: boolean | null
-          entity_extraction: Json | null
-          external_id: string | null
-          extreme_case_check: Json | null
-          id: string
-          is_starred: boolean | null
-          is_urgent: boolean | null
-          metadata: Json | null
-          scheduled_at: string | null
-          scheduling_source: string | null
-          source: string | null
-          status: Database["public"]["Enums"]["CaseStatus"] | null
-          type: Database["public"]["Enums"]["CaseType"] | null
-          updated_at: string | null
-          updated_by: string | null
-          user_id: string | null
-          visibility: Database["public"]["Enums"]["CaseVisibility"]
-        }
+          auto_scheduled_at: string | null;
+          cadence_source: string | null;
+          call_delay_days: number | null;
+          call_enabled: boolean | null;
+          canonical_patient_id: string | null;
+          clinic_id: string | null;
+          created_at: string | null;
+          created_by: string | null;
+          detected_case_type: string | null;
+          email_delay_days: number | null;
+          email_enabled: boolean | null;
+          entity_extraction: Json | null;
+          external_id: string | null;
+          extreme_case_check: Json | null;
+          id: string;
+          is_starred: boolean | null;
+          is_urgent: boolean | null;
+          metadata: Json | null;
+          scheduled_at: string | null;
+          scheduling_source: string | null;
+          source: string | null;
+          status: Database["public"]["Enums"]["CaseStatus"] | null;
+          type: Database["public"]["Enums"]["CaseType"] | null;
+          updated_at: string | null;
+          updated_by: string | null;
+          user_id: string | null;
+          visibility: Database["public"]["Enums"]["CaseVisibility"];
+        };
         Insert: {
-          auto_scheduled_at?: string | null
-          cadence_source?: string | null
-          call_delay_days?: number | null
-          call_enabled?: boolean | null
-          canonical_patient_id?: string | null
-          clinic_id?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          detected_case_type?: string | null
-          email_delay_days?: number | null
-          email_enabled?: boolean | null
-          entity_extraction?: Json | null
-          external_id?: string | null
-          extreme_case_check?: Json | null
-          id?: string
-          is_starred?: boolean | null
-          is_urgent?: boolean | null
-          metadata?: Json | null
-          scheduled_at?: string | null
-          scheduling_source?: string | null
-          source?: string | null
-          status?: Database["public"]["Enums"]["CaseStatus"] | null
-          type?: Database["public"]["Enums"]["CaseType"] | null
-          updated_at?: string | null
-          updated_by?: string | null
-          user_id?: string | null
-          visibility?: Database["public"]["Enums"]["CaseVisibility"]
-        }
+          auto_scheduled_at?: string | null;
+          cadence_source?: string | null;
+          call_delay_days?: number | null;
+          call_enabled?: boolean | null;
+          canonical_patient_id?: string | null;
+          clinic_id?: string | null;
+          created_at?: string | null;
+          created_by?: string | null;
+          detected_case_type?: string | null;
+          email_delay_days?: number | null;
+          email_enabled?: boolean | null;
+          entity_extraction?: Json | null;
+          external_id?: string | null;
+          extreme_case_check?: Json | null;
+          id?: string;
+          is_starred?: boolean | null;
+          is_urgent?: boolean | null;
+          metadata?: Json | null;
+          scheduled_at?: string | null;
+          scheduling_source?: string | null;
+          source?: string | null;
+          status?: Database["public"]["Enums"]["CaseStatus"] | null;
+          type?: Database["public"]["Enums"]["CaseType"] | null;
+          updated_at?: string | null;
+          updated_by?: string | null;
+          user_id?: string | null;
+          visibility?: Database["public"]["Enums"]["CaseVisibility"];
+        };
         Update: {
-          auto_scheduled_at?: string | null
-          cadence_source?: string | null
-          call_delay_days?: number | null
-          call_enabled?: boolean | null
-          canonical_patient_id?: string | null
-          clinic_id?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          detected_case_type?: string | null
-          email_delay_days?: number | null
-          email_enabled?: boolean | null
-          entity_extraction?: Json | null
-          external_id?: string | null
-          extreme_case_check?: Json | null
-          id?: string
-          is_starred?: boolean | null
-          is_urgent?: boolean | null
-          metadata?: Json | null
-          scheduled_at?: string | null
-          scheduling_source?: string | null
-          source?: string | null
-          status?: Database["public"]["Enums"]["CaseStatus"] | null
-          type?: Database["public"]["Enums"]["CaseType"] | null
-          updated_at?: string | null
-          updated_by?: string | null
-          user_id?: string | null
-          visibility?: Database["public"]["Enums"]["CaseVisibility"]
-        }
+          auto_scheduled_at?: string | null;
+          cadence_source?: string | null;
+          call_delay_days?: number | null;
+          call_enabled?: boolean | null;
+          canonical_patient_id?: string | null;
+          clinic_id?: string | null;
+          created_at?: string | null;
+          created_by?: string | null;
+          detected_case_type?: string | null;
+          email_delay_days?: number | null;
+          email_enabled?: boolean | null;
+          entity_extraction?: Json | null;
+          external_id?: string | null;
+          extreme_case_check?: Json | null;
+          id?: string;
+          is_starred?: boolean | null;
+          is_urgent?: boolean | null;
+          metadata?: Json | null;
+          scheduled_at?: string | null;
+          scheduling_source?: string | null;
+          source?: string | null;
+          status?: Database["public"]["Enums"]["CaseStatus"] | null;
+          type?: Database["public"]["Enums"]["CaseType"] | null;
+          updated_at?: string | null;
+          updated_by?: string | null;
+          user_id?: string | null;
+          visibility?: Database["public"]["Enums"]["CaseVisibility"];
+        };
         Relationships: [
           {
-            foreignKeyName: "cases_canonical_patient_id_fkey"
-            columns: ["canonical_patient_id"]
-            isOneToOne: false
-            referencedRelation: "canonical_patients"
-            referencedColumns: ["id"]
+            foreignKeyName: "cases_canonical_patient_id_fkey";
+            columns: ["canonical_patient_id"];
+            isOneToOne: false;
+            referencedRelation: "canonical_patients";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "cases_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "cases_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "cases_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "cases_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       clients: {
         Row: {
-          address_line1: string | null
-          address_line2: string | null
-          city: string | null
-          clinic_id: string
-          communication_opt_out: boolean | null
-          country: string | null
-          created_at: string
-          display_name: string
-          email: string | null
-          first_name: string | null
-          first_visit_at: string | null
-          id: string
-          is_active: boolean
-          last_name: string | null
-          last_visit_at: string | null
-          metadata: Json | null
-          phone: string | null
-          phone_secondary: string | null
-          postal_code: string | null
-          preferred_contact_method: string | null
-          state: string | null
-          updated_at: string
-        }
+          address_line1: string | null;
+          address_line2: string | null;
+          city: string | null;
+          clinic_id: string;
+          communication_opt_out: boolean | null;
+          country: string | null;
+          created_at: string;
+          display_name: string;
+          email: string | null;
+          first_name: string | null;
+          first_visit_at: string | null;
+          id: string;
+          is_active: boolean;
+          last_name: string | null;
+          last_visit_at: string | null;
+          metadata: Json | null;
+          phone: string | null;
+          phone_secondary: string | null;
+          postal_code: string | null;
+          preferred_contact_method: string | null;
+          state: string | null;
+          updated_at: string;
+        };
         Insert: {
-          address_line1?: string | null
-          address_line2?: string | null
-          city?: string | null
-          clinic_id: string
-          communication_opt_out?: boolean | null
-          country?: string | null
-          created_at?: string
-          display_name: string
-          email?: string | null
-          first_name?: string | null
-          first_visit_at?: string | null
-          id?: string
-          is_active?: boolean
-          last_name?: string | null
-          last_visit_at?: string | null
-          metadata?: Json | null
-          phone?: string | null
-          phone_secondary?: string | null
-          postal_code?: string | null
-          preferred_contact_method?: string | null
-          state?: string | null
-          updated_at?: string
-        }
+          address_line1?: string | null;
+          address_line2?: string | null;
+          city?: string | null;
+          clinic_id: string;
+          communication_opt_out?: boolean | null;
+          country?: string | null;
+          created_at?: string;
+          display_name: string;
+          email?: string | null;
+          first_name?: string | null;
+          first_visit_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          last_name?: string | null;
+          last_visit_at?: string | null;
+          metadata?: Json | null;
+          phone?: string | null;
+          phone_secondary?: string | null;
+          postal_code?: string | null;
+          preferred_contact_method?: string | null;
+          state?: string | null;
+          updated_at?: string;
+        };
         Update: {
-          address_line1?: string | null
-          address_line2?: string | null
-          city?: string | null
-          clinic_id?: string
-          communication_opt_out?: boolean | null
-          country?: string | null
-          created_at?: string
-          display_name?: string
-          email?: string | null
-          first_name?: string | null
-          first_visit_at?: string | null
-          id?: string
-          is_active?: boolean
-          last_name?: string | null
-          last_visit_at?: string | null
-          metadata?: Json | null
-          phone?: string | null
-          phone_secondary?: string | null
-          postal_code?: string | null
-          preferred_contact_method?: string | null
-          state?: string | null
-          updated_at?: string
-        }
+          address_line1?: string | null;
+          address_line2?: string | null;
+          city?: string | null;
+          clinic_id?: string;
+          communication_opt_out?: boolean | null;
+          country?: string | null;
+          created_at?: string;
+          display_name?: string;
+          email?: string | null;
+          first_name?: string | null;
+          first_visit_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          last_name?: string | null;
+          last_visit_at?: string | null;
+          metadata?: Json | null;
+          phone?: string | null;
+          phone_secondary?: string | null;
+          postal_code?: string | null;
+          preferred_contact_method?: string | null;
+          state?: string | null;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "clients_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "clients_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       clinic_api_keys: {
         Row: {
-          created_at: string
-          expires_at: string | null
-          id: string
-          is_active: boolean
-          key_hash: string
-          key_prefix: string
-          last_used_at: string | null
-          name: string
-          permissions: Json | null
-          updated_at: string
-          user_id: string
-        }
+          created_at: string;
+          expires_at: string | null;
+          id: string;
+          is_active: boolean;
+          key_hash: string;
+          key_prefix: string;
+          last_used_at: string | null;
+          name: string;
+          permissions: Json | null;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          is_active?: boolean
-          key_hash: string
-          key_prefix: string
-          last_used_at?: string | null
-          name: string
-          permissions?: Json | null
-          updated_at?: string
-          user_id: string
-        }
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          key_hash: string;
+          key_prefix: string;
+          last_used_at?: string | null;
+          name: string;
+          permissions?: Json | null;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          is_active?: boolean
-          key_hash?: string
-          key_prefix?: string
-          last_used_at?: string | null
-          name?: string
-          permissions?: Json | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          key_hash?: string;
+          key_prefix?: string;
+          last_used_at?: string | null;
+          name?: string;
+          permissions?: Json | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       clinic_assistants: {
         Row: {
-          assistant_id: string
-          clinic_name: string
-          created_at: string
-          id: string
-          is_active: boolean
-          phone_number_id: string | null
-          updated_at: string
-        }
+          assistant_id: string;
+          clinic_name: string;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          phone_number_id: string | null;
+          updated_at: string;
+        };
         Insert: {
-          assistant_id: string
-          clinic_name: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          phone_number_id?: string | null
-          updated_at?: string
-        }
+          assistant_id: string;
+          clinic_name: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          phone_number_id?: string | null;
+          updated_at?: string;
+        };
         Update: {
-          assistant_id?: string
-          clinic_name?: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          phone_number_id?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          assistant_id?: string;
+          clinic_name?: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          phone_number_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       clinic_blocked_periods: {
         Row: {
-          clinic_id: string
-          created_at: string
-          days_of_week: number[]
-          end_time: string
-          id: string
-          is_active: boolean
-          name: string
-          start_time: string
-          updated_at: string
-        }
+          clinic_id: string;
+          created_at: string;
+          days_of_week: number[];
+          end_time: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          start_time: string;
+          updated_at: string;
+        };
         Insert: {
-          clinic_id: string
-          created_at?: string
-          days_of_week?: number[]
-          end_time: string
-          id?: string
-          is_active?: boolean
-          name: string
-          start_time: string
-          updated_at?: string
-        }
+          clinic_id: string;
+          created_at?: string;
+          days_of_week?: number[];
+          end_time: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          start_time: string;
+          updated_at?: string;
+        };
         Update: {
-          clinic_id?: string
-          created_at?: string
-          days_of_week?: number[]
-          end_time?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          start_time?: string
-          updated_at?: string
-        }
+          clinic_id?: string;
+          created_at?: string;
+          days_of_week?: number[];
+          end_time?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          start_time?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "clinic_blocked_periods_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "clinic_blocked_periods_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       clinic_case_type_cadence: {
         Row: {
-          auto_schedule_call: boolean | null
-          auto_schedule_email: boolean | null
-          call_delay_days: number | null
-          case_type: string
-          clinic_id: string
-          created_at: string | null
-          email_delay_days: number | null
-          id: string
-          never_auto_schedule: boolean | null
-          preferred_call_time: string | null
-          preferred_email_time: string | null
-          updated_at: string | null
-        }
+          auto_schedule_call: boolean | null;
+          auto_schedule_email: boolean | null;
+          call_delay_days: number | null;
+          case_type: string;
+          clinic_id: string;
+          created_at: string | null;
+          email_delay_days: number | null;
+          id: string;
+          never_auto_schedule: boolean | null;
+          preferred_call_time: string | null;
+          preferred_email_time: string | null;
+          updated_at: string | null;
+        };
         Insert: {
-          auto_schedule_call?: boolean | null
-          auto_schedule_email?: boolean | null
-          call_delay_days?: number | null
-          case_type: string
-          clinic_id: string
-          created_at?: string | null
-          email_delay_days?: number | null
-          id?: string
-          never_auto_schedule?: boolean | null
-          preferred_call_time?: string | null
-          preferred_email_time?: string | null
-          updated_at?: string | null
-        }
+          auto_schedule_call?: boolean | null;
+          auto_schedule_email?: boolean | null;
+          call_delay_days?: number | null;
+          case_type: string;
+          clinic_id: string;
+          created_at?: string | null;
+          email_delay_days?: number | null;
+          id?: string;
+          never_auto_schedule?: boolean | null;
+          preferred_call_time?: string | null;
+          preferred_email_time?: string | null;
+          updated_at?: string | null;
+        };
         Update: {
-          auto_schedule_call?: boolean | null
-          auto_schedule_email?: boolean | null
-          call_delay_days?: number | null
-          case_type?: string
-          clinic_id?: string
-          created_at?: string | null
-          email_delay_days?: number | null
-          id?: string
-          never_auto_schedule?: boolean | null
-          preferred_call_time?: string | null
-          preferred_email_time?: string | null
-          updated_at?: string | null
-        }
+          auto_schedule_call?: boolean | null;
+          auto_schedule_email?: boolean | null;
+          call_delay_days?: number | null;
+          case_type?: string;
+          clinic_id?: string;
+          created_at?: string | null;
+          email_delay_days?: number | null;
+          id?: string;
+          never_auto_schedule?: boolean | null;
+          preferred_call_time?: string | null;
+          preferred_email_time?: string | null;
+          updated_at?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "clinic_case_type_cadence_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "clinic_case_type_cadence_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       clinic_invitations: {
         Row: {
-          accepted_at: string | null
-          accepted_by: string | null
-          clinic_id: string
-          created_at: string
-          email: string
-          expires_at: string
-          id: string
-          invited_by: string
-          role: string
-          status: string
-          token: string
-        }
+          accepted_at: string | null;
+          accepted_by: string | null;
+          clinic_id: string;
+          created_at: string;
+          email: string;
+          expires_at: string;
+          id: string;
+          invited_by: string;
+          role: string;
+          status: string;
+          token: string;
+        };
         Insert: {
-          accepted_at?: string | null
-          accepted_by?: string | null
-          clinic_id: string
-          created_at?: string
-          email: string
-          expires_at?: string
-          id?: string
-          invited_by: string
-          role?: string
-          status?: string
-          token?: string
-        }
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          clinic_id: string;
+          created_at?: string;
+          email: string;
+          expires_at?: string;
+          id?: string;
+          invited_by: string;
+          role?: string;
+          status?: string;
+          token?: string;
+        };
         Update: {
-          accepted_at?: string | null
-          accepted_by?: string | null
-          clinic_id?: string
-          created_at?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          invited_by?: string
-          role?: string
-          status?: string
-          token?: string
-        }
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          clinic_id?: string;
+          created_at?: string;
+          email?: string;
+          expires_at?: string;
+          id?: string;
+          invited_by?: string;
+          role?: string;
+          status?: string;
+          token?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "clinic_invitations_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "clinic_invitations_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       clinic_messages: {
         Row: {
-          assigned_to_user_id: string | null
-          caller_name: string | null
-          caller_phone: string
-          clinic_id: string
-          created_at: string
-          id: string
-          message_content: string
-          message_type: string
-          metadata: Json | null
-          priority: string | null
-          read_at: string | null
-          status: string
-          triage_data: Json | null
-          updated_at: string
-          vapi_call_id: string | null
-        }
+          assigned_to_user_id: string | null;
+          caller_name: string | null;
+          caller_phone: string;
+          clinic_id: string;
+          created_at: string;
+          id: string;
+          message_content: string;
+          message_type: string;
+          metadata: Json | null;
+          priority: string | null;
+          read_at: string | null;
+          status: string;
+          triage_data: Json | null;
+          updated_at: string;
+          vapi_call_id: string | null;
+        };
         Insert: {
-          assigned_to_user_id?: string | null
-          caller_name?: string | null
-          caller_phone: string
-          clinic_id: string
-          created_at?: string
-          id?: string
-          message_content: string
-          message_type?: string
-          metadata?: Json | null
-          priority?: string | null
-          read_at?: string | null
-          status?: string
-          triage_data?: Json | null
-          updated_at?: string
-          vapi_call_id?: string | null
-        }
+          assigned_to_user_id?: string | null;
+          caller_name?: string | null;
+          caller_phone: string;
+          clinic_id: string;
+          created_at?: string;
+          id?: string;
+          message_content: string;
+          message_type?: string;
+          metadata?: Json | null;
+          priority?: string | null;
+          read_at?: string | null;
+          status?: string;
+          triage_data?: Json | null;
+          updated_at?: string;
+          vapi_call_id?: string | null;
+        };
         Update: {
-          assigned_to_user_id?: string | null
-          caller_name?: string | null
-          caller_phone?: string
-          clinic_id?: string
-          created_at?: string
-          id?: string
-          message_content?: string
-          message_type?: string
-          metadata?: Json | null
-          priority?: string | null
-          read_at?: string | null
-          status?: string
-          triage_data?: Json | null
-          updated_at?: string
-          vapi_call_id?: string | null
-        }
+          assigned_to_user_id?: string | null;
+          caller_name?: string | null;
+          caller_phone?: string;
+          clinic_id?: string;
+          created_at?: string;
+          id?: string;
+          message_content?: string;
+          message_type?: string;
+          metadata?: Json | null;
+          priority?: string | null;
+          read_at?: string | null;
+          status?: string;
+          triage_data?: Json | null;
+          updated_at?: string;
+          vapi_call_id?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "clinic_messages_assigned_to_user_id_fkey"
-            columns: ["assigned_to_user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "clinic_messages_assigned_to_user_id_fkey";
+            columns: ["assigned_to_user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "clinic_messages_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "clinic_messages_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       clinic_schedule_config: {
         Row: {
-          clinic_id: string
-          close_time: string
-          created_at: string
-          daily_hours: Json | null
-          days_of_week: number[]
-          default_capacity: number
-          id: string
-          idexx_config_snapshot: Json | null
-          open_time: string
-          slot_duration_minutes: number
-          stale_threshold_minutes: number
-          sync_horizon_days: number
-          sync_schedules: Json | null
-          target_room_id: string | null
-          target_room_name: string | null
-          timezone: string
-          updated_at: string
-          vapi_availability_end_time: string | null
-          vapi_availability_start_time: string | null
-        }
+          clinic_id: string;
+          close_time: string;
+          created_at: string;
+          daily_hours: Json | null;
+          days_of_week: number[];
+          default_capacity: number;
+          id: string;
+          idexx_config_snapshot: Json | null;
+          open_time: string;
+          slot_duration_minutes: number;
+          stale_threshold_minutes: number;
+          sync_horizon_days: number;
+          sync_schedules: Json | null;
+          target_room_id: string | null;
+          target_room_name: string | null;
+          timezone: string;
+          updated_at: string;
+          vapi_availability_end_time: string | null;
+          vapi_availability_start_time: string | null;
+        };
         Insert: {
-          clinic_id: string
-          close_time?: string
-          created_at?: string
-          daily_hours?: Json | null
-          days_of_week?: number[]
-          default_capacity?: number
-          id?: string
-          idexx_config_snapshot?: Json | null
-          open_time?: string
-          slot_duration_minutes?: number
-          stale_threshold_minutes?: number
-          sync_horizon_days?: number
-          sync_schedules?: Json | null
-          target_room_id?: string | null
-          target_room_name?: string | null
-          timezone?: string
-          updated_at?: string
-          vapi_availability_end_time?: string | null
-          vapi_availability_start_time?: string | null
-        }
+          clinic_id: string;
+          close_time?: string;
+          created_at?: string;
+          daily_hours?: Json | null;
+          days_of_week?: number[];
+          default_capacity?: number;
+          id?: string;
+          idexx_config_snapshot?: Json | null;
+          open_time?: string;
+          slot_duration_minutes?: number;
+          stale_threshold_minutes?: number;
+          sync_horizon_days?: number;
+          sync_schedules?: Json | null;
+          target_room_id?: string | null;
+          target_room_name?: string | null;
+          timezone?: string;
+          updated_at?: string;
+          vapi_availability_end_time?: string | null;
+          vapi_availability_start_time?: string | null;
+        };
         Update: {
-          clinic_id?: string
-          close_time?: string
-          created_at?: string
-          daily_hours?: Json | null
-          days_of_week?: number[]
-          default_capacity?: number
-          id?: string
-          idexx_config_snapshot?: Json | null
-          open_time?: string
-          slot_duration_minutes?: number
-          stale_threshold_minutes?: number
-          sync_horizon_days?: number
-          sync_schedules?: Json | null
-          target_room_id?: string | null
-          target_room_name?: string | null
-          timezone?: string
-          updated_at?: string
-          vapi_availability_end_time?: string | null
-          vapi_availability_start_time?: string | null
-        }
+          clinic_id?: string;
+          close_time?: string;
+          created_at?: string;
+          daily_hours?: Json | null;
+          days_of_week?: number[];
+          default_capacity?: number;
+          id?: string;
+          idexx_config_snapshot?: Json | null;
+          open_time?: string;
+          slot_duration_minutes?: number;
+          stale_threshold_minutes?: number;
+          sync_horizon_days?: number;
+          sync_schedules?: Json | null;
+          target_room_id?: string | null;
+          target_room_name?: string | null;
+          timezone?: string;
+          updated_at?: string;
+          vapi_availability_end_time?: string | null;
+          vapi_availability_start_time?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "clinic_schedule_config_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: true
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "clinic_schedule_config_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: true;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       clinics: {
         Row: {
-          address: string | null
-          address_config: Json | null
-          business_hours: Json | null
-          clerk_org_id: string | null
-          created_at: string
-          current_period_end: string | null
-          current_period_start: string | null
-          email: string | null
-          email_footer_text: string | null
-          email_header_text: string | null
-          er_config: Json | null
-          id: string
-          inbound_assistant_id: string | null
-          inbound_phone_number_id: string | null
-          is_active: boolean
-          logo_url: string | null
-          name: string
-          outbound_assistant_id: string | null
-          outbound_phone_number_id: string | null
-          phone: string | null
-          pims_type: string
-          primary_color: string | null
-          slug: string
-          stripe_customer_id: string | null
-          stripe_subscription_id: string | null
-          subscription_status: string | null
-          subscription_tier: string | null
-          timezone: string | null
-          updated_at: string
-        }
+          address: string | null;
+          address_config: Json | null;
+          business_hours: Json | null;
+          clerk_org_id: string | null;
+          created_at: string;
+          current_period_end: string | null;
+          current_period_start: string | null;
+          email: string | null;
+          email_footer_text: string | null;
+          email_header_text: string | null;
+          er_config: Json | null;
+          id: string;
+          inbound_assistant_id: string | null;
+          inbound_phone_number_id: string | null;
+          is_active: boolean;
+          logo_url: string | null;
+          name: string;
+          outbound_assistant_id: string | null;
+          outbound_phone_number_id: string | null;
+          phone: string | null;
+          pims_type: string;
+          primary_color: string | null;
+          slug: string;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          subscription_status: string | null;
+          subscription_tier: string | null;
+          timezone: string | null;
+          updated_at: string;
+        };
         Insert: {
-          address?: string | null
-          address_config?: Json | null
-          business_hours?: Json | null
-          clerk_org_id?: string | null
-          created_at?: string
-          current_period_end?: string | null
-          current_period_start?: string | null
-          email?: string | null
-          email_footer_text?: string | null
-          email_header_text?: string | null
-          er_config?: Json | null
-          id?: string
-          inbound_assistant_id?: string | null
-          inbound_phone_number_id?: string | null
-          is_active?: boolean
-          logo_url?: string | null
-          name: string
-          outbound_assistant_id?: string | null
-          outbound_phone_number_id?: string | null
-          phone?: string | null
-          pims_type?: string
-          primary_color?: string | null
-          slug: string
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          subscription_status?: string | null
-          subscription_tier?: string | null
-          timezone?: string | null
-          updated_at?: string
-        }
+          address?: string | null;
+          address_config?: Json | null;
+          business_hours?: Json | null;
+          clerk_org_id?: string | null;
+          created_at?: string;
+          current_period_end?: string | null;
+          current_period_start?: string | null;
+          email?: string | null;
+          email_footer_text?: string | null;
+          email_header_text?: string | null;
+          er_config?: Json | null;
+          id?: string;
+          inbound_assistant_id?: string | null;
+          inbound_phone_number_id?: string | null;
+          is_active?: boolean;
+          logo_url?: string | null;
+          name: string;
+          outbound_assistant_id?: string | null;
+          outbound_phone_number_id?: string | null;
+          phone?: string | null;
+          pims_type?: string;
+          primary_color?: string | null;
+          slug: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          subscription_status?: string | null;
+          subscription_tier?: string | null;
+          timezone?: string | null;
+          updated_at?: string;
+        };
         Update: {
-          address?: string | null
-          address_config?: Json | null
-          business_hours?: Json | null
-          clerk_org_id?: string | null
-          created_at?: string
-          current_period_end?: string | null
-          current_period_start?: string | null
-          email?: string | null
-          email_footer_text?: string | null
-          email_header_text?: string | null
-          er_config?: Json | null
-          id?: string
-          inbound_assistant_id?: string | null
-          inbound_phone_number_id?: string | null
-          is_active?: boolean
-          logo_url?: string | null
-          name?: string
-          outbound_assistant_id?: string | null
-          outbound_phone_number_id?: string | null
-          phone?: string | null
-          pims_type?: string
-          primary_color?: string | null
-          slug?: string
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          subscription_status?: string | null
-          subscription_tier?: string | null
-          timezone?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          address?: string | null;
+          address_config?: Json | null;
+          business_hours?: Json | null;
+          clerk_org_id?: string | null;
+          created_at?: string;
+          current_period_end?: string | null;
+          current_period_start?: string | null;
+          email?: string | null;
+          email_footer_text?: string | null;
+          email_header_text?: string | null;
+          er_config?: Json | null;
+          id?: string;
+          inbound_assistant_id?: string | null;
+          inbound_phone_number_id?: string | null;
+          is_active?: boolean;
+          logo_url?: string | null;
+          name?: string;
+          outbound_assistant_id?: string | null;
+          outbound_phone_number_id?: string | null;
+          phone?: string | null;
+          pims_type?: string;
+          primary_color?: string | null;
+          slug?: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          subscription_status?: string | null;
+          subscription_tier?: string | null;
+          timezone?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       consultation_sync_status: {
         Row: {
-          case_id: string | null
-          created_at: string
-          error_message: string | null
-          id: string
-          metadata: Json | null
-          neo_consultation_id: string
-          reconciled_at: string | null
-          status: string
-          sync_session_id: string
-          synced_at: string | null
-          updated_at: string
-        }
+          case_id: string | null;
+          created_at: string;
+          error_message: string | null;
+          id: string;
+          metadata: Json | null;
+          neo_consultation_id: string;
+          reconciled_at: string | null;
+          status: string;
+          sync_session_id: string;
+          synced_at: string | null;
+          updated_at: string;
+        };
         Insert: {
-          case_id?: string | null
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          metadata?: Json | null
-          neo_consultation_id: string
-          reconciled_at?: string | null
-          status?: string
-          sync_session_id: string
-          synced_at?: string | null
-          updated_at?: string
-        }
+          case_id?: string | null;
+          created_at?: string;
+          error_message?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          neo_consultation_id: string;
+          reconciled_at?: string | null;
+          status?: string;
+          sync_session_id: string;
+          synced_at?: string | null;
+          updated_at?: string;
+        };
         Update: {
-          case_id?: string | null
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          metadata?: Json | null
-          neo_consultation_id?: string
-          reconciled_at?: string | null
-          status?: string
-          sync_session_id?: string
-          synced_at?: string | null
-          updated_at?: string
-        }
+          case_id?: string | null;
+          created_at?: string;
+          error_message?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          neo_consultation_id?: string;
+          reconciled_at?: string | null;
+          status?: string;
+          sync_session_id?: string;
+          synced_at?: string | null;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "consultation_sync_status_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
+            foreignKeyName: "consultation_sync_status_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "consultation_sync_status_sync_session_id_fkey"
-            columns: ["sync_session_id"]
-            isOneToOne: false
-            referencedRelation: "idexx_sync_sessions"
-            referencedColumns: ["id"]
+            foreignKeyName: "consultation_sync_status_sync_session_id_fkey";
+            columns: ["sync_session_id"];
+            isOneToOne: false;
+            referencedRelation: "idexx_sync_sessions";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       contact_submissions: {
         Row: {
-          clinic_name: string | null
-          created_at: string | null
-          email: string
-          first_name: string
-          id: string
-          last_name: string
-          message: string
-          metadata: Json | null
-          phone: string | null
-          source: string | null
-        }
+          clinic_name: string | null;
+          created_at: string | null;
+          email: string;
+          first_name: string;
+          id: string;
+          last_name: string;
+          message: string;
+          metadata: Json | null;
+          phone: string | null;
+          source: string | null;
+        };
         Insert: {
-          clinic_name?: string | null
-          created_at?: string | null
-          email: string
-          first_name: string
-          id?: string
-          last_name: string
-          message: string
-          metadata?: Json | null
-          phone?: string | null
-          source?: string | null
-        }
+          clinic_name?: string | null;
+          created_at?: string | null;
+          email: string;
+          first_name: string;
+          id?: string;
+          last_name: string;
+          message: string;
+          metadata?: Json | null;
+          phone?: string | null;
+          source?: string | null;
+        };
         Update: {
-          clinic_name?: string | null
-          created_at?: string | null
-          email?: string
-          first_name?: string
-          id?: string
-          last_name?: string
-          message?: string
-          metadata?: Json | null
-          phone?: string | null
-          source?: string | null
-        }
-        Relationships: []
-      }
+          clinic_name?: string | null;
+          created_at?: string | null;
+          email?: string;
+          first_name?: string;
+          id?: string;
+          last_name?: string;
+          message?: string;
+          metadata?: Json | null;
+          phone?: string | null;
+          source?: string | null;
+        };
+        Relationships: [];
+      };
       discharge_batch_items: {
         Row: {
-          batch_id: string
-          call_id: string | null
-          call_scheduled: boolean | null
-          case_id: string | null
-          created_at: string | null
-          email_id: string | null
-          email_scheduled: boolean | null
-          error_message: string | null
-          id: string
-          patient_id: string | null
-          processed_at: string | null
-          status: string
-        }
+          batch_id: string;
+          call_id: string | null;
+          call_scheduled: boolean | null;
+          case_id: string | null;
+          created_at: string | null;
+          email_id: string | null;
+          email_scheduled: boolean | null;
+          error_message: string | null;
+          id: string;
+          patient_id: string | null;
+          processed_at: string | null;
+          status: string;
+        };
         Insert: {
-          batch_id: string
-          call_id?: string | null
-          call_scheduled?: boolean | null
-          case_id?: string | null
-          created_at?: string | null
-          email_id?: string | null
-          email_scheduled?: boolean | null
-          error_message?: string | null
-          id?: string
-          patient_id?: string | null
-          processed_at?: string | null
-          status?: string
-        }
+          batch_id: string;
+          call_id?: string | null;
+          call_scheduled?: boolean | null;
+          case_id?: string | null;
+          created_at?: string | null;
+          email_id?: string | null;
+          email_scheduled?: boolean | null;
+          error_message?: string | null;
+          id?: string;
+          patient_id?: string | null;
+          processed_at?: string | null;
+          status?: string;
+        };
         Update: {
-          batch_id?: string
-          call_id?: string | null
-          call_scheduled?: boolean | null
-          case_id?: string | null
-          created_at?: string | null
-          email_id?: string | null
-          email_scheduled?: boolean | null
-          error_message?: string | null
-          id?: string
-          patient_id?: string | null
-          processed_at?: string | null
-          status?: string
-        }
+          batch_id?: string;
+          call_id?: string | null;
+          call_scheduled?: boolean | null;
+          case_id?: string | null;
+          created_at?: string | null;
+          email_id?: string | null;
+          email_scheduled?: boolean | null;
+          error_message?: string | null;
+          id?: string;
+          patient_id?: string | null;
+          processed_at?: string | null;
+          status?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "discharge_batch_items_batch_id_fkey"
-            columns: ["batch_id"]
-            isOneToOne: false
-            referencedRelation: "discharge_batches"
-            referencedColumns: ["id"]
+            foreignKeyName: "discharge_batch_items_batch_id_fkey";
+            columns: ["batch_id"];
+            isOneToOne: false;
+            referencedRelation: "discharge_batches";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "discharge_batch_items_call_id_fkey"
-            columns: ["call_id"]
-            isOneToOne: false
-            referencedRelation: "scheduled_discharge_calls"
-            referencedColumns: ["id"]
+            foreignKeyName: "discharge_batch_items_call_id_fkey";
+            columns: ["call_id"];
+            isOneToOne: false;
+            referencedRelation: "scheduled_discharge_calls";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "discharge_batch_items_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
+            foreignKeyName: "discharge_batch_items_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "discharge_batch_items_email_id_fkey"
-            columns: ["email_id"]
-            isOneToOne: false
-            referencedRelation: "scheduled_discharge_emails"
-            referencedColumns: ["id"]
+            foreignKeyName: "discharge_batch_items_email_id_fkey";
+            columns: ["email_id"];
+            isOneToOne: false;
+            referencedRelation: "scheduled_discharge_emails";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "discharge_batch_items_patient_id_fkey"
-            columns: ["patient_id"]
-            isOneToOne: false
-            referencedRelation: "patients"
-            referencedColumns: ["id"]
+            foreignKeyName: "discharge_batch_items_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       discharge_batches: {
         Row: {
-          call_schedule_time: string
-          cancelled_at: string | null
-          completed_at: string | null
-          created_at: string | null
-          email_schedule_time: string
-          error_summary: Json | null
-          failed_cases: number
-          id: string
-          metadata: Json | null
-          processed_cases: number
-          started_at: string | null
-          status: string
-          successful_cases: number
-          total_cases: number
-          updated_at: string | null
-          user_id: string | null
-        }
+          call_schedule_time: string;
+          cancelled_at: string | null;
+          completed_at: string | null;
+          created_at: string | null;
+          email_schedule_time: string;
+          error_summary: Json | null;
+          failed_cases: number;
+          id: string;
+          metadata: Json | null;
+          processed_cases: number;
+          started_at: string | null;
+          status: string;
+          successful_cases: number;
+          total_cases: number;
+          updated_at: string | null;
+          user_id: string | null;
+        };
         Insert: {
-          call_schedule_time: string
-          cancelled_at?: string | null
-          completed_at?: string | null
-          created_at?: string | null
-          email_schedule_time: string
-          error_summary?: Json | null
-          failed_cases?: number
-          id?: string
-          metadata?: Json | null
-          processed_cases?: number
-          started_at?: string | null
-          status?: string
-          successful_cases?: number
-          total_cases?: number
-          updated_at?: string | null
-          user_id?: string | null
-        }
+          call_schedule_time: string;
+          cancelled_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string | null;
+          email_schedule_time: string;
+          error_summary?: Json | null;
+          failed_cases?: number;
+          id?: string;
+          metadata?: Json | null;
+          processed_cases?: number;
+          started_at?: string | null;
+          status?: string;
+          successful_cases?: number;
+          total_cases?: number;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
         Update: {
-          call_schedule_time?: string
-          cancelled_at?: string | null
-          completed_at?: string | null
-          created_at?: string | null
-          email_schedule_time?: string
-          error_summary?: Json | null
-          failed_cases?: number
-          id?: string
-          metadata?: Json | null
-          processed_cases?: number
-          started_at?: string | null
-          status?: string
-          successful_cases?: number
-          total_cases?: number
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
+          call_schedule_time?: string;
+          cancelled_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string | null;
+          email_schedule_time?: string;
+          error_summary?: Json | null;
+          failed_cases?: number;
+          id?: string;
+          metadata?: Json | null;
+          processed_cases?: number;
+          started_at?: string | null;
+          status?: string;
+          successful_cases?: number;
+          total_cases?: number;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       discharge_summaries: {
         Row: {
-          case_id: string
-          content: string
-          created_at: string
-          generation_id: string | null
-          id: string
-          soap_note_id: string | null
-          structured_content: Json | null
-          template_id: string | null
-          updated_at: string
-          user_id: string
-        }
+          case_id: string;
+          content: string;
+          created_at: string;
+          generation_id: string | null;
+          id: string;
+          soap_note_id: string | null;
+          structured_content: Json | null;
+          template_id: string | null;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          case_id: string
-          content: string
-          created_at?: string
-          generation_id?: string | null
-          id?: string
-          soap_note_id?: string | null
-          structured_content?: Json | null
-          template_id?: string | null
-          updated_at?: string
-          user_id: string
-        }
+          case_id: string;
+          content: string;
+          created_at?: string;
+          generation_id?: string | null;
+          id?: string;
+          soap_note_id?: string | null;
+          structured_content?: Json | null;
+          template_id?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          case_id?: string
-          content?: string
-          created_at?: string
-          generation_id?: string | null
-          id?: string
-          soap_note_id?: string | null
-          structured_content?: Json | null
-          template_id?: string | null
-          updated_at?: string
-          user_id?: string
-        }
+          case_id?: string;
+          content?: string;
+          created_at?: string;
+          generation_id?: string | null;
+          id?: string;
+          soap_note_id?: string | null;
+          structured_content?: Json | null;
+          template_id?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "discharge_summaries_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
+            foreignKeyName: "discharge_summaries_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "discharge_summaries_generation_id_fkey"
-            columns: ["generation_id"]
-            isOneToOne: false
-            referencedRelation: "generations"
-            referencedColumns: ["id"]
+            foreignKeyName: "discharge_summaries_generation_id_fkey";
+            columns: ["generation_id"];
+            isOneToOne: false;
+            referencedRelation: "generations";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "discharge_summaries_soap_note_id_fkey"
-            columns: ["soap_note_id"]
-            isOneToOne: false
-            referencedRelation: "soap_notes"
-            referencedColumns: ["id"]
+            foreignKeyName: "discharge_summaries_soap_note_id_fkey";
+            columns: ["soap_note_id"];
+            isOneToOne: false;
+            referencedRelation: "soap_notes";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "discharge_summaries_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "temp_discharge_summary_templates"
-            referencedColumns: ["id"]
+            foreignKeyName: "discharge_summaries_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "temp_discharge_summary_templates";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "discharge_summaries_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "discharge_summaries_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       discharge_template_shares: {
         Row: {
-          created_at: string | null
-          id: string
-          shared_by_user_id: string | null
-          shared_with_user_id: string
-          template_id: string
-          updated_at: string | null
-        }
+          created_at: string | null;
+          id: string;
+          shared_by_user_id: string | null;
+          shared_with_user_id: string;
+          template_id: string;
+          updated_at: string | null;
+        };
         Insert: {
-          created_at?: string | null
-          id?: string
-          shared_by_user_id?: string | null
-          shared_with_user_id: string
-          template_id: string
-          updated_at?: string | null
-        }
+          created_at?: string | null;
+          id?: string;
+          shared_by_user_id?: string | null;
+          shared_with_user_id: string;
+          template_id: string;
+          updated_at?: string | null;
+        };
         Update: {
-          created_at?: string | null
-          id?: string
-          shared_by_user_id?: string | null
-          shared_with_user_id?: string
-          template_id?: string
-          updated_at?: string | null
-        }
+          created_at?: string | null;
+          id?: string;
+          shared_by_user_id?: string | null;
+          shared_with_user_id?: string;
+          template_id?: string;
+          updated_at?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "discharge_template_shares_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "temp_discharge_summary_templates"
-            referencedColumns: ["id"]
+            foreignKeyName: "discharge_template_shares_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "temp_discharge_summary_templates";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       error_logs: {
         Row: {
-          case_id: string | null
-          created_at: string | null
-          error_code: string | null
-          error_data: Json | null
-          error_message: string
-          error_type: string
-          event_id: string | null
-          id: string
-          platform: string
-          request_data: Json | null
-          resolution_notes: string | null
-          resolved: boolean | null
-          resolved_at: string | null
-          response_data: Json | null
-          source: string | null
-          stack_trace: string | null
-          user_id: string | null
-        }
+          case_id: string | null;
+          created_at: string | null;
+          error_code: string | null;
+          error_data: Json | null;
+          error_message: string;
+          error_type: string;
+          event_id: string | null;
+          id: string;
+          platform: string;
+          request_data: Json | null;
+          resolution_notes: string | null;
+          resolved: boolean | null;
+          resolved_at: string | null;
+          response_data: Json | null;
+          source: string | null;
+          stack_trace: string | null;
+          user_id: string | null;
+        };
         Insert: {
-          case_id?: string | null
-          created_at?: string | null
-          error_code?: string | null
-          error_data?: Json | null
-          error_message: string
-          error_type: string
-          event_id?: string | null
-          id?: string
-          platform: string
-          request_data?: Json | null
-          resolution_notes?: string | null
-          resolved?: boolean | null
-          resolved_at?: string | null
-          response_data?: Json | null
-          source?: string | null
-          stack_trace?: string | null
-          user_id?: string | null
-        }
+          case_id?: string | null;
+          created_at?: string | null;
+          error_code?: string | null;
+          error_data?: Json | null;
+          error_message: string;
+          error_type: string;
+          event_id?: string | null;
+          id?: string;
+          platform: string;
+          request_data?: Json | null;
+          resolution_notes?: string | null;
+          resolved?: boolean | null;
+          resolved_at?: string | null;
+          response_data?: Json | null;
+          source?: string | null;
+          stack_trace?: string | null;
+          user_id?: string | null;
+        };
         Update: {
-          case_id?: string | null
-          created_at?: string | null
-          error_code?: string | null
-          error_data?: Json | null
-          error_message?: string
-          error_type?: string
-          event_id?: string | null
-          id?: string
-          platform?: string
-          request_data?: Json | null
-          resolution_notes?: string | null
-          resolved?: boolean | null
-          resolved_at?: string | null
-          response_data?: Json | null
-          source?: string | null
-          stack_trace?: string | null
-          user_id?: string | null
-        }
+          case_id?: string | null;
+          created_at?: string | null;
+          error_code?: string | null;
+          error_data?: Json | null;
+          error_message?: string;
+          error_type?: string;
+          event_id?: string | null;
+          id?: string;
+          platform?: string;
+          request_data?: Json | null;
+          resolution_notes?: string | null;
+          resolved?: boolean | null;
+          resolved_at?: string | null;
+          response_data?: Json | null;
+          source?: string | null;
+          stack_trace?: string | null;
+          user_id?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "error_logs_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
+            foreignKeyName: "error_logs_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "error_logs_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "user_events"
-            referencedColumns: ["id"]
+            foreignKeyName: "error_logs_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "user_events";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       feature_usage: {
         Row: {
-          created_at: string | null
-          feature_category: string
-          feature_name: string
-          first_used_at: string | null
-          id: string
-          last_used_at: string | null
-          metadata: Json | null
-          platform: string
-          updated_at: string | null
-          usage_count: number | null
-          user_id: string | null
-        }
+          created_at: string | null;
+          feature_category: string;
+          feature_name: string;
+          first_used_at: string | null;
+          id: string;
+          last_used_at: string | null;
+          metadata: Json | null;
+          platform: string;
+          updated_at: string | null;
+          usage_count: number | null;
+          user_id: string | null;
+        };
         Insert: {
-          created_at?: string | null
-          feature_category: string
-          feature_name: string
-          first_used_at?: string | null
-          id?: string
-          last_used_at?: string | null
-          metadata?: Json | null
-          platform: string
-          updated_at?: string | null
-          usage_count?: number | null
-          user_id?: string | null
-        }
+          created_at?: string | null;
+          feature_category: string;
+          feature_name: string;
+          first_used_at?: string | null;
+          id?: string;
+          last_used_at?: string | null;
+          metadata?: Json | null;
+          platform: string;
+          updated_at?: string | null;
+          usage_count?: number | null;
+          user_id?: string | null;
+        };
         Update: {
-          created_at?: string | null
-          feature_category?: string
-          feature_name?: string
-          first_used_at?: string | null
-          id?: string
-          last_used_at?: string | null
-          metadata?: Json | null
-          platform?: string
-          updated_at?: string | null
-          usage_count?: number | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
+          created_at?: string | null;
+          feature_category?: string;
+          feature_name?: string;
+          first_used_at?: string | null;
+          id?: string;
+          last_used_at?: string | null;
+          metadata?: Json | null;
+          platform?: string;
+          updated_at?: string | null;
+          usage_count?: number | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       generations: {
         Row: {
-          case_id: string | null
-          content: string | null
-          created_at: string
-          id: string
-          prompt: string | null
-          template_id: string | null
-          updated_at: string | null
-        }
+          case_id: string | null;
+          content: string | null;
+          created_at: string;
+          id: string;
+          prompt: string | null;
+          template_id: string | null;
+          updated_at: string | null;
+        };
         Insert: {
-          case_id?: string | null
-          content?: string | null
-          created_at?: string
-          id?: string
-          prompt?: string | null
-          template_id?: string | null
-          updated_at?: string | null
-        }
+          case_id?: string | null;
+          content?: string | null;
+          created_at?: string;
+          id?: string;
+          prompt?: string | null;
+          template_id?: string | null;
+          updated_at?: string | null;
+        };
         Update: {
-          case_id?: string | null
-          content?: string | null
-          created_at?: string
-          id?: string
-          prompt?: string | null
-          template_id?: string | null
-          updated_at?: string | null
-        }
+          case_id?: string | null;
+          content?: string | null;
+          created_at?: string;
+          id?: string;
+          prompt?: string | null;
+          template_id?: string | null;
+          updated_at?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "generations_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
+            foreignKeyName: "generations_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "generations_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "templates"
-            referencedColumns: ["id"]
+            foreignKeyName: "generations_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "templates";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "generations_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "templates_enhanced"
-            referencedColumns: ["id"]
+            foreignKeyName: "generations_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "templates_enhanced";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       idexx_credentials: {
         Row: {
-          clinic_id: string | null
-          company_id_encrypted: string | null
-          created_at: string
-          encryption_key_id: string
-          id: string
-          is_active: boolean
-          last_used_at: string | null
-          last_validated_at: string | null
-          password_encrypted: string
-          sync_enabled: boolean
-          updated_at: string
-          user_id: string
-          username_encrypted: string
-          validation_status: string
-        }
+          clinic_id: string | null;
+          company_id_encrypted: string | null;
+          created_at: string;
+          encryption_key_id: string;
+          id: string;
+          is_active: boolean;
+          last_used_at: string | null;
+          last_validated_at: string | null;
+          password_encrypted: string;
+          sync_enabled: boolean;
+          updated_at: string;
+          user_id: string;
+          username_encrypted: string;
+          validation_status: string;
+        };
         Insert: {
-          clinic_id?: string | null
-          company_id_encrypted?: string | null
-          created_at?: string
-          encryption_key_id?: string
-          id?: string
-          is_active?: boolean
-          last_used_at?: string | null
-          last_validated_at?: string | null
-          password_encrypted: string
-          sync_enabled?: boolean
-          updated_at?: string
-          user_id: string
-          username_encrypted: string
-          validation_status?: string
-        }
+          clinic_id?: string | null;
+          company_id_encrypted?: string | null;
+          created_at?: string;
+          encryption_key_id?: string;
+          id?: string;
+          is_active?: boolean;
+          last_used_at?: string | null;
+          last_validated_at?: string | null;
+          password_encrypted: string;
+          sync_enabled?: boolean;
+          updated_at?: string;
+          user_id: string;
+          username_encrypted: string;
+          validation_status?: string;
+        };
         Update: {
-          clinic_id?: string | null
-          company_id_encrypted?: string | null
-          created_at?: string
-          encryption_key_id?: string
-          id?: string
-          is_active?: boolean
-          last_used_at?: string | null
-          last_validated_at?: string | null
-          password_encrypted?: string
-          sync_enabled?: boolean
-          updated_at?: string
-          user_id?: string
-          username_encrypted?: string
-          validation_status?: string
-        }
+          clinic_id?: string | null;
+          company_id_encrypted?: string | null;
+          created_at?: string;
+          encryption_key_id?: string;
+          id?: string;
+          is_active?: boolean;
+          last_used_at?: string | null;
+          last_validated_at?: string | null;
+          password_encrypted?: string;
+          sync_enabled?: boolean;
+          updated_at?: string;
+          user_id?: string;
+          username_encrypted?: string;
+          validation_status?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "idexx_credentials_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "idexx_credentials_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       idexx_sync_audit_log: {
         Row: {
-          action_type: string
-          clinic_id: string
-          created_at: string
-          details: Json | null
-          id: string
-          ip_address: unknown
-          resource_id: string | null
-          resource_type: string
-          status: string
-          sync_session_id: string | null
-          user_agent: string | null
-          user_id: string
-        }
+          action_type: string;
+          clinic_id: string;
+          created_at: string;
+          details: Json | null;
+          id: string;
+          ip_address: unknown;
+          resource_id: string | null;
+          resource_type: string;
+          status: string;
+          sync_session_id: string | null;
+          user_agent: string | null;
+          user_id: string;
+        };
         Insert: {
-          action_type: string
-          clinic_id: string
-          created_at?: string
-          details?: Json | null
-          id?: string
-          ip_address?: unknown
-          resource_id?: string | null
-          resource_type: string
-          status: string
-          sync_session_id?: string | null
-          user_agent?: string | null
-          user_id: string
-        }
+          action_type: string;
+          clinic_id: string;
+          created_at?: string;
+          details?: Json | null;
+          id?: string;
+          ip_address?: unknown;
+          resource_id?: string | null;
+          resource_type: string;
+          status: string;
+          sync_session_id?: string | null;
+          user_agent?: string | null;
+          user_id: string;
+        };
         Update: {
-          action_type?: string
-          clinic_id?: string
-          created_at?: string
-          details?: Json | null
-          id?: string
-          ip_address?: unknown
-          resource_id?: string | null
-          resource_type?: string
-          status?: string
-          sync_session_id?: string | null
-          user_agent?: string | null
-          user_id?: string
-        }
+          action_type?: string;
+          clinic_id?: string;
+          created_at?: string;
+          details?: Json | null;
+          id?: string;
+          ip_address?: unknown;
+          resource_id?: string | null;
+          resource_type?: string;
+          status?: string;
+          sync_session_id?: string | null;
+          user_agent?: string | null;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "idexx_sync_audit_log_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "idexx_sync_audit_log_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "idexx_sync_audit_log_sync_session_id_fkey"
-            columns: ["sync_session_id"]
-            isOneToOne: false
-            referencedRelation: "idexx_sync_sessions"
-            referencedColumns: ["id"]
+            foreignKeyName: "idexx_sync_audit_log_sync_session_id_fkey";
+            columns: ["sync_session_id"];
+            isOneToOne: false;
+            referencedRelation: "idexx_sync_sessions";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       idexx_sync_sessions: {
         Row: {
-          appointments_synced: number | null
-          clinic_id: string
-          completed_at: string | null
-          consultations_failed: number
-          consultations_synced: number | null
-          created_at: string
-          credential_id: string | null
-          discharge_calls_scheduled: number
-          error_details: Json | null
-          error_message: string | null
-          id: string
-          metadata: Json | null
-          next_scheduled_sync: string | null
-          session_type: string
-          started_at: string | null
-          status: string
-          updated_at: string
-          user_id: string
-        }
+          appointments_synced: number | null;
+          clinic_id: string;
+          completed_at: string | null;
+          consultations_failed: number;
+          consultations_synced: number | null;
+          created_at: string;
+          credential_id: string | null;
+          discharge_calls_scheduled: number;
+          error_details: Json | null;
+          error_message: string | null;
+          id: string;
+          metadata: Json | null;
+          next_scheduled_sync: string | null;
+          session_type: string;
+          started_at: string | null;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          appointments_synced?: number | null
-          clinic_id: string
-          completed_at?: string | null
-          consultations_failed?: number
-          consultations_synced?: number | null
-          created_at?: string
-          credential_id?: string | null
-          discharge_calls_scheduled?: number
-          error_details?: Json | null
-          error_message?: string | null
-          id?: string
-          metadata?: Json | null
-          next_scheduled_sync?: string | null
-          session_type: string
-          started_at?: string | null
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
+          appointments_synced?: number | null;
+          clinic_id: string;
+          completed_at?: string | null;
+          consultations_failed?: number;
+          consultations_synced?: number | null;
+          created_at?: string;
+          credential_id?: string | null;
+          discharge_calls_scheduled?: number;
+          error_details?: Json | null;
+          error_message?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          next_scheduled_sync?: string | null;
+          session_type: string;
+          started_at?: string | null;
+          status?: string;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          appointments_synced?: number | null
-          clinic_id?: string
-          completed_at?: string | null
-          consultations_failed?: number
-          consultations_synced?: number | null
-          created_at?: string
-          credential_id?: string | null
-          discharge_calls_scheduled?: number
-          error_details?: Json | null
-          error_message?: string | null
-          id?: string
-          metadata?: Json | null
-          next_scheduled_sync?: string | null
-          session_type?: string
-          started_at?: string | null
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
+          appointments_synced?: number | null;
+          clinic_id?: string;
+          completed_at?: string | null;
+          consultations_failed?: number;
+          consultations_synced?: number | null;
+          created_at?: string;
+          credential_id?: string | null;
+          discharge_calls_scheduled?: number;
+          error_details?: Json | null;
+          error_message?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          next_scheduled_sync?: string | null;
+          session_type?: string;
+          started_at?: string | null;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "idexx_sync_sessions_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "idexx_sync_sessions_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "idexx_sync_sessions_credential_id_fkey"
-            columns: ["credential_id"]
-            isOneToOne: false
-            referencedRelation: "idexx_credentials"
-            referencedColumns: ["id"]
+            foreignKeyName: "idexx_sync_sessions_credential_id_fkey";
+            columns: ["credential_id"];
+            isOneToOne: false;
+            referencedRelation: "idexx_credentials";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       inbound_vapi_calls: {
         Row: {
-          action_confirmed: boolean | null
-          actions_taken: Json | null
-          assistant_id: string
-          attention_flagged_at: string | null
-          attention_severity: string | null
-          attention_summary: string | null
-          attention_types: string[] | null
-          call_analysis: Json | null
-          call_outcome_data: Json | null
-          cleaned_transcript: string | null
-          clinic_name: string | null
-          clinic_phone: string | null
-          cost: number | null
-          created_at: string
-          customer_number: string | null
-          customer_phone: string | null
-          display_transcript: string | null
-          duration_seconds: number | null
-          ended_at: string | null
-          ended_reason: string | null
-          escalation_data: Json | null
-          extracted_caller_name: string | null
-          extracted_caller_phone: string | null
-          extracted_pet_name: string | null
-          follow_up_data: Json | null
-          id: string
-          medication_compliance_data: Json | null
-          metadata: Json | null
-          outcome: string | null
-          owner_sentiment_data: Json | null
-          pet_health_data: Json | null
-          phone_number_id: string | null
-          recording_url: string | null
-          started_at: string | null
-          status: string
-          stereo_recording_url: string | null
-          structured_data: Json | null
-          success_evaluation: string | null
-          summary: string | null
-          transcript: string | null
-          transcript_messages: Json | null
-          type: string
-          updated_at: string
-          use_display_transcript: boolean | null
-          user_id: string | null
-          user_sentiment: string | null
-          vapi_call_id: string
-        }
+          action_confirmed: boolean | null;
+          actions_taken: Json | null;
+          assistant_id: string;
+          attention_flagged_at: string | null;
+          attention_severity: string | null;
+          attention_summary: string | null;
+          attention_types: string[] | null;
+          call_analysis: Json | null;
+          call_outcome_data: Json | null;
+          cleaned_transcript: string | null;
+          clinic_name: string | null;
+          clinic_phone: string | null;
+          cost: number | null;
+          created_at: string;
+          customer_number: string | null;
+          customer_phone: string | null;
+          display_transcript: string | null;
+          duration_seconds: number | null;
+          ended_at: string | null;
+          ended_reason: string | null;
+          escalation_data: Json | null;
+          extracted_caller_name: string | null;
+          extracted_caller_phone: string | null;
+          extracted_pet_name: string | null;
+          follow_up_data: Json | null;
+          id: string;
+          medication_compliance_data: Json | null;
+          metadata: Json | null;
+          outcome: string | null;
+          owner_sentiment_data: Json | null;
+          pet_health_data: Json | null;
+          phone_number_id: string | null;
+          recording_url: string | null;
+          started_at: string | null;
+          status: string;
+          stereo_recording_url: string | null;
+          structured_data: Json | null;
+          success_evaluation: string | null;
+          summary: string | null;
+          transcript: string | null;
+          transcript_messages: Json | null;
+          type: string;
+          updated_at: string;
+          use_display_transcript: boolean | null;
+          user_id: string | null;
+          user_sentiment: string | null;
+          vapi_call_id: string;
+        };
         Insert: {
-          action_confirmed?: boolean | null
-          actions_taken?: Json | null
-          assistant_id: string
-          attention_flagged_at?: string | null
-          attention_severity?: string | null
-          attention_summary?: string | null
-          attention_types?: string[] | null
-          call_analysis?: Json | null
-          call_outcome_data?: Json | null
-          cleaned_transcript?: string | null
-          clinic_name?: string | null
-          clinic_phone?: string | null
-          cost?: number | null
-          created_at?: string
-          customer_number?: string | null
-          customer_phone?: string | null
-          display_transcript?: string | null
-          duration_seconds?: number | null
-          ended_at?: string | null
-          ended_reason?: string | null
-          escalation_data?: Json | null
-          extracted_caller_name?: string | null
-          extracted_caller_phone?: string | null
-          extracted_pet_name?: string | null
-          follow_up_data?: Json | null
-          id?: string
-          medication_compliance_data?: Json | null
-          metadata?: Json | null
-          outcome?: string | null
-          owner_sentiment_data?: Json | null
-          pet_health_data?: Json | null
-          phone_number_id?: string | null
-          recording_url?: string | null
-          started_at?: string | null
-          status?: string
-          stereo_recording_url?: string | null
-          structured_data?: Json | null
-          success_evaluation?: string | null
-          summary?: string | null
-          transcript?: string | null
-          transcript_messages?: Json | null
-          type?: string
-          updated_at?: string
-          use_display_transcript?: boolean | null
-          user_id?: string | null
-          user_sentiment?: string | null
-          vapi_call_id: string
-        }
+          action_confirmed?: boolean | null;
+          actions_taken?: Json | null;
+          assistant_id: string;
+          attention_flagged_at?: string | null;
+          attention_severity?: string | null;
+          attention_summary?: string | null;
+          attention_types?: string[] | null;
+          call_analysis?: Json | null;
+          call_outcome_data?: Json | null;
+          cleaned_transcript?: string | null;
+          clinic_name?: string | null;
+          clinic_phone?: string | null;
+          cost?: number | null;
+          created_at?: string;
+          customer_number?: string | null;
+          customer_phone?: string | null;
+          display_transcript?: string | null;
+          duration_seconds?: number | null;
+          ended_at?: string | null;
+          ended_reason?: string | null;
+          escalation_data?: Json | null;
+          extracted_caller_name?: string | null;
+          extracted_caller_phone?: string | null;
+          extracted_pet_name?: string | null;
+          follow_up_data?: Json | null;
+          id?: string;
+          medication_compliance_data?: Json | null;
+          metadata?: Json | null;
+          outcome?: string | null;
+          owner_sentiment_data?: Json | null;
+          pet_health_data?: Json | null;
+          phone_number_id?: string | null;
+          recording_url?: string | null;
+          started_at?: string | null;
+          status?: string;
+          stereo_recording_url?: string | null;
+          structured_data?: Json | null;
+          success_evaluation?: string | null;
+          summary?: string | null;
+          transcript?: string | null;
+          transcript_messages?: Json | null;
+          type?: string;
+          updated_at?: string;
+          use_display_transcript?: boolean | null;
+          user_id?: string | null;
+          user_sentiment?: string | null;
+          vapi_call_id: string;
+        };
         Update: {
-          action_confirmed?: boolean | null
-          actions_taken?: Json | null
-          assistant_id?: string
-          attention_flagged_at?: string | null
-          attention_severity?: string | null
-          attention_summary?: string | null
-          attention_types?: string[] | null
-          call_analysis?: Json | null
-          call_outcome_data?: Json | null
-          cleaned_transcript?: string | null
-          clinic_name?: string | null
-          clinic_phone?: string | null
-          cost?: number | null
-          created_at?: string
-          customer_number?: string | null
-          customer_phone?: string | null
-          display_transcript?: string | null
-          duration_seconds?: number | null
-          ended_at?: string | null
-          ended_reason?: string | null
-          escalation_data?: Json | null
-          extracted_caller_name?: string | null
-          extracted_caller_phone?: string | null
-          extracted_pet_name?: string | null
-          follow_up_data?: Json | null
-          id?: string
-          medication_compliance_data?: Json | null
-          metadata?: Json | null
-          outcome?: string | null
-          owner_sentiment_data?: Json | null
-          pet_health_data?: Json | null
-          phone_number_id?: string | null
-          recording_url?: string | null
-          started_at?: string | null
-          status?: string
-          stereo_recording_url?: string | null
-          structured_data?: Json | null
-          success_evaluation?: string | null
-          summary?: string | null
-          transcript?: string | null
-          transcript_messages?: Json | null
-          type?: string
-          updated_at?: string
-          use_display_transcript?: boolean | null
-          user_id?: string | null
-          user_sentiment?: string | null
-          vapi_call_id?: string
-        }
-        Relationships: []
-      }
+          action_confirmed?: boolean | null;
+          actions_taken?: Json | null;
+          assistant_id?: string;
+          attention_flagged_at?: string | null;
+          attention_severity?: string | null;
+          attention_summary?: string | null;
+          attention_types?: string[] | null;
+          call_analysis?: Json | null;
+          call_outcome_data?: Json | null;
+          cleaned_transcript?: string | null;
+          clinic_name?: string | null;
+          clinic_phone?: string | null;
+          cost?: number | null;
+          created_at?: string;
+          customer_number?: string | null;
+          customer_phone?: string | null;
+          display_transcript?: string | null;
+          duration_seconds?: number | null;
+          ended_at?: string | null;
+          ended_reason?: string | null;
+          escalation_data?: Json | null;
+          extracted_caller_name?: string | null;
+          extracted_caller_phone?: string | null;
+          extracted_pet_name?: string | null;
+          follow_up_data?: Json | null;
+          id?: string;
+          medication_compliance_data?: Json | null;
+          metadata?: Json | null;
+          outcome?: string | null;
+          owner_sentiment_data?: Json | null;
+          pet_health_data?: Json | null;
+          phone_number_id?: string | null;
+          recording_url?: string | null;
+          started_at?: string | null;
+          status?: string;
+          stereo_recording_url?: string | null;
+          structured_data?: Json | null;
+          success_evaluation?: string | null;
+          summary?: string | null;
+          transcript?: string | null;
+          transcript_messages?: Json | null;
+          type?: string;
+          updated_at?: string;
+          use_display_transcript?: boolean | null;
+          user_id?: string | null;
+          user_sentiment?: string | null;
+          vapi_call_id?: string;
+        };
+        Relationships: [];
+      };
       patients: {
         Row: {
-          breed: string | null
-          canonical_patient_id: string | null
-          case_id: string | null
-          client_id: string | null
-          clinic_id: string | null
-          created_at: string
-          created_by: string | null
-          date_of_birth: string | null
-          external_id: string | null
-          id: string
-          metadata: Json | null
-          name: string
-          owner_email: string | null
-          owner_name: string | null
-          owner_phone: string | null
-          sex: string | null
-          source: string | null
-          species: string | null
-          updated_at: string | null
-          updated_by: string | null
-          user_id: string | null
-          weight_kg: number | null
-        }
+          breed: string | null;
+          canonical_patient_id: string | null;
+          case_id: string | null;
+          client_id: string | null;
+          clinic_id: string | null;
+          created_at: string;
+          created_by: string | null;
+          date_of_birth: string | null;
+          external_id: string | null;
+          id: string;
+          metadata: Json | null;
+          name: string;
+          owner_email: string | null;
+          owner_name: string | null;
+          owner_phone: string | null;
+          sex: string | null;
+          source: string | null;
+          species: string | null;
+          updated_at: string | null;
+          updated_by: string | null;
+          user_id: string | null;
+          weight_kg: number | null;
+        };
         Insert: {
-          breed?: string | null
-          canonical_patient_id?: string | null
-          case_id?: string | null
-          client_id?: string | null
-          clinic_id?: string | null
-          created_at?: string
-          created_by?: string | null
-          date_of_birth?: string | null
-          external_id?: string | null
-          id?: string
-          metadata?: Json | null
-          name: string
-          owner_email?: string | null
-          owner_name?: string | null
-          owner_phone?: string | null
-          sex?: string | null
-          source?: string | null
-          species?: string | null
-          updated_at?: string | null
-          updated_by?: string | null
-          user_id?: string | null
-          weight_kg?: number | null
-        }
+          breed?: string | null;
+          canonical_patient_id?: string | null;
+          case_id?: string | null;
+          client_id?: string | null;
+          clinic_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          date_of_birth?: string | null;
+          external_id?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          name: string;
+          owner_email?: string | null;
+          owner_name?: string | null;
+          owner_phone?: string | null;
+          sex?: string | null;
+          source?: string | null;
+          species?: string | null;
+          updated_at?: string | null;
+          updated_by?: string | null;
+          user_id?: string | null;
+          weight_kg?: number | null;
+        };
         Update: {
-          breed?: string | null
-          canonical_patient_id?: string | null
-          case_id?: string | null
-          client_id?: string | null
-          clinic_id?: string | null
-          created_at?: string
-          created_by?: string | null
-          date_of_birth?: string | null
-          external_id?: string | null
-          id?: string
-          metadata?: Json | null
-          name?: string
-          owner_email?: string | null
-          owner_name?: string | null
-          owner_phone?: string | null
-          sex?: string | null
-          source?: string | null
-          species?: string | null
-          updated_at?: string | null
-          updated_by?: string | null
-          user_id?: string | null
-          weight_kg?: number | null
-        }
+          breed?: string | null;
+          canonical_patient_id?: string | null;
+          case_id?: string | null;
+          client_id?: string | null;
+          clinic_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          date_of_birth?: string | null;
+          external_id?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          name?: string;
+          owner_email?: string | null;
+          owner_name?: string | null;
+          owner_phone?: string | null;
+          sex?: string | null;
+          source?: string | null;
+          species?: string | null;
+          updated_at?: string | null;
+          updated_by?: string | null;
+          user_id?: string | null;
+          weight_kg?: number | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "patient_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
+            foreignKeyName: "patient_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "patients_canonical_patient_id_fkey"
-            columns: ["canonical_patient_id"]
-            isOneToOne: false
-            referencedRelation: "canonical_patients"
-            referencedColumns: ["id"]
+            foreignKeyName: "patients_canonical_patient_id_fkey";
+            columns: ["canonical_patient_id"];
+            isOneToOne: false;
+            referencedRelation: "canonical_patients";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "patients_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
+            foreignKeyName: "patients_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "patients_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "patients_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "patients_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "patients_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
+      pims_appointments: {
+        Row: {
+          appointment_type: string | null;
+          client_name: string | null;
+          client_phone: string | null;
+          clinic_id: string;
+          created_at: string;
+          date: string | null;
+          deleted_at: string | null;
+          id: string;
+          last_synced_at: string | null;
+          neo_appointment_id: string | null;
+          patient_name: string | null;
+          provider_name: string | null;
+          room_id: string | null;
+          source: string;
+          status: string;
+          sync_hash: string | null;
+          time_range: unknown;
+          updated_at: string;
+        };
+        Insert: {
+          appointment_type?: string | null;
+          client_name?: string | null;
+          client_phone?: string | null;
+          clinic_id: string;
+          created_at?: string;
+          date?: string | null;
+          deleted_at?: string | null;
+          id?: string;
+          last_synced_at?: string | null;
+          neo_appointment_id?: string | null;
+          patient_name?: string | null;
+          provider_name?: string | null;
+          room_id?: string | null;
+          source?: string;
+          status?: string;
+          sync_hash?: string | null;
+          time_range: unknown;
+          updated_at?: string;
+        };
+        Update: {
+          appointment_type?: string | null;
+          client_name?: string | null;
+          client_phone?: string | null;
+          clinic_id?: string;
+          created_at?: string;
+          date?: string | null;
+          deleted_at?: string | null;
+          id?: string;
+          last_synced_at?: string | null;
+          neo_appointment_id?: string | null;
+          patient_name?: string | null;
+          provider_name?: string | null;
+          room_id?: string | null;
+          source?: string;
+          status?: string;
+          sync_hash?: string | null;
+          time_range?: unknown;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pims_appointments_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       pims_mappings: {
         Row: {
-          created_at: string
-          entity_id: string
-          entity_type: string
-          external_data: Json | null
-          external_id: string
-          id: string
-          last_synced_at: string | null
-          pims_type: string
-          sync_status: string | null
-          updated_at: string
-        }
+          created_at: string;
+          entity_id: string;
+          entity_type: string;
+          external_data: Json | null;
+          external_id: string;
+          id: string;
+          last_synced_at: string | null;
+          pims_type: string;
+          sync_status: string | null;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          entity_id: string
-          entity_type: string
-          external_data?: Json | null
-          external_id: string
-          id?: string
-          last_synced_at?: string | null
-          pims_type: string
-          sync_status?: string | null
-          updated_at?: string
-        }
+          created_at?: string;
+          entity_id: string;
+          entity_type: string;
+          external_data?: Json | null;
+          external_id: string;
+          id?: string;
+          last_synced_at?: string | null;
+          pims_type: string;
+          sync_status?: string | null;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          entity_id?: string
-          entity_type?: string
-          external_data?: Json | null
-          external_id?: string
-          id?: string
-          last_synced_at?: string | null
-          pims_type?: string
-          sync_status?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          entity_id?: string;
+          entity_type?: string;
+          external_data?: Json | null;
+          external_id?: string;
+          id?: string;
+          last_synced_at?: string | null;
+          pims_type?: string;
+          sync_status?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       providers: {
         Row: {
-          clinic_id: string
-          created_at: string
-          id: string
-          is_active: boolean
-          name: string
-          neo_provider_id: string
-          role: string
-          updated_at: string
-        }
+          clinic_id: string;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          neo_provider_id: string;
+          role: string;
+          updated_at: string;
+        };
         Insert: {
-          clinic_id: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name: string
-          neo_provider_id: string
-          role?: string
-          updated_at?: string
-        }
+          clinic_id: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          neo_provider_id: string;
+          role?: string;
+          updated_at?: string;
+        };
         Update: {
-          clinic_id?: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          neo_provider_id?: string
-          role?: string
-          updated_at?: string
-        }
+          clinic_id?: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          neo_provider_id?: string;
+          role?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "providers_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "providers_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       refill_requests: {
         Row: {
-          approved_at: string | null
-          approved_by: string | null
-          client_name: string
-          client_phone: string
-          clinic_id: string
-          created_at: string
-          id: string
-          last_refill_date: string | null
-          medication_name: string
-          medication_strength: string | null
-          metadata: Json | null
-          pet_name: string
-          pharmacy_name: string | null
-          pharmacy_phone: string | null
-          pharmacy_preference: string | null
-          requires_exam: boolean | null
-          species: string | null
-          status: string
-          updated_at: string
-          vapi_call_id: string | null
-          vet_notes: string | null
-        }
+          approved_at: string | null;
+          approved_by: string | null;
+          client_name: string;
+          client_phone: string;
+          clinic_id: string;
+          created_at: string;
+          id: string;
+          last_refill_date: string | null;
+          medication_name: string;
+          medication_strength: string | null;
+          metadata: Json | null;
+          pet_name: string;
+          pharmacy_name: string | null;
+          pharmacy_phone: string | null;
+          pharmacy_preference: string | null;
+          requires_exam: boolean | null;
+          species: string | null;
+          status: string;
+          updated_at: string;
+          vapi_call_id: string | null;
+          vet_notes: string | null;
+        };
         Insert: {
-          approved_at?: string | null
-          approved_by?: string | null
-          client_name: string
-          client_phone: string
-          clinic_id: string
-          created_at?: string
-          id?: string
-          last_refill_date?: string | null
-          medication_name: string
-          medication_strength?: string | null
-          metadata?: Json | null
-          pet_name: string
-          pharmacy_name?: string | null
-          pharmacy_phone?: string | null
-          pharmacy_preference?: string | null
-          requires_exam?: boolean | null
-          species?: string | null
-          status?: string
-          updated_at?: string
-          vapi_call_id?: string | null
-          vet_notes?: string | null
-        }
+          approved_at?: string | null;
+          approved_by?: string | null;
+          client_name: string;
+          client_phone: string;
+          clinic_id: string;
+          created_at?: string;
+          id?: string;
+          last_refill_date?: string | null;
+          medication_name: string;
+          medication_strength?: string | null;
+          metadata?: Json | null;
+          pet_name: string;
+          pharmacy_name?: string | null;
+          pharmacy_phone?: string | null;
+          pharmacy_preference?: string | null;
+          requires_exam?: boolean | null;
+          species?: string | null;
+          status?: string;
+          updated_at?: string;
+          vapi_call_id?: string | null;
+          vet_notes?: string | null;
+        };
         Update: {
-          approved_at?: string | null
-          approved_by?: string | null
-          client_name?: string
-          client_phone?: string
-          clinic_id?: string
-          created_at?: string
-          id?: string
-          last_refill_date?: string | null
-          medication_name?: string
-          medication_strength?: string | null
-          metadata?: Json | null
-          pet_name?: string
-          pharmacy_name?: string | null
-          pharmacy_phone?: string | null
-          pharmacy_preference?: string | null
-          requires_exam?: boolean | null
-          species?: string | null
-          status?: string
-          updated_at?: string
-          vapi_call_id?: string | null
-          vet_notes?: string | null
-        }
+          approved_at?: string | null;
+          approved_by?: string | null;
+          client_name?: string;
+          client_phone?: string;
+          clinic_id?: string;
+          created_at?: string;
+          id?: string;
+          last_refill_date?: string | null;
+          medication_name?: string;
+          medication_strength?: string | null;
+          metadata?: Json | null;
+          pet_name?: string;
+          pharmacy_name?: string | null;
+          pharmacy_phone?: string | null;
+          pharmacy_preference?: string | null;
+          requires_exam?: boolean | null;
+          species?: string | null;
+          status?: string;
+          updated_at?: string;
+          vapi_call_id?: string | null;
+          vet_notes?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "refill_requests_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "refill_requests_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       retell_calls: {
         Row: {
-          agent_id: string
-          call_analysis: Json | null
-          call_variables: Json | null
-          created_at: string | null
-          created_by: string | null
-          disconnection_reason: string | null
-          duration_seconds: number | null
-          end_timestamp: string | null
-          error_message: string | null
-          id: string
-          metadata: Json | null
-          patient_id: string | null
-          phone_number: string
-          phone_number_pretty: string | null
-          public_log_url: string | null
-          recording_url: string | null
-          retell_call_id: string
-          retell_response: Json | null
-          scheduled_for: string | null
-          start_timestamp: string | null
-          status: string
-          transcript: string | null
-          transcript_object: Json | null
-          updated_at: string | null
-        }
+          agent_id: string;
+          call_analysis: Json | null;
+          call_variables: Json | null;
+          created_at: string | null;
+          created_by: string | null;
+          disconnection_reason: string | null;
+          duration_seconds: number | null;
+          end_timestamp: string | null;
+          error_message: string | null;
+          id: string;
+          metadata: Json | null;
+          patient_id: string | null;
+          phone_number: string;
+          phone_number_pretty: string | null;
+          public_log_url: string | null;
+          recording_url: string | null;
+          retell_call_id: string;
+          retell_response: Json | null;
+          scheduled_for: string | null;
+          start_timestamp: string | null;
+          status: string;
+          transcript: string | null;
+          transcript_object: Json | null;
+          updated_at: string | null;
+        };
         Insert: {
-          agent_id: string
-          call_analysis?: Json | null
-          call_variables?: Json | null
-          created_at?: string | null
-          created_by?: string | null
-          disconnection_reason?: string | null
-          duration_seconds?: number | null
-          end_timestamp?: string | null
-          error_message?: string | null
-          id?: string
-          metadata?: Json | null
-          patient_id?: string | null
-          phone_number: string
-          phone_number_pretty?: string | null
-          public_log_url?: string | null
-          recording_url?: string | null
-          retell_call_id: string
-          retell_response?: Json | null
-          scheduled_for?: string | null
-          start_timestamp?: string | null
-          status?: string
-          transcript?: string | null
-          transcript_object?: Json | null
-          updated_at?: string | null
-        }
+          agent_id: string;
+          call_analysis?: Json | null;
+          call_variables?: Json | null;
+          created_at?: string | null;
+          created_by?: string | null;
+          disconnection_reason?: string | null;
+          duration_seconds?: number | null;
+          end_timestamp?: string | null;
+          error_message?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          patient_id?: string | null;
+          phone_number: string;
+          phone_number_pretty?: string | null;
+          public_log_url?: string | null;
+          recording_url?: string | null;
+          retell_call_id: string;
+          retell_response?: Json | null;
+          scheduled_for?: string | null;
+          start_timestamp?: string | null;
+          status?: string;
+          transcript?: string | null;
+          transcript_object?: Json | null;
+          updated_at?: string | null;
+        };
         Update: {
-          agent_id?: string
-          call_analysis?: Json | null
-          call_variables?: Json | null
-          created_at?: string | null
-          created_by?: string | null
-          disconnection_reason?: string | null
-          duration_seconds?: number | null
-          end_timestamp?: string | null
-          error_message?: string | null
-          id?: string
-          metadata?: Json | null
-          patient_id?: string | null
-          phone_number?: string
-          phone_number_pretty?: string | null
-          public_log_url?: string | null
-          recording_url?: string | null
-          retell_call_id?: string
-          retell_response?: Json | null
-          scheduled_for?: string | null
-          start_timestamp?: string | null
-          status?: string
-          transcript?: string | null
-          transcript_object?: Json | null
-          updated_at?: string | null
-        }
+          agent_id?: string;
+          call_analysis?: Json | null;
+          call_variables?: Json | null;
+          created_at?: string | null;
+          created_by?: string | null;
+          disconnection_reason?: string | null;
+          duration_seconds?: number | null;
+          end_timestamp?: string | null;
+          error_message?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          patient_id?: string | null;
+          phone_number?: string;
+          phone_number_pretty?: string | null;
+          public_log_url?: string | null;
+          recording_url?: string | null;
+          retell_call_id?: string;
+          retell_response?: Json | null;
+          scheduled_for?: string | null;
+          start_timestamp?: string | null;
+          status?: string;
+          transcript?: string | null;
+          transcript_object?: Json | null;
+          updated_at?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "fk_retell_calls_patient"
-            columns: ["patient_id"]
-            isOneToOne: false
-            referencedRelation: "call_patients"
-            referencedColumns: ["id"]
+            foreignKeyName: "fk_retell_calls_patient";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "call_patients";
+            referencedColumns: ["id"];
           },
-        ]
-      }
-      schedule_appointments: {
-        Row: {
-          appointment_type: string | null
-          booked_via: string
-          cancelled_at: string | null
-          cancelled_reason: string | null
-          client_id: string | null
-          client_name: string | null
-          client_phone: string | null
-          clinic_id: string
-          created_at: string
-          date: string
-          deleted_at: string | null
-          end_time: string
-          id: string
-          last_synced_at: string
-          neo_appointment_id: string
-          patient_id: string | null
-          patient_name: string | null
-          provider_name: string | null
-          room_id: string | null
-          slot_id: string | null
-          start_time: string
-          status: string
-          sync_hash: string | null
-          updated_at: string
-        }
-        Insert: {
-          appointment_type?: string | null
-          booked_via?: string
-          cancelled_at?: string | null
-          cancelled_reason?: string | null
-          client_id?: string | null
-          client_name?: string | null
-          client_phone?: string | null
-          clinic_id: string
-          created_at?: string
-          date: string
-          deleted_at?: string | null
-          end_time: string
-          id?: string
-          last_synced_at?: string
-          neo_appointment_id: string
-          patient_id?: string | null
-          patient_name?: string | null
-          provider_name?: string | null
-          room_id?: string | null
-          slot_id?: string | null
-          start_time: string
-          status: string
-          sync_hash?: string | null
-          updated_at?: string
-        }
-        Update: {
-          appointment_type?: string | null
-          booked_via?: string
-          cancelled_at?: string | null
-          cancelled_reason?: string | null
-          client_id?: string | null
-          client_name?: string | null
-          client_phone?: string | null
-          clinic_id?: string
-          created_at?: string
-          date?: string
-          deleted_at?: string | null
-          end_time?: string
-          id?: string
-          last_synced_at?: string
-          neo_appointment_id?: string
-          patient_id?: string | null
-          patient_name?: string | null
-          provider_name?: string | null
-          room_id?: string | null
-          slot_id?: string | null
-          start_time?: string
-          status?: string
-          sync_hash?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "schedule_appointments_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "schedule_appointments_slot_id_fkey"
-            columns: ["slot_id"]
-            isOneToOne: false
-            referencedRelation: "schedule_slots"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      schedule_appointments_v2: {
-        Row: {
-          appointment_type: string | null
-          client_name: string | null
-          client_phone: string | null
-          clinic_id: string
-          created_at: string
-          date: string | null
-          deleted_at: string | null
-          id: string
-          last_synced_at: string | null
-          neo_appointment_id: string | null
-          patient_name: string | null
-          provider_name: string | null
-          room_id: string | null
-          source: string
-          status: string
-          sync_hash: string | null
-          time_range: unknown
-          updated_at: string
-        }
-        Insert: {
-          appointment_type?: string | null
-          client_name?: string | null
-          client_phone?: string | null
-          clinic_id: string
-          created_at?: string
-          date?: string | null
-          deleted_at?: string | null
-          id?: string
-          last_synced_at?: string | null
-          neo_appointment_id?: string | null
-          patient_name?: string | null
-          provider_name?: string | null
-          room_id?: string | null
-          source?: string
-          status?: string
-          sync_hash?: string | null
-          time_range: unknown
-          updated_at?: string
-        }
-        Update: {
-          appointment_type?: string | null
-          client_name?: string | null
-          client_phone?: string | null
-          clinic_id?: string
-          created_at?: string
-          date?: string | null
-          deleted_at?: string | null
-          id?: string
-          last_synced_at?: string | null
-          neo_appointment_id?: string | null
-          patient_name?: string | null
-          provider_name?: string | null
-          room_id?: string | null
-          source?: string
-          status?: string
-          sync_hash?: string | null
-          time_range?: unknown
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "schedule_appointments_v2_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      schedule_slots: {
-        Row: {
-          booked_count: number
-          capacity: number
-          clinic_id: string
-          created_at: string
-          date: string
-          end_time: string
-          id: string
-          last_synced_at: string | null
-          start_time: string
-          sync_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          booked_count?: number
-          capacity?: number
-          clinic_id: string
-          created_at?: string
-          date: string
-          end_time: string
-          id?: string
-          last_synced_at?: string | null
-          start_time: string
-          sync_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          booked_count?: number
-          capacity?: number
-          clinic_id?: string
-          created_at?: string
-          date?: string
-          end_time?: string
-          id?: string
-          last_synced_at?: string | null
-          start_time?: string
-          sync_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "schedule_slots_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+        ];
+      };
       schedule_syncs: {
         Row: {
-          appointments_added: number | null
-          appointments_removed: number | null
-          appointments_updated: number | null
-          clinic_id: string
-          completed_at: string | null
-          conflicts_detected: number | null
-          conflicts_resolved: number | null
-          created_at: string
-          duration_ms: number | null
-          error_details: Json | null
-          error_message: string | null
-          failed_dates: string[] | null
-          id: string
-          idexx_config: Json | null
-          partial_success: boolean | null
-          processing_date: string | null
-          progress_percentage: number | null
-          slots_created: number | null
-          slots_updated: number | null
-          started_at: string
-          status: string
-          sync_end_date: string
-          sync_start_date: string
-          sync_type: string | null
-        }
+          appointments_added: number | null;
+          appointments_removed: number | null;
+          appointments_updated: number | null;
+          clinic_id: string;
+          completed_at: string | null;
+          conflicts_detected: number | null;
+          conflicts_resolved: number | null;
+          created_at: string;
+          duration_ms: number | null;
+          error_details: Json | null;
+          error_message: string | null;
+          failed_dates: string[] | null;
+          id: string;
+          idexx_config: Json | null;
+          partial_success: boolean | null;
+          processing_date: string | null;
+          progress_percentage: number | null;
+          slots_created: number | null;
+          slots_updated: number | null;
+          started_at: string;
+          status: string;
+          sync_end_date: string;
+          sync_start_date: string;
+          sync_type: string | null;
+        };
         Insert: {
-          appointments_added?: number | null
-          appointments_removed?: number | null
-          appointments_updated?: number | null
-          clinic_id: string
-          completed_at?: string | null
-          conflicts_detected?: number | null
-          conflicts_resolved?: number | null
-          created_at?: string
-          duration_ms?: number | null
-          error_details?: Json | null
-          error_message?: string | null
-          failed_dates?: string[] | null
-          id?: string
-          idexx_config?: Json | null
-          partial_success?: boolean | null
-          processing_date?: string | null
-          progress_percentage?: number | null
-          slots_created?: number | null
-          slots_updated?: number | null
-          started_at?: string
-          status?: string
-          sync_end_date: string
-          sync_start_date: string
-          sync_type?: string | null
-        }
+          appointments_added?: number | null;
+          appointments_removed?: number | null;
+          appointments_updated?: number | null;
+          clinic_id: string;
+          completed_at?: string | null;
+          conflicts_detected?: number | null;
+          conflicts_resolved?: number | null;
+          created_at?: string;
+          duration_ms?: number | null;
+          error_details?: Json | null;
+          error_message?: string | null;
+          failed_dates?: string[] | null;
+          id?: string;
+          idexx_config?: Json | null;
+          partial_success?: boolean | null;
+          processing_date?: string | null;
+          progress_percentage?: number | null;
+          slots_created?: number | null;
+          slots_updated?: number | null;
+          started_at?: string;
+          status?: string;
+          sync_end_date: string;
+          sync_start_date: string;
+          sync_type?: string | null;
+        };
         Update: {
-          appointments_added?: number | null
-          appointments_removed?: number | null
-          appointments_updated?: number | null
-          clinic_id?: string
-          completed_at?: string | null
-          conflicts_detected?: number | null
-          conflicts_resolved?: number | null
-          created_at?: string
-          duration_ms?: number | null
-          error_details?: Json | null
-          error_message?: string | null
-          failed_dates?: string[] | null
-          id?: string
-          idexx_config?: Json | null
-          partial_success?: boolean | null
-          processing_date?: string | null
-          progress_percentage?: number | null
-          slots_created?: number | null
-          slots_updated?: number | null
-          started_at?: string
-          status?: string
-          sync_end_date?: string
-          sync_start_date?: string
-          sync_type?: string | null
-        }
+          appointments_added?: number | null;
+          appointments_removed?: number | null;
+          appointments_updated?: number | null;
+          clinic_id?: string;
+          completed_at?: string | null;
+          conflicts_detected?: number | null;
+          conflicts_resolved?: number | null;
+          created_at?: string;
+          duration_ms?: number | null;
+          error_details?: Json | null;
+          error_message?: string | null;
+          failed_dates?: string[] | null;
+          id?: string;
+          idexx_config?: Json | null;
+          partial_success?: boolean | null;
+          processing_date?: string | null;
+          progress_percentage?: number | null;
+          slots_created?: number | null;
+          slots_updated?: number | null;
+          started_at?: string;
+          status?: string;
+          sync_end_date?: string;
+          sync_start_date?: string;
+          sync_type?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "schedule_syncs_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "schedule_syncs_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       scheduled_discharge_calls: {
         Row: {
-          assistant_id: string | null
-          attention_flagged_at: string | null
-          attention_severity: string | null
-          attention_summary: string | null
-          attention_types: string[] | null
-          call_analysis: Json | null
-          call_outcome_data: Json | null
-          case_id: string | null
-          cleaned_transcript: string | null
-          condition_category: string | null
-          cost: number | null
-          created_at: string
-          customer_phone: string | null
-          duration_seconds: number | null
-          dynamic_variables: Json
-          ended_at: string | null
-          ended_reason: string | null
-          escalation_data: Json | null
-          follow_up_data: Json | null
-          id: string
-          knowledge_base_used: string | null
-          medication_compliance_data: Json | null
-          metadata: Json | null
-          outbound_phone_number_id: string | null
-          owner_sentiment_data: Json | null
-          pet_health_data: Json | null
-          qstash_message_id: string | null
-          recording_url: string | null
-          review_category: string | null
-          scheduled_for: string | null
-          started_at: string | null
-          status: string
-          stereo_recording_url: string | null
-          structured_data: Json | null
-          success_evaluation: string | null
-          summary: string | null
-          transcript: string | null
-          transcript_messages: Json | null
-          updated_at: string
-          urgent_reason_summary: string | null
-          user_id: string
-          user_sentiment: string | null
-          vapi_call_id: string | null
-        }
+          assistant_id: string | null;
+          attention_flagged_at: string | null;
+          attention_severity: string | null;
+          attention_summary: string | null;
+          attention_types: string[] | null;
+          call_analysis: Json | null;
+          call_outcome_data: Json | null;
+          case_id: string | null;
+          cleaned_transcript: string | null;
+          condition_category: string | null;
+          cost: number | null;
+          created_at: string;
+          customer_phone: string | null;
+          duration_seconds: number | null;
+          dynamic_variables: Json;
+          ended_at: string | null;
+          ended_reason: string | null;
+          escalation_data: Json | null;
+          follow_up_data: Json | null;
+          id: string;
+          knowledge_base_used: string | null;
+          medication_compliance_data: Json | null;
+          metadata: Json | null;
+          outbound_phone_number_id: string | null;
+          owner_sentiment_data: Json | null;
+          pet_health_data: Json | null;
+          qstash_message_id: string | null;
+          recording_url: string | null;
+          review_category: string | null;
+          scheduled_for: string | null;
+          started_at: string | null;
+          status: string;
+          stereo_recording_url: string | null;
+          structured_data: Json | null;
+          success_evaluation: string | null;
+          summary: string | null;
+          transcript: string | null;
+          transcript_messages: Json | null;
+          updated_at: string;
+          urgent_reason_summary: string | null;
+          user_id: string;
+          user_sentiment: string | null;
+          vapi_call_id: string | null;
+        };
         Insert: {
-          assistant_id?: string | null
-          attention_flagged_at?: string | null
-          attention_severity?: string | null
-          attention_summary?: string | null
-          attention_types?: string[] | null
-          call_analysis?: Json | null
-          call_outcome_data?: Json | null
-          case_id?: string | null
-          cleaned_transcript?: string | null
-          condition_category?: string | null
-          cost?: number | null
-          created_at?: string
-          customer_phone?: string | null
-          duration_seconds?: number | null
-          dynamic_variables: Json
-          ended_at?: string | null
-          ended_reason?: string | null
-          escalation_data?: Json | null
-          follow_up_data?: Json | null
-          id?: string
-          knowledge_base_used?: string | null
-          medication_compliance_data?: Json | null
-          metadata?: Json | null
-          outbound_phone_number_id?: string | null
-          owner_sentiment_data?: Json | null
-          pet_health_data?: Json | null
-          qstash_message_id?: string | null
-          recording_url?: string | null
-          review_category?: string | null
-          scheduled_for?: string | null
-          started_at?: string | null
-          status?: string
-          stereo_recording_url?: string | null
-          structured_data?: Json | null
-          success_evaluation?: string | null
-          summary?: string | null
-          transcript?: string | null
-          transcript_messages?: Json | null
-          updated_at?: string
-          urgent_reason_summary?: string | null
-          user_id: string
-          user_sentiment?: string | null
-          vapi_call_id?: string | null
-        }
+          assistant_id?: string | null;
+          attention_flagged_at?: string | null;
+          attention_severity?: string | null;
+          attention_summary?: string | null;
+          attention_types?: string[] | null;
+          call_analysis?: Json | null;
+          call_outcome_data?: Json | null;
+          case_id?: string | null;
+          cleaned_transcript?: string | null;
+          condition_category?: string | null;
+          cost?: number | null;
+          created_at?: string;
+          customer_phone?: string | null;
+          duration_seconds?: number | null;
+          dynamic_variables: Json;
+          ended_at?: string | null;
+          ended_reason?: string | null;
+          escalation_data?: Json | null;
+          follow_up_data?: Json | null;
+          id?: string;
+          knowledge_base_used?: string | null;
+          medication_compliance_data?: Json | null;
+          metadata?: Json | null;
+          outbound_phone_number_id?: string | null;
+          owner_sentiment_data?: Json | null;
+          pet_health_data?: Json | null;
+          qstash_message_id?: string | null;
+          recording_url?: string | null;
+          review_category?: string | null;
+          scheduled_for?: string | null;
+          started_at?: string | null;
+          status?: string;
+          stereo_recording_url?: string | null;
+          structured_data?: Json | null;
+          success_evaluation?: string | null;
+          summary?: string | null;
+          transcript?: string | null;
+          transcript_messages?: Json | null;
+          updated_at?: string;
+          urgent_reason_summary?: string | null;
+          user_id: string;
+          user_sentiment?: string | null;
+          vapi_call_id?: string | null;
+        };
         Update: {
-          assistant_id?: string | null
-          attention_flagged_at?: string | null
-          attention_severity?: string | null
-          attention_summary?: string | null
-          attention_types?: string[] | null
-          call_analysis?: Json | null
-          call_outcome_data?: Json | null
-          case_id?: string | null
-          cleaned_transcript?: string | null
-          condition_category?: string | null
-          cost?: number | null
-          created_at?: string
-          customer_phone?: string | null
-          duration_seconds?: number | null
-          dynamic_variables?: Json
-          ended_at?: string | null
-          ended_reason?: string | null
-          escalation_data?: Json | null
-          follow_up_data?: Json | null
-          id?: string
-          knowledge_base_used?: string | null
-          medication_compliance_data?: Json | null
-          metadata?: Json | null
-          outbound_phone_number_id?: string | null
-          owner_sentiment_data?: Json | null
-          pet_health_data?: Json | null
-          qstash_message_id?: string | null
-          recording_url?: string | null
-          review_category?: string | null
-          scheduled_for?: string | null
-          started_at?: string | null
-          status?: string
-          stereo_recording_url?: string | null
-          structured_data?: Json | null
-          success_evaluation?: string | null
-          summary?: string | null
-          transcript?: string | null
-          transcript_messages?: Json | null
-          updated_at?: string
-          urgent_reason_summary?: string | null
-          user_id?: string
-          user_sentiment?: string | null
-          vapi_call_id?: string | null
-        }
+          assistant_id?: string | null;
+          attention_flagged_at?: string | null;
+          attention_severity?: string | null;
+          attention_summary?: string | null;
+          attention_types?: string[] | null;
+          call_analysis?: Json | null;
+          call_outcome_data?: Json | null;
+          case_id?: string | null;
+          cleaned_transcript?: string | null;
+          condition_category?: string | null;
+          cost?: number | null;
+          created_at?: string;
+          customer_phone?: string | null;
+          duration_seconds?: number | null;
+          dynamic_variables?: Json;
+          ended_at?: string | null;
+          ended_reason?: string | null;
+          escalation_data?: Json | null;
+          follow_up_data?: Json | null;
+          id?: string;
+          knowledge_base_used?: string | null;
+          medication_compliance_data?: Json | null;
+          metadata?: Json | null;
+          outbound_phone_number_id?: string | null;
+          owner_sentiment_data?: Json | null;
+          pet_health_data?: Json | null;
+          qstash_message_id?: string | null;
+          recording_url?: string | null;
+          review_category?: string | null;
+          scheduled_for?: string | null;
+          started_at?: string | null;
+          status?: string;
+          stereo_recording_url?: string | null;
+          structured_data?: Json | null;
+          success_evaluation?: string | null;
+          summary?: string | null;
+          transcript?: string | null;
+          transcript_messages?: Json | null;
+          updated_at?: string;
+          urgent_reason_summary?: string | null;
+          user_id?: string;
+          user_sentiment?: string | null;
+          vapi_call_id?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "scheduled_discharge_calls_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
+            foreignKeyName: "scheduled_discharge_calls_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       scheduled_discharge_emails: {
         Row: {
-          case_id: string | null
-          created_at: string
-          html_content: string
-          id: string
-          metadata: Json | null
-          qstash_message_id: string | null
-          recipient_email: string
-          recipient_name: string | null
-          resend_email_id: string | null
-          scheduled_for: string
-          sent_at: string | null
-          status: string
-          subject: string
-          text_content: string | null
-          updated_at: string
-          user_id: string
-        }
+          case_id: string | null;
+          created_at: string;
+          html_content: string;
+          id: string;
+          metadata: Json | null;
+          qstash_message_id: string | null;
+          recipient_email: string;
+          recipient_name: string | null;
+          resend_email_id: string | null;
+          scheduled_for: string;
+          sent_at: string | null;
+          status: string;
+          subject: string;
+          text_content: string | null;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          case_id?: string | null
-          created_at?: string
-          html_content: string
-          id?: string
-          metadata?: Json | null
-          qstash_message_id?: string | null
-          recipient_email: string
-          recipient_name?: string | null
-          resend_email_id?: string | null
-          scheduled_for: string
-          sent_at?: string | null
-          status?: string
-          subject: string
-          text_content?: string | null
-          updated_at?: string
-          user_id: string
-        }
+          case_id?: string | null;
+          created_at?: string;
+          html_content: string;
+          id?: string;
+          metadata?: Json | null;
+          qstash_message_id?: string | null;
+          recipient_email: string;
+          recipient_name?: string | null;
+          resend_email_id?: string | null;
+          scheduled_for: string;
+          sent_at?: string | null;
+          status?: string;
+          subject: string;
+          text_content?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          case_id?: string | null
-          created_at?: string
-          html_content?: string
-          id?: string
-          metadata?: Json | null
-          qstash_message_id?: string | null
-          recipient_email?: string
-          recipient_name?: string | null
-          resend_email_id?: string | null
-          scheduled_for?: string
-          sent_at?: string | null
-          status?: string
-          subject?: string
-          text_content?: string | null
-          updated_at?: string
-          user_id?: string
-        }
+          case_id?: string | null;
+          created_at?: string;
+          html_content?: string;
+          id?: string;
+          metadata?: Json | null;
+          qstash_message_id?: string | null;
+          recipient_email?: string;
+          recipient_name?: string | null;
+          resend_email_id?: string | null;
+          scheduled_for?: string;
+          sent_at?: string | null;
+          status?: string;
+          subject?: string;
+          text_content?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "scheduled_discharge_emails_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
+            foreignKeyName: "scheduled_discharge_emails_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       session_analytics: {
         Row: {
-          actions_performed: string[] | null
-          app_version: string | null
-          cases_created: number | null
-          created_at: string | null
-          device_info: Json | null
-          discharges_sent: number | null
-          duration_seconds: number | null
-          ended_at: string | null
-          event_count: number | null
-          extension_version: string | null
-          features_used: string[] | null
-          id: string
-          metadata: Json | null
-          platform: string
-          session_id: string
-          started_at: string | null
-          updated_at: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
+          actions_performed: string[] | null;
+          app_version: string | null;
+          cases_created: number | null;
+          created_at: string | null;
+          device_info: Json | null;
+          discharges_sent: number | null;
+          duration_seconds: number | null;
+          ended_at: string | null;
+          event_count: number | null;
+          extension_version: string | null;
+          features_used: string[] | null;
+          id: string;
+          metadata: Json | null;
+          platform: string;
+          session_id: string;
+          started_at: string | null;
+          updated_at: string | null;
+          user_agent: string | null;
+          user_id: string | null;
+        };
         Insert: {
-          actions_performed?: string[] | null
-          app_version?: string | null
-          cases_created?: number | null
-          created_at?: string | null
-          device_info?: Json | null
-          discharges_sent?: number | null
-          duration_seconds?: number | null
-          ended_at?: string | null
-          event_count?: number | null
-          extension_version?: string | null
-          features_used?: string[] | null
-          id?: string
-          metadata?: Json | null
-          platform: string
-          session_id: string
-          started_at?: string | null
-          updated_at?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
+          actions_performed?: string[] | null;
+          app_version?: string | null;
+          cases_created?: number | null;
+          created_at?: string | null;
+          device_info?: Json | null;
+          discharges_sent?: number | null;
+          duration_seconds?: number | null;
+          ended_at?: string | null;
+          event_count?: number | null;
+          extension_version?: string | null;
+          features_used?: string[] | null;
+          id?: string;
+          metadata?: Json | null;
+          platform: string;
+          session_id: string;
+          started_at?: string | null;
+          updated_at?: string | null;
+          user_agent?: string | null;
+          user_id?: string | null;
+        };
         Update: {
-          actions_performed?: string[] | null
-          app_version?: string | null
-          cases_created?: number | null
-          created_at?: string | null
-          device_info?: Json | null
-          discharges_sent?: number | null
-          duration_seconds?: number | null
-          ended_at?: string | null
-          event_count?: number | null
-          extension_version?: string | null
-          features_used?: string[] | null
-          id?: string
-          metadata?: Json | null
-          platform?: string
-          session_id?: string
-          started_at?: string | null
-          updated_at?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
+          actions_performed?: string[] | null;
+          app_version?: string | null;
+          cases_created?: number | null;
+          created_at?: string | null;
+          device_info?: Json | null;
+          discharges_sent?: number | null;
+          duration_seconds?: number | null;
+          ended_at?: string | null;
+          event_count?: number | null;
+          extension_version?: string | null;
+          features_used?: string[] | null;
+          id?: string;
+          metadata?: Json | null;
+          platform?: string;
+          session_id?: string;
+          started_at?: string | null;
+          updated_at?: string | null;
+          user_agent?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       slack_installations: {
         Row: {
-          bot_token: string
-          created_at: string
-          id: string
-          team_id: string
-          team_name: string | null
-          updated_at: string
-        }
+          bot_token: string;
+          created_at: string;
+          id: string;
+          team_id: string;
+          team_name: string | null;
+          updated_at: string;
+        };
         Insert: {
-          bot_token: string
-          created_at?: string
-          id?: string
-          team_id: string
-          team_name?: string | null
-          updated_at?: string
-        }
+          bot_token: string;
+          created_at?: string;
+          id?: string;
+          team_id: string;
+          team_name?: string | null;
+          updated_at?: string;
+        };
         Update: {
-          bot_token?: string
-          created_at?: string
-          id?: string
-          team_id?: string
-          team_name?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          bot_token?: string;
+          created_at?: string;
+          id?: string;
+          team_id?: string;
+          team_name?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       slack_reminder_channels: {
         Row: {
-          added_by_user_id: string
-          channel_id: string
-          channel_name: string
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          timezone: string
-          updated_at: string | null
-          workspace_id: string | null
-        }
+          added_by_user_id: string;
+          channel_id: string;
+          channel_name: string;
+          created_at: string | null;
+          id: string;
+          is_active: boolean | null;
+          timezone: string;
+          updated_at: string | null;
+          workspace_id: string | null;
+        };
         Insert: {
-          added_by_user_id: string
-          channel_id: string
-          channel_name: string
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          timezone?: string
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
+          added_by_user_id: string;
+          channel_id: string;
+          channel_name: string;
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          timezone?: string;
+          updated_at?: string | null;
+          workspace_id?: string | null;
+        };
         Update: {
-          added_by_user_id?: string
-          channel_id?: string
-          channel_name?: string
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          timezone?: string
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
+          added_by_user_id?: string;
+          channel_id?: string;
+          channel_name?: string;
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          timezone?: string;
+          updated_at?: string | null;
+          workspace_id?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "slack_reminder_channels_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "slack_workspaces"
-            referencedColumns: ["id"]
+            foreignKeyName: "slack_reminder_channels_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "slack_workspaces";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       slack_task_completions: {
         Row: {
-          completed_at: string | null
-          completed_by_user_id: string
-          completed_by_username: string | null
-          completion_date: string
-          id: string
-          message_ts: string | null
-          task_id: string | null
-        }
+          completed_at: string | null;
+          completed_by_user_id: string;
+          completed_by_username: string | null;
+          completion_date: string;
+          id: string;
+          message_ts: string | null;
+          task_id: string | null;
+        };
         Insert: {
-          completed_at?: string | null
-          completed_by_user_id: string
-          completed_by_username?: string | null
-          completion_date: string
-          id?: string
-          message_ts?: string | null
-          task_id?: string | null
-        }
+          completed_at?: string | null;
+          completed_by_user_id: string;
+          completed_by_username?: string | null;
+          completion_date: string;
+          id?: string;
+          message_ts?: string | null;
+          task_id?: string | null;
+        };
         Update: {
-          completed_at?: string | null
-          completed_by_user_id?: string
-          completed_by_username?: string | null
-          completion_date?: string
-          id?: string
-          message_ts?: string | null
-          task_id?: string | null
-        }
+          completed_at?: string | null;
+          completed_by_user_id?: string;
+          completed_by_username?: string | null;
+          completion_date?: string;
+          id?: string;
+          message_ts?: string | null;
+          task_id?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "slack_task_completions_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "slack_tasks"
-            referencedColumns: ["id"]
+            foreignKeyName: "slack_task_completions_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "slack_tasks";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       slack_tasks: {
         Row: {
-          channel_id: string | null
-          created_at: string | null
-          created_by_user_id: string
-          description: string | null
-          id: string
-          is_active: boolean | null
-          reminder_time: string
-          title: string
-          updated_at: string | null
-        }
+          channel_id: string | null;
+          created_at: string | null;
+          created_by_user_id: string;
+          description: string | null;
+          id: string;
+          is_active: boolean | null;
+          reminder_time: string;
+          title: string;
+          updated_at: string | null;
+        };
         Insert: {
-          channel_id?: string | null
-          created_at?: string | null
-          created_by_user_id: string
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          reminder_time: string
-          title: string
-          updated_at?: string | null
-        }
+          channel_id?: string | null;
+          created_at?: string | null;
+          created_by_user_id: string;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          reminder_time: string;
+          title: string;
+          updated_at?: string | null;
+        };
         Update: {
-          channel_id?: string | null
-          created_at?: string | null
-          created_by_user_id?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          reminder_time?: string
-          title?: string
-          updated_at?: string | null
-        }
+          channel_id?: string | null;
+          created_at?: string | null;
+          created_by_user_id?: string;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          reminder_time?: string;
+          title?: string;
+          updated_at?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "slack_tasks_channel_id_fkey"
-            columns: ["channel_id"]
-            isOneToOne: false
-            referencedRelation: "slack_reminder_channels"
-            referencedColumns: ["id"]
+            foreignKeyName: "slack_tasks_channel_id_fkey";
+            columns: ["channel_id"];
+            isOneToOne: false;
+            referencedRelation: "slack_reminder_channels";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       slack_workspaces: {
         Row: {
-          app_id: string
-          authed_user_id: string | null
-          bot_token: string
-          bot_user_id: string
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          scope: string
-          team_id: string
-          team_name: string
-          updated_at: string | null
-        }
+          app_id: string;
+          authed_user_id: string | null;
+          bot_token: string;
+          bot_user_id: string;
+          created_at: string | null;
+          id: string;
+          is_active: boolean | null;
+          scope: string;
+          team_id: string;
+          team_name: string;
+          updated_at: string | null;
+        };
         Insert: {
-          app_id: string
-          authed_user_id?: string | null
-          bot_token: string
-          bot_user_id: string
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          scope: string
-          team_id: string
-          team_name: string
-          updated_at?: string | null
-        }
+          app_id: string;
+          authed_user_id?: string | null;
+          bot_token: string;
+          bot_user_id: string;
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          scope: string;
+          team_id: string;
+          team_name: string;
+          updated_at?: string | null;
+        };
         Update: {
-          app_id?: string
-          authed_user_id?: string | null
-          bot_token?: string
-          bot_user_id?: string
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          scope?: string
-          team_id?: string
-          team_name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+          app_id?: string;
+          authed_user_id?: string | null;
+          bot_token?: string;
+          bot_user_id?: string;
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          scope?: string;
+          team_id?: string;
+          team_name?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
       soap_notes: {
         Row: {
-          assessment: string | null
-          case_id: string | null
-          client_instructions: string | null
-          created_at: string
-          id: string
-          objective: string | null
-          plan: string | null
-          subjective: string | null
-          transcript: string | null
-          updated_at: string | null
-        }
+          assessment: string | null;
+          case_id: string | null;
+          client_instructions: string | null;
+          created_at: string;
+          id: string;
+          objective: string | null;
+          plan: string | null;
+          subjective: string | null;
+          transcript: string | null;
+          updated_at: string | null;
+        };
         Insert: {
-          assessment?: string | null
-          case_id?: string | null
-          client_instructions?: string | null
-          created_at?: string
-          id?: string
-          objective?: string | null
-          plan?: string | null
-          subjective?: string | null
-          transcript?: string | null
-          updated_at?: string | null
-        }
+          assessment?: string | null;
+          case_id?: string | null;
+          client_instructions?: string | null;
+          created_at?: string;
+          id?: string;
+          objective?: string | null;
+          plan?: string | null;
+          subjective?: string | null;
+          transcript?: string | null;
+          updated_at?: string | null;
+        };
         Update: {
-          assessment?: string | null
-          case_id?: string | null
-          client_instructions?: string | null
-          created_at?: string
-          id?: string
-          objective?: string | null
-          plan?: string | null
-          subjective?: string | null
-          transcript?: string | null
-          updated_at?: string | null
-        }
+          assessment?: string | null;
+          case_id?: string | null;
+          client_instructions?: string | null;
+          created_at?: string;
+          id?: string;
+          objective?: string | null;
+          plan?: string | null;
+          subjective?: string | null;
+          transcript?: string | null;
+          updated_at?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "soap_notes_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
+            foreignKeyName: "soap_notes_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       soap_template_shares: {
         Row: {
-          created_at: string | null
-          id: string
-          shared_by_user_id: string | null
-          shared_with_user_id: string
-          template_id: string
-          updated_at: string | null
-        }
+          created_at: string | null;
+          id: string;
+          shared_by_user_id: string | null;
+          shared_with_user_id: string;
+          template_id: string;
+          updated_at: string | null;
+        };
         Insert: {
-          created_at?: string | null
-          id?: string
-          shared_by_user_id?: string | null
-          shared_with_user_id: string
-          template_id: string
-          updated_at?: string | null
-        }
+          created_at?: string | null;
+          id?: string;
+          shared_by_user_id?: string | null;
+          shared_with_user_id: string;
+          template_id: string;
+          updated_at?: string | null;
+        };
         Update: {
-          created_at?: string | null
-          id?: string
-          shared_by_user_id?: string | null
-          shared_with_user_id?: string
-          template_id?: string
-          updated_at?: string | null
-        }
+          created_at?: string | null;
+          id?: string;
+          shared_by_user_id?: string | null;
+          shared_with_user_id?: string;
+          template_id?: string;
+          updated_at?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "soap_template_shares_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "temp_soap_templates"
-            referencedColumns: ["id"]
+            foreignKeyName: "soap_template_shares_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "temp_soap_templates";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       temp_discharge_summary_templates: {
         Row: {
-          content: string
-          created_at: string
-          id: string
-          is_default: boolean | null
-          name: string
-          updated_at: string
-          user_id: string
-        }
+          content: string;
+          created_at: string;
+          id: string;
+          is_default: boolean | null;
+          name: string;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          is_default?: boolean | null
-          name: string
-          updated_at?: string
-          user_id: string
-        }
+          content: string;
+          created_at?: string;
+          id?: string;
+          is_default?: boolean | null;
+          name: string;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          is_default?: boolean | null
-          name?: string
-          updated_at?: string
-          user_id?: string
-        }
+          content?: string;
+          created_at?: string;
+          id?: string;
+          is_default?: boolean | null;
+          name?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "temp_discharge_summary_templates_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "temp_discharge_summary_templates_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       temp_soap_templates: {
         Row: {
-          assessment_prompt: string | null
-          assessment_template: string | null
-          client_instructions_prompt: string | null
-          client_instructions_template: string | null
-          created_at: string | null
-          display_name: string
-          icon_name: string
-          id: string
-          is_default: boolean | null
-          objective_prompt: string | null
-          objective_template: string | null
-          person_name: string
-          plan_prompt: string | null
-          plan_template: string | null
-          subjective_prompt: string | null
-          subjective_template: string | null
-          system_prompt_addition: string | null
-          template_id: string
-          template_name: string
-          updated_at: string | null
-          user_id: string | null
-        }
+          assessment_prompt: string | null;
+          assessment_template: string | null;
+          client_instructions_prompt: string | null;
+          client_instructions_template: string | null;
+          created_at: string | null;
+          display_name: string;
+          icon_name: string;
+          id: string;
+          is_default: boolean | null;
+          objective_prompt: string | null;
+          objective_template: string | null;
+          person_name: string;
+          plan_prompt: string | null;
+          plan_template: string | null;
+          subjective_prompt: string | null;
+          subjective_template: string | null;
+          system_prompt_addition: string | null;
+          template_id: string;
+          template_name: string;
+          updated_at: string | null;
+          user_id: string | null;
+        };
         Insert: {
-          assessment_prompt?: string | null
-          assessment_template?: string | null
-          client_instructions_prompt?: string | null
-          client_instructions_template?: string | null
-          created_at?: string | null
-          display_name: string
-          icon_name: string
-          id?: string
-          is_default?: boolean | null
-          objective_prompt?: string | null
-          objective_template?: string | null
-          person_name: string
-          plan_prompt?: string | null
-          plan_template?: string | null
-          subjective_prompt?: string | null
-          subjective_template?: string | null
-          system_prompt_addition?: string | null
-          template_id: string
-          template_name: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
+          assessment_prompt?: string | null;
+          assessment_template?: string | null;
+          client_instructions_prompt?: string | null;
+          client_instructions_template?: string | null;
+          created_at?: string | null;
+          display_name: string;
+          icon_name: string;
+          id?: string;
+          is_default?: boolean | null;
+          objective_prompt?: string | null;
+          objective_template?: string | null;
+          person_name: string;
+          plan_prompt?: string | null;
+          plan_template?: string | null;
+          subjective_prompt?: string | null;
+          subjective_template?: string | null;
+          system_prompt_addition?: string | null;
+          template_id: string;
+          template_name: string;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
         Update: {
-          assessment_prompt?: string | null
-          assessment_template?: string | null
-          client_instructions_prompt?: string | null
-          client_instructions_template?: string | null
-          created_at?: string | null
-          display_name?: string
-          icon_name?: string
-          id?: string
-          is_default?: boolean | null
-          objective_prompt?: string | null
-          objective_template?: string | null
-          person_name?: string
-          plan_prompt?: string | null
-          plan_template?: string | null
-          subjective_prompt?: string | null
-          subjective_template?: string | null
-          system_prompt_addition?: string | null
-          template_id?: string
-          template_name?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
+          assessment_prompt?: string | null;
+          assessment_template?: string | null;
+          client_instructions_prompt?: string | null;
+          client_instructions_template?: string | null;
+          created_at?: string | null;
+          display_name?: string;
+          icon_name?: string;
+          id?: string;
+          is_default?: boolean | null;
+          objective_prompt?: string | null;
+          objective_template?: string | null;
+          person_name?: string;
+          plan_prompt?: string | null;
+          plan_template?: string | null;
+          subjective_prompt?: string | null;
+          subjective_template?: string | null;
+          system_prompt_addition?: string | null;
+          template_id?: string;
+          template_name?: string;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "temp_soap_templates_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "temp_soap_templates_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       templates: {
         Row: {
-          content: Json | null
-          created_at: string | null
-          description: string | null
-          id: string
-          key: string | null
-          metadata: Json | null
-          model: string | null
-          name: string | null
-          output_format: string | null
-          prompt: string | null
-          type: string | null
-          updated_at: string | null
-          validation_schema: Json | null
-        }
+          content: Json | null;
+          created_at: string | null;
+          description: string | null;
+          id: string;
+          key: string | null;
+          metadata: Json | null;
+          model: string | null;
+          name: string | null;
+          output_format: string | null;
+          prompt: string | null;
+          type: string | null;
+          updated_at: string | null;
+          validation_schema: Json | null;
+        };
         Insert: {
-          content?: Json | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          key?: string | null
-          metadata?: Json | null
-          model?: string | null
-          name?: string | null
-          output_format?: string | null
-          prompt?: string | null
-          type?: string | null
-          updated_at?: string | null
-          validation_schema?: Json | null
-        }
+          content?: Json | null;
+          created_at?: string | null;
+          description?: string | null;
+          id?: string;
+          key?: string | null;
+          metadata?: Json | null;
+          model?: string | null;
+          name?: string | null;
+          output_format?: string | null;
+          prompt?: string | null;
+          type?: string | null;
+          updated_at?: string | null;
+          validation_schema?: Json | null;
+        };
         Update: {
-          content?: Json | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          key?: string | null
-          metadata?: Json | null
-          model?: string | null
-          name?: string | null
-          output_format?: string | null
-          prompt?: string | null
-          type?: string | null
-          updated_at?: string | null
-          validation_schema?: Json | null
-        }
-        Relationships: []
-      }
+          content?: Json | null;
+          created_at?: string | null;
+          description?: string | null;
+          id?: string;
+          key?: string | null;
+          metadata?: Json | null;
+          model?: string | null;
+          name?: string | null;
+          output_format?: string | null;
+          prompt?: string | null;
+          type?: string | null;
+          updated_at?: string | null;
+          validation_schema?: Json | null;
+        };
+        Relationships: [];
+      };
       transcriptions: {
         Row: {
-          audio_file_id: string | null
-          case_id: string | null
-          created_at: string
-          id: string
-          processing_status: string | null
-          speaker_segments: Json | null
-          transcript: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
+          audio_file_id: string | null;
+          case_id: string | null;
+          created_at: string;
+          id: string;
+          processing_status: string | null;
+          speaker_segments: Json | null;
+          transcript: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+        };
         Insert: {
-          audio_file_id?: string | null
-          case_id?: string | null
-          created_at?: string
-          id?: string
-          processing_status?: string | null
-          speaker_segments?: Json | null
-          transcript?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
+          audio_file_id?: string | null;
+          case_id?: string | null;
+          created_at?: string;
+          id?: string;
+          processing_status?: string | null;
+          speaker_segments?: Json | null;
+          transcript?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
         Update: {
-          audio_file_id?: string | null
-          case_id?: string | null
-          created_at?: string
-          id?: string
-          processing_status?: string | null
-          speaker_segments?: Json | null
-          transcript?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
+          audio_file_id?: string | null;
+          case_id?: string | null;
+          created_at?: string;
+          id?: string;
+          processing_status?: string | null;
+          speaker_segments?: Json | null;
+          transcript?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "transcriptions_audio_file_id_fkey"
-            columns: ["audio_file_id"]
-            isOneToOne: false
-            referencedRelation: "audio_files"
-            referencedColumns: ["id"]
+            foreignKeyName: "transcriptions_audio_file_id_fkey";
+            columns: ["audio_file_id"];
+            isOneToOne: false;
+            referencedRelation: "audio_files";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "transcriptions_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
+            foreignKeyName: "transcriptions_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "transcriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "transcriptions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       user_clinic_access: {
         Row: {
-          clinic_id: string
-          created_at: string
-          granted_at: string
-          granted_by: string | null
-          id: string
-          is_primary: boolean
-          role: string
-          user_id: string
-        }
+          clinic_id: string;
+          created_at: string;
+          granted_at: string;
+          granted_by: string | null;
+          id: string;
+          is_primary: boolean;
+          role: string;
+          user_id: string;
+        };
         Insert: {
-          clinic_id: string
-          created_at?: string
-          granted_at?: string
-          granted_by?: string | null
-          id?: string
-          is_primary?: boolean
-          role?: string
-          user_id: string
-        }
+          clinic_id: string;
+          created_at?: string;
+          granted_at?: string;
+          granted_by?: string | null;
+          id?: string;
+          is_primary?: boolean;
+          role?: string;
+          user_id: string;
+        };
         Update: {
-          clinic_id?: string
-          created_at?: string
-          granted_at?: string
-          granted_by?: string | null
-          id?: string
-          is_primary?: boolean
-          role?: string
-          user_id?: string
-        }
+          clinic_id?: string;
+          created_at?: string;
+          granted_at?: string;
+          granted_by?: string | null;
+          id?: string;
+          is_primary?: boolean;
+          role?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "user_clinic_access_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "user_clinic_access_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "user_clinic_access_granted_by_fkey"
-            columns: ["granted_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "user_clinic_access_granted_by_fkey";
+            columns: ["granted_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "user_clinic_access_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "user_clinic_access_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       user_events: {
         Row: {
-          case_id: string | null
-          created_at: string | null
-          discharge_summary_id: string | null
-          error_code: string | null
-          error_message: string | null
-          event_action: string
-          event_category: string
-          event_type: string
-          id: string
-          metadata: Json | null
-          patient_id: string | null
-          platform: string
-          properties: Json | null
-          scheduled_call_id: string | null
-          scheduled_email_id: string | null
-          session_id: string | null
-          source: string | null
-          success: boolean | null
-          user_id: string | null
-        }
+          case_id: string | null;
+          created_at: string | null;
+          discharge_summary_id: string | null;
+          error_code: string | null;
+          error_message: string | null;
+          event_action: string;
+          event_category: string;
+          event_type: string;
+          id: string;
+          metadata: Json | null;
+          patient_id: string | null;
+          platform: string;
+          properties: Json | null;
+          scheduled_call_id: string | null;
+          scheduled_email_id: string | null;
+          session_id: string | null;
+          source: string | null;
+          success: boolean | null;
+          user_id: string | null;
+        };
         Insert: {
-          case_id?: string | null
-          created_at?: string | null
-          discharge_summary_id?: string | null
-          error_code?: string | null
-          error_message?: string | null
-          event_action: string
-          event_category: string
-          event_type: string
-          id?: string
-          metadata?: Json | null
-          patient_id?: string | null
-          platform: string
-          properties?: Json | null
-          scheduled_call_id?: string | null
-          scheduled_email_id?: string | null
-          session_id?: string | null
-          source?: string | null
-          success?: boolean | null
-          user_id?: string | null
-        }
+          case_id?: string | null;
+          created_at?: string | null;
+          discharge_summary_id?: string | null;
+          error_code?: string | null;
+          error_message?: string | null;
+          event_action: string;
+          event_category: string;
+          event_type: string;
+          id?: string;
+          metadata?: Json | null;
+          patient_id?: string | null;
+          platform: string;
+          properties?: Json | null;
+          scheduled_call_id?: string | null;
+          scheduled_email_id?: string | null;
+          session_id?: string | null;
+          source?: string | null;
+          success?: boolean | null;
+          user_id?: string | null;
+        };
         Update: {
-          case_id?: string | null
-          created_at?: string | null
-          discharge_summary_id?: string | null
-          error_code?: string | null
-          error_message?: string | null
-          event_action?: string
-          event_category?: string
-          event_type?: string
-          id?: string
-          metadata?: Json | null
-          patient_id?: string | null
-          platform?: string
-          properties?: Json | null
-          scheduled_call_id?: string | null
-          scheduled_email_id?: string | null
-          session_id?: string | null
-          source?: string | null
-          success?: boolean | null
-          user_id?: string | null
-        }
+          case_id?: string | null;
+          created_at?: string | null;
+          discharge_summary_id?: string | null;
+          error_code?: string | null;
+          error_message?: string | null;
+          event_action?: string;
+          event_category?: string;
+          event_type?: string;
+          id?: string;
+          metadata?: Json | null;
+          patient_id?: string | null;
+          platform?: string;
+          properties?: Json | null;
+          scheduled_call_id?: string | null;
+          scheduled_email_id?: string | null;
+          session_id?: string | null;
+          source?: string | null;
+          success?: boolean | null;
+          user_id?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "user_events_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
+            foreignKeyName: "user_events_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "user_events_discharge_summary_id_fkey"
-            columns: ["discharge_summary_id"]
-            isOneToOne: false
-            referencedRelation: "discharge_summaries"
-            referencedColumns: ["id"]
+            foreignKeyName: "user_events_discharge_summary_id_fkey";
+            columns: ["discharge_summary_id"];
+            isOneToOne: false;
+            referencedRelation: "discharge_summaries";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "user_events_patient_id_fkey"
-            columns: ["patient_id"]
-            isOneToOne: false
-            referencedRelation: "patients"
-            referencedColumns: ["id"]
+            foreignKeyName: "user_events_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "user_events_scheduled_call_id_fkey"
-            columns: ["scheduled_call_id"]
-            isOneToOne: false
-            referencedRelation: "scheduled_discharge_calls"
-            referencedColumns: ["id"]
+            foreignKeyName: "user_events_scheduled_call_id_fkey";
+            columns: ["scheduled_call_id"];
+            isOneToOne: false;
+            referencedRelation: "scheduled_discharge_calls";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "user_events_scheduled_email_id_fkey"
-            columns: ["scheduled_email_id"]
-            isOneToOne: false
-            referencedRelation: "scheduled_discharge_emails"
-            referencedColumns: ["id"]
+            foreignKeyName: "user_events_scheduled_email_id_fkey";
+            columns: ["scheduled_email_id"];
+            isOneToOne: false;
+            referencedRelation: "scheduled_discharge_emails";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       users: {
         Row: {
-          avatar_url: string | null
-          batch_include_idexx_notes: boolean | null
-          batch_include_manual_transcriptions: boolean | null
-          call_delay_days: number | null
-          clerk_user_id: string | null
-          clinic_email: string | null
-          clinic_name: string | null
-          clinic_phone: string | null
-          created_at: string
-          default_discharge_template_id: string | null
-          default_schedule_delay_minutes: number | null
-          email: string | null
-          email_delay_days: number | null
-          emergency_phone: string | null
-          first_name: string | null
-          id: string
-          idexx_company_id: string | null
-          idexx_password: string | null
-          idexx_username: string | null
-          last_name: string | null
-          license_number: string | null
-          max_call_retries: number | null
-          onboarding_completed: boolean | null
-          pims_credentials: Json | null
-          pims_systems: Json | null
-          preferred_call_end_time: string | null
-          preferred_call_start_time: string | null
-          preferred_email_end_time: string | null
-          preferred_email_start_time: string | null
-          role: Database["public"]["Enums"]["user_role"] | null
-          test_contact_email: string | null
-          test_contact_name: string | null
-          test_contact_phone: string | null
-          test_mode_enabled: boolean | null
-          updated_at: string
-          voicemail_detection_enabled: boolean | null
-          voicemail_hangup_on_detection: boolean
-          voicemail_message: string | null
-          weave_password: string | null
-          weave_username: string | null
-        }
+          avatar_url: string | null;
+          batch_include_idexx_notes: boolean | null;
+          batch_include_manual_transcriptions: boolean | null;
+          call_delay_days: number | null;
+          clerk_user_id: string | null;
+          clinic_email: string | null;
+          clinic_name: string | null;
+          clinic_phone: string | null;
+          created_at: string;
+          default_discharge_template_id: string | null;
+          default_schedule_delay_minutes: number | null;
+          email: string | null;
+          email_delay_days: number | null;
+          emergency_phone: string | null;
+          first_name: string | null;
+          id: string;
+          idexx_company_id: string | null;
+          idexx_password: string | null;
+          idexx_username: string | null;
+          last_name: string | null;
+          license_number: string | null;
+          max_call_retries: number | null;
+          onboarding_completed: boolean | null;
+          pims_credentials: Json | null;
+          pims_systems: Json | null;
+          preferred_call_end_time: string | null;
+          preferred_call_start_time: string | null;
+          preferred_email_end_time: string | null;
+          preferred_email_start_time: string | null;
+          role: Database["public"]["Enums"]["user_role"] | null;
+          test_contact_email: string | null;
+          test_contact_name: string | null;
+          test_contact_phone: string | null;
+          test_mode_enabled: boolean | null;
+          updated_at: string;
+          voicemail_detection_enabled: boolean | null;
+          voicemail_hangup_on_detection: boolean;
+          voicemail_message: string | null;
+          weave_password: string | null;
+          weave_username: string | null;
+        };
         Insert: {
-          avatar_url?: string | null
-          batch_include_idexx_notes?: boolean | null
-          batch_include_manual_transcriptions?: boolean | null
-          call_delay_days?: number | null
-          clerk_user_id?: string | null
-          clinic_email?: string | null
-          clinic_name?: string | null
-          clinic_phone?: string | null
-          created_at?: string
-          default_discharge_template_id?: string | null
-          default_schedule_delay_minutes?: number | null
-          email?: string | null
-          email_delay_days?: number | null
-          emergency_phone?: string | null
-          first_name?: string | null
-          id?: string
-          idexx_company_id?: string | null
-          idexx_password?: string | null
-          idexx_username?: string | null
-          last_name?: string | null
-          license_number?: string | null
-          max_call_retries?: number | null
-          onboarding_completed?: boolean | null
-          pims_credentials?: Json | null
-          pims_systems?: Json | null
-          preferred_call_end_time?: string | null
-          preferred_call_start_time?: string | null
-          preferred_email_end_time?: string | null
-          preferred_email_start_time?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-          test_contact_email?: string | null
-          test_contact_name?: string | null
-          test_contact_phone?: string | null
-          test_mode_enabled?: boolean | null
-          updated_at?: string
-          voicemail_detection_enabled?: boolean | null
-          voicemail_hangup_on_detection?: boolean
-          voicemail_message?: string | null
-          weave_password?: string | null
-          weave_username?: string | null
-        }
+          avatar_url?: string | null;
+          batch_include_idexx_notes?: boolean | null;
+          batch_include_manual_transcriptions?: boolean | null;
+          call_delay_days?: number | null;
+          clerk_user_id?: string | null;
+          clinic_email?: string | null;
+          clinic_name?: string | null;
+          clinic_phone?: string | null;
+          created_at?: string;
+          default_discharge_template_id?: string | null;
+          default_schedule_delay_minutes?: number | null;
+          email?: string | null;
+          email_delay_days?: number | null;
+          emergency_phone?: string | null;
+          first_name?: string | null;
+          id?: string;
+          idexx_company_id?: string | null;
+          idexx_password?: string | null;
+          idexx_username?: string | null;
+          last_name?: string | null;
+          license_number?: string | null;
+          max_call_retries?: number | null;
+          onboarding_completed?: boolean | null;
+          pims_credentials?: Json | null;
+          pims_systems?: Json | null;
+          preferred_call_end_time?: string | null;
+          preferred_call_start_time?: string | null;
+          preferred_email_end_time?: string | null;
+          preferred_email_start_time?: string | null;
+          role?: Database["public"]["Enums"]["user_role"] | null;
+          test_contact_email?: string | null;
+          test_contact_name?: string | null;
+          test_contact_phone?: string | null;
+          test_mode_enabled?: boolean | null;
+          updated_at?: string;
+          voicemail_detection_enabled?: boolean | null;
+          voicemail_hangup_on_detection?: boolean;
+          voicemail_message?: string | null;
+          weave_password?: string | null;
+          weave_username?: string | null;
+        };
         Update: {
-          avatar_url?: string | null
-          batch_include_idexx_notes?: boolean | null
-          batch_include_manual_transcriptions?: boolean | null
-          call_delay_days?: number | null
-          clerk_user_id?: string | null
-          clinic_email?: string | null
-          clinic_name?: string | null
-          clinic_phone?: string | null
-          created_at?: string
-          default_discharge_template_id?: string | null
-          default_schedule_delay_minutes?: number | null
-          email?: string | null
-          email_delay_days?: number | null
-          emergency_phone?: string | null
-          first_name?: string | null
-          id?: string
-          idexx_company_id?: string | null
-          idexx_password?: string | null
-          idexx_username?: string | null
-          last_name?: string | null
-          license_number?: string | null
-          max_call_retries?: number | null
-          onboarding_completed?: boolean | null
-          pims_credentials?: Json | null
-          pims_systems?: Json | null
-          preferred_call_end_time?: string | null
-          preferred_call_start_time?: string | null
-          preferred_email_end_time?: string | null
-          preferred_email_start_time?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-          test_contact_email?: string | null
-          test_contact_name?: string | null
-          test_contact_phone?: string | null
-          test_mode_enabled?: boolean | null
-          updated_at?: string
-          voicemail_detection_enabled?: boolean | null
-          voicemail_hangup_on_detection?: boolean
-          voicemail_message?: string | null
-          weave_password?: string | null
-          weave_username?: string | null
-        }
+          avatar_url?: string | null;
+          batch_include_idexx_notes?: boolean | null;
+          batch_include_manual_transcriptions?: boolean | null;
+          call_delay_days?: number | null;
+          clerk_user_id?: string | null;
+          clinic_email?: string | null;
+          clinic_name?: string | null;
+          clinic_phone?: string | null;
+          created_at?: string;
+          default_discharge_template_id?: string | null;
+          default_schedule_delay_minutes?: number | null;
+          email?: string | null;
+          email_delay_days?: number | null;
+          emergency_phone?: string | null;
+          first_name?: string | null;
+          id?: string;
+          idexx_company_id?: string | null;
+          idexx_password?: string | null;
+          idexx_username?: string | null;
+          last_name?: string | null;
+          license_number?: string | null;
+          max_call_retries?: number | null;
+          onboarding_completed?: boolean | null;
+          pims_credentials?: Json | null;
+          pims_systems?: Json | null;
+          preferred_call_end_time?: string | null;
+          preferred_call_start_time?: string | null;
+          preferred_email_end_time?: string | null;
+          preferred_email_start_time?: string | null;
+          role?: Database["public"]["Enums"]["user_role"] | null;
+          test_contact_email?: string | null;
+          test_contact_name?: string | null;
+          test_contact_phone?: string | null;
+          test_mode_enabled?: boolean | null;
+          updated_at?: string;
+          voicemail_detection_enabled?: boolean | null;
+          voicemail_hangup_on_detection?: boolean;
+          voicemail_message?: string | null;
+          weave_password?: string | null;
+          weave_username?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "users_default_discharge_template_id_fkey"
-            columns: ["default_discharge_template_id"]
-            isOneToOne: false
-            referencedRelation: "temp_discharge_summary_templates"
-            referencedColumns: ["id"]
+            foreignKeyName: "users_default_discharge_template_id_fkey";
+            columns: ["default_discharge_template_id"];
+            isOneToOne: false;
+            referencedRelation: "temp_discharge_summary_templates";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       vapi_assistant_mappings: {
         Row: {
-          assistant_id: string
-          assistant_name: string | null
-          assistant_type: string
-          clinic_id: string
-          created_at: string
-          environment: string
-          id: string
-          is_active: boolean
-          pims_clinic_id: string | null
-          updated_at: string
-        }
+          assistant_id: string;
+          assistant_name: string | null;
+          assistant_type: string;
+          clinic_id: string;
+          created_at: string;
+          environment: string;
+          id: string;
+          is_active: boolean;
+          pims_clinic_id: string | null;
+          updated_at: string;
+        };
         Insert: {
-          assistant_id: string
-          assistant_name?: string | null
-          assistant_type?: string
-          clinic_id: string
-          created_at?: string
-          environment?: string
-          id?: string
-          is_active?: boolean
-          pims_clinic_id?: string | null
-          updated_at?: string
-        }
+          assistant_id: string;
+          assistant_name?: string | null;
+          assistant_type?: string;
+          clinic_id: string;
+          created_at?: string;
+          environment?: string;
+          id?: string;
+          is_active?: boolean;
+          pims_clinic_id?: string | null;
+          updated_at?: string;
+        };
         Update: {
-          assistant_id?: string
-          assistant_name?: string | null
-          assistant_type?: string
-          clinic_id?: string
-          created_at?: string
-          environment?: string
-          id?: string
-          is_active?: boolean
-          pims_clinic_id?: string | null
-          updated_at?: string
-        }
+          assistant_id?: string;
+          assistant_name?: string | null;
+          assistant_type?: string;
+          clinic_id?: string;
+          created_at?: string;
+          environment?: string;
+          id?: string;
+          is_active?: boolean;
+          pims_clinic_id?: string | null;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "vapi_assistant_mappings_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "vapi_assistant_mappings_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "vapi_assistant_mappings_pims_clinic_id_fkey"
-            columns: ["pims_clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "vapi_assistant_mappings_pims_clinic_id_fkey";
+            columns: ["pims_clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
-      vapi_bookings: {
-        Row: {
-          appointment_type: string | null
-          booked_at_sync_id: string | null
-          breed: string | null
-          cancelled_at: string | null
-          cancelled_reason: string | null
-          client_name: string
-          client_phone: string
-          clinic_id: string
-          confirmation_number: string | null
-          created_at: string
-          date: string
-          end_time: string | null
-          has_conflict: boolean
-          hold_expires_at: string | null
-          id: string
-          idexx_appointment_id: string | null
-          idexx_client_id: string | null
-          idexx_patient_id: string | null
-          is_new_client: boolean | null
-          metadata: Json | null
-          original_date: string | null
-          original_time: string | null
-          patient_name: string
-          provider_name: string | null
-          reason: string | null
-          rescheduled_at: string | null
-          rescheduled_from_id: string | null
-          rescheduled_reason: string | null
-          rescheduled_to_id: string | null
-          room_id: string | null
-          slot_id: string | null
-          species: string | null
-          start_time: string
-          status: string
-          sync_freshness_at_booking: string | null
-          updated_at: string
-          vapi_call_id: string | null
-        }
-        Insert: {
-          appointment_type?: string | null
-          booked_at_sync_id?: string | null
-          breed?: string | null
-          cancelled_at?: string | null
-          cancelled_reason?: string | null
-          client_name: string
-          client_phone: string
-          clinic_id: string
-          confirmation_number?: string | null
-          created_at?: string
-          date: string
-          end_time?: string | null
-          has_conflict?: boolean
-          hold_expires_at?: string | null
-          id?: string
-          idexx_appointment_id?: string | null
-          idexx_client_id?: string | null
-          idexx_patient_id?: string | null
-          is_new_client?: boolean | null
-          metadata?: Json | null
-          original_date?: string | null
-          original_time?: string | null
-          patient_name: string
-          provider_name?: string | null
-          reason?: string | null
-          rescheduled_at?: string | null
-          rescheduled_from_id?: string | null
-          rescheduled_reason?: string | null
-          rescheduled_to_id?: string | null
-          room_id?: string | null
-          slot_id?: string | null
-          species?: string | null
-          start_time: string
-          status?: string
-          sync_freshness_at_booking?: string | null
-          updated_at?: string
-          vapi_call_id?: string | null
-        }
-        Update: {
-          appointment_type?: string | null
-          booked_at_sync_id?: string | null
-          breed?: string | null
-          cancelled_at?: string | null
-          cancelled_reason?: string | null
-          client_name?: string
-          client_phone?: string
-          clinic_id?: string
-          confirmation_number?: string | null
-          created_at?: string
-          date?: string
-          end_time?: string | null
-          has_conflict?: boolean
-          hold_expires_at?: string | null
-          id?: string
-          idexx_appointment_id?: string | null
-          idexx_client_id?: string | null
-          idexx_patient_id?: string | null
-          is_new_client?: boolean | null
-          metadata?: Json | null
-          original_date?: string | null
-          original_time?: string | null
-          patient_name?: string
-          provider_name?: string | null
-          reason?: string | null
-          rescheduled_at?: string | null
-          rescheduled_from_id?: string | null
-          rescheduled_reason?: string | null
-          rescheduled_to_id?: string | null
-          room_id?: string | null
-          slot_id?: string | null
-          species?: string | null
-          start_time?: string
-          status?: string
-          sync_freshness_at_booking?: string | null
-          updated_at?: string
-          vapi_call_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "vapi_bookings_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vapi_bookings_rescheduled_from_id_fkey"
-            columns: ["rescheduled_from_id"]
-            isOneToOne: false
-            referencedRelation: "vapi_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vapi_bookings_rescheduled_to_id_fkey"
-            columns: ["rescheduled_to_id"]
-            isOneToOne: false
-            referencedRelation: "vapi_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vapi_bookings_slot_id_fkey"
-            columns: ["slot_id"]
-            isOneToOne: false
-            referencedRelation: "schedule_slots"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      vapi_bookings_v2: {
-        Row: {
-          breed: string | null
-          client_name: string
-          client_phone: string
-          clinic_id: string
-          confirmation_number: string | null
-          created_at: string
-          date: string | null
-          has_conflict: boolean
-          hold_expires_at: string | null
-          id: string
-          is_new_client: boolean | null
-          metadata: Json | null
-          original_time_range: unknown
-          patient_name: string
-          reason: string | null
-          rescheduled_at: string | null
-          rescheduled_reason: string | null
-          species: string | null
-          status: string
-          time_range: unknown
-          updated_at: string
-          vapi_call_id: string | null
-        }
-        Insert: {
-          breed?: string | null
-          client_name: string
-          client_phone: string
-          clinic_id: string
-          confirmation_number?: string | null
-          created_at?: string
-          date?: string | null
-          has_conflict?: boolean
-          hold_expires_at?: string | null
-          id?: string
-          is_new_client?: boolean | null
-          metadata?: Json | null
-          original_time_range?: unknown
-          patient_name: string
-          reason?: string | null
-          rescheduled_at?: string | null
-          rescheduled_reason?: string | null
-          species?: string | null
-          status?: string
-          time_range: unknown
-          updated_at?: string
-          vapi_call_id?: string | null
-        }
-        Update: {
-          breed?: string | null
-          client_name?: string
-          client_phone?: string
-          clinic_id?: string
-          confirmation_number?: string | null
-          created_at?: string
-          date?: string | null
-          has_conflict?: boolean
-          hold_expires_at?: string | null
-          id?: string
-          is_new_client?: boolean | null
-          metadata?: Json | null
-          original_time_range?: unknown
-          patient_name?: string
-          reason?: string | null
-          rescheduled_at?: string | null
-          rescheduled_reason?: string | null
-          species?: string | null
-          status?: string
-          time_range?: unknown
-          updated_at?: string
-          vapi_call_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "vapi_bookings_v2_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+        ];
+      };
       vital_signs: {
         Row: {
-          case_id: string | null
-          created_at: string | null
-          diastolic: number | null
-          extracted_from: string | null
-          id: string
-          measured_at: string | null
-          metadata: Json | null
-          notes: string | null
-          pulse: number | null
-          respiration: number | null
-          soap_note_id: string | null
-          source: string | null
-          systolic: number | null
-          temperature: number | null
-          temperature_unit: string | null
-          updated_at: string | null
-          user_id: string
-          weight: number | null
-          weight_unit: string | null
-        }
+          case_id: string | null;
+          created_at: string | null;
+          diastolic: number | null;
+          extracted_from: string | null;
+          id: string;
+          measured_at: string | null;
+          metadata: Json | null;
+          notes: string | null;
+          pulse: number | null;
+          respiration: number | null;
+          soap_note_id: string | null;
+          source: string | null;
+          systolic: number | null;
+          temperature: number | null;
+          temperature_unit: string | null;
+          updated_at: string | null;
+          user_id: string;
+          weight: number | null;
+          weight_unit: string | null;
+        };
         Insert: {
-          case_id?: string | null
-          created_at?: string | null
-          diastolic?: number | null
-          extracted_from?: string | null
-          id?: string
-          measured_at?: string | null
-          metadata?: Json | null
-          notes?: string | null
-          pulse?: number | null
-          respiration?: number | null
-          soap_note_id?: string | null
-          source?: string | null
-          systolic?: number | null
-          temperature?: number | null
-          temperature_unit?: string | null
-          updated_at?: string | null
-          user_id: string
-          weight?: number | null
-          weight_unit?: string | null
-        }
+          case_id?: string | null;
+          created_at?: string | null;
+          diastolic?: number | null;
+          extracted_from?: string | null;
+          id?: string;
+          measured_at?: string | null;
+          metadata?: Json | null;
+          notes?: string | null;
+          pulse?: number | null;
+          respiration?: number | null;
+          soap_note_id?: string | null;
+          source?: string | null;
+          systolic?: number | null;
+          temperature?: number | null;
+          temperature_unit?: string | null;
+          updated_at?: string | null;
+          user_id: string;
+          weight?: number | null;
+          weight_unit?: string | null;
+        };
         Update: {
-          case_id?: string | null
-          created_at?: string | null
-          diastolic?: number | null
-          extracted_from?: string | null
-          id?: string
-          measured_at?: string | null
-          metadata?: Json | null
-          notes?: string | null
-          pulse?: number | null
-          respiration?: number | null
-          soap_note_id?: string | null
-          source?: string | null
-          systolic?: number | null
-          temperature?: number | null
-          temperature_unit?: string | null
-          updated_at?: string | null
-          user_id?: string
-          weight?: number | null
-          weight_unit?: string | null
-        }
+          case_id?: string | null;
+          created_at?: string | null;
+          diastolic?: number | null;
+          extracted_from?: string | null;
+          id?: string;
+          measured_at?: string | null;
+          metadata?: Json | null;
+          notes?: string | null;
+          pulse?: number | null;
+          respiration?: number | null;
+          soap_note_id?: string | null;
+          source?: string | null;
+          systolic?: number | null;
+          temperature?: number | null;
+          temperature_unit?: string | null;
+          updated_at?: string | null;
+          user_id?: string;
+          weight?: number | null;
+          weight_unit?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "vital_signs_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
+            foreignKeyName: "vital_signs_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "vital_signs_soap_note_id_fkey"
-            columns: ["soap_note_id"]
-            isOneToOne: false
-            referencedRelation: "soap_notes"
-            referencedColumns: ["id"]
+            foreignKeyName: "vital_signs_soap_note_id_fkey";
+            columns: ["soap_note_id"];
+            isOneToOne: false;
+            referencedRelation: "soap_notes";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       waitlist_signups: {
         Row: {
-          campaign: string
-          confirmed_at: string | null
-          created_at: string
-          email: string
-          full_name: string | null
-          id: string
-          ip: unknown
-          metadata: Json
-          source: string | null
-          status: Database["public"]["Enums"]["waitlist_status"]
-          user_agent: string | null
-        }
+          campaign: string;
+          confirmed_at: string | null;
+          created_at: string;
+          email: string;
+          full_name: string | null;
+          id: string;
+          ip: unknown;
+          metadata: Json;
+          source: string | null;
+          status: Database["public"]["Enums"]["waitlist_status"];
+          user_agent: string | null;
+        };
         Insert: {
-          campaign?: string
-          confirmed_at?: string | null
-          created_at?: string
-          email: string
-          full_name?: string | null
-          id?: string
-          ip?: unknown
-          metadata?: Json
-          source?: string | null
-          status?: Database["public"]["Enums"]["waitlist_status"]
-          user_agent?: string | null
-        }
+          campaign?: string;
+          confirmed_at?: string | null;
+          created_at?: string;
+          email: string;
+          full_name?: string | null;
+          id?: string;
+          ip?: unknown;
+          metadata?: Json;
+          source?: string | null;
+          status?: Database["public"]["Enums"]["waitlist_status"];
+          user_agent?: string | null;
+        };
         Update: {
-          campaign?: string
-          confirmed_at?: string | null
-          created_at?: string
-          email?: string
-          full_name?: string | null
-          id?: string
-          ip?: unknown
-          metadata?: Json
-          source?: string | null
-          status?: Database["public"]["Enums"]["waitlist_status"]
-          user_agent?: string | null
-        }
-        Relationships: []
-      }
+          campaign?: string;
+          confirmed_at?: string | null;
+          created_at?: string;
+          email?: string;
+          full_name?: string | null;
+          id?: string;
+          ip?: unknown;
+          metadata?: Json;
+          source?: string | null;
+          status?: Database["public"]["Enums"]["waitlist_status"];
+          user_agent?: string | null;
+        };
+        Relationships: [];
+      };
       weave_credentials: {
         Row: {
-          clinic_id: string | null
-          created_at: string
-          encryption_key_id: string
-          id: string
-          is_active: boolean
-          last_used_at: string | null
-          password_encrypted: string
-          updated_at: string
-          user_id: string
-          username_encrypted: string
-        }
+          clinic_id: string | null;
+          created_at: string;
+          encryption_key_id: string;
+          id: string;
+          is_active: boolean;
+          last_used_at: string | null;
+          password_encrypted: string;
+          updated_at: string;
+          user_id: string;
+          username_encrypted: string;
+        };
         Insert: {
-          clinic_id?: string | null
-          created_at?: string
-          encryption_key_id?: string
-          id?: string
-          is_active?: boolean
-          last_used_at?: string | null
-          password_encrypted: string
-          updated_at?: string
-          user_id: string
-          username_encrypted: string
-        }
+          clinic_id?: string | null;
+          created_at?: string;
+          encryption_key_id?: string;
+          id?: string;
+          is_active?: boolean;
+          last_used_at?: string | null;
+          password_encrypted: string;
+          updated_at?: string;
+          user_id: string;
+          username_encrypted: string;
+        };
         Update: {
-          clinic_id?: string | null
-          created_at?: string
-          encryption_key_id?: string
-          id?: string
-          is_active?: boolean
-          last_used_at?: string | null
-          password_encrypted?: string
-          updated_at?: string
-          user_id?: string
-          username_encrypted?: string
-        }
+          clinic_id?: string | null;
+          created_at?: string;
+          encryption_key_id?: string;
+          id?: string;
+          is_active?: boolean;
+          last_used_at?: string | null;
+          password_encrypted?: string;
+          updated_at?: string;
+          user_id?: string;
+          username_encrypted?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "weave_credentials_clinic_id_fkey"
-            columns: ["clinic_id"]
-            isOneToOne: false
-            referencedRelation: "clinics"
-            referencedColumns: ["id"]
+            foreignKeyName: "weave_credentials_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
-    }
+        ];
+      };
+    };
     Views: {
       analytics_daily_active_users: {
         Row: {
-          active_users: number | null
-          date: string | null
-          platform: string | null
-          total_events: number | null
-        }
-        Relationships: []
-      }
+          active_users: number | null;
+          date: string | null;
+          platform: string | null;
+          total_events: number | null;
+        };
+        Relationships: [];
+      };
       analytics_discharge_workflow: {
         Row: {
-          calls_completed: number | null
-          calls_scheduled: number | null
-          completion_rate: number | null
-          date: string | null
-          emails_scheduled: number | null
-          emails_sent: number | null
-          platform: string | null
-          workflows_completed: number | null
-          workflows_failed: number | null
-          workflows_started: number | null
-        }
-        Relationships: []
-      }
+          calls_completed: number | null;
+          calls_scheduled: number | null;
+          completion_rate: number | null;
+          date: string | null;
+          emails_scheduled: number | null;
+          emails_sent: number | null;
+          platform: string | null;
+          workflows_completed: number | null;
+          workflows_failed: number | null;
+          workflows_started: number | null;
+        };
+        Relationships: [];
+      };
       analytics_error_summary: {
         Row: {
-          affected_users: number | null
-          error_count: number | null
-          error_type: string | null
-          first_occurrence: string | null
-          last_occurrence: string | null
-          platform: string | null
-          resolved_count: number | null
-          unresolved_count: number | null
-        }
-        Relationships: []
-      }
+          affected_users: number | null;
+          error_count: number | null;
+          error_type: string | null;
+          first_occurrence: string | null;
+          last_occurrence: string | null;
+          platform: string | null;
+          resolved_count: number | null;
+          unresolved_count: number | null;
+        };
+        Relationships: [];
+      };
       analytics_feature_adoption: {
         Row: {
-          avg_uses_per_user: number | null
-          feature_category: string | null
-          feature_name: string | null
-          last_used: string | null
-          platform: string | null
-          total_uses: number | null
-          unique_users: number | null
-        }
-        Relationships: []
-      }
+          avg_uses_per_user: number | null;
+          feature_category: string | null;
+          feature_name: string | null;
+          last_used: string | null;
+          platform: string | null;
+          total_uses: number | null;
+          unique_users: number | null;
+        };
+        Relationships: [];
+      };
       analytics_session_metrics: {
         Row: {
-          avg_cases_created: number | null
-          avg_discharges_sent: number | null
-          avg_duration_seconds: number | null
-          avg_events_per_session: number | null
-          completed_sessions: number | null
-          date: string | null
-          platform: string | null
-          total_cases_created: number | null
-          total_discharges_sent: number | null
-          total_sessions: number | null
-        }
-        Relationships: []
-      }
+          avg_cases_created: number | null;
+          avg_discharges_sent: number | null;
+          avg_duration_seconds: number | null;
+          avg_events_per_session: number | null;
+          completed_sessions: number | null;
+          date: string | null;
+          platform: string | null;
+          total_cases_created: number | null;
+          total_discharges_sent: number | null;
+          total_sessions: number | null;
+        };
+        Relationships: [];
+      };
       templates_enhanced: {
         Row: {
-          category: string | null
-          content: Json | null
-          created_at: string | null
-          description: string | null
-          element_count: number | null
-          id: string | null
-          key: string | null
-          metadata: Json | null
-          model: string | null
-          name: string | null
-          output_format: string | null
-          prompt: string | null
-          section_count: number | null
-          tags: Json | null
-          type: string | null
-          updated_at: string | null
-          validation_schema: Json | null
-          version: string | null
-        }
+          category: string | null;
+          content: Json | null;
+          created_at: string | null;
+          description: string | null;
+          element_count: number | null;
+          id: string | null;
+          key: string | null;
+          metadata: Json | null;
+          model: string | null;
+          name: string | null;
+          output_format: string | null;
+          prompt: string | null;
+          section_count: number | null;
+          tags: Json | null;
+          type: string | null;
+          updated_at: string | null;
+          validation_schema: Json | null;
+          version: string | null;
+        };
         Insert: {
-          category?: never
-          content?: Json | null
-          created_at?: string | null
-          description?: string | null
-          element_count?: never
-          id?: string | null
-          key?: string | null
-          metadata?: Json | null
-          model?: string | null
-          name?: string | null
-          output_format?: string | null
-          prompt?: string | null
-          section_count?: never
-          tags?: never
-          type?: string | null
-          updated_at?: string | null
-          validation_schema?: Json | null
-          version?: never
-        }
+          category?: never;
+          content?: Json | null;
+          created_at?: string | null;
+          description?: string | null;
+          element_count?: never;
+          id?: string | null;
+          key?: string | null;
+          metadata?: Json | null;
+          model?: string | null;
+          name?: string | null;
+          output_format?: string | null;
+          prompt?: string | null;
+          section_count?: never;
+          tags?: never;
+          type?: string | null;
+          updated_at?: string | null;
+          validation_schema?: Json | null;
+          version?: never;
+        };
         Update: {
-          category?: never
-          content?: Json | null
-          created_at?: string | null
-          description?: string | null
-          element_count?: never
-          id?: string | null
-          key?: string | null
-          metadata?: Json | null
-          model?: string | null
-          name?: string | null
-          output_format?: string | null
-          prompt?: string | null
-          section_count?: never
-          tags?: never
-          type?: string | null
-          updated_at?: string | null
-          validation_schema?: Json | null
-          version?: never
-        }
-        Relationships: []
-      }
-    }
+          category?: never;
+          content?: Json | null;
+          created_at?: string | null;
+          description?: string | null;
+          element_count?: never;
+          id?: string | null;
+          key?: string | null;
+          metadata?: Json | null;
+          model?: string | null;
+          name?: string | null;
+          output_format?: string | null;
+          prompt?: string | null;
+          section_count?: never;
+          tags?: never;
+          type?: string | null;
+          updated_at?: string | null;
+          validation_schema?: Json | null;
+          version?: never;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
       accept_clinic_invitation: {
-        Args: { p_token: string; p_user_id: string }
-        Returns: Json
-      }
-      auto_reschedule_conflicts: {
-        Args: { p_clinic_id: string; p_date: string }
-        Returns: {
-          booking_id: string
-          client_name: string
-          new_time: string
-          old_time: string
-          patient_name: string
-        }[]
-      }
-      book_appointment_with_hold_v2: {
+        Args: { p_token: string; p_user_id: string };
+        Returns: Json;
+      };
+      book_appointment_with_hold: {
         Args: {
-          p_client_name: string
-          p_client_phone: string
-          p_clinic_id: string
-          p_end_time: string
-          p_hold_minutes?: number
-          p_is_new_client?: boolean
-          p_patient_name: string
-          p_reason?: string
-          p_species?: string
-          p_start_time: string
-          p_vapi_call_id?: string
-        }
-        Returns: Json
-      }
-      book_slot_with_hold: {
-        Args: {
-          p_client_name: string
-          p_client_phone: string
-          p_clinic_id: string
-          p_date: string
-          p_is_new_client: boolean
-          p_patient_name: string
-          p_reason: string
-          p_species: string
-          p_time: string
-          p_vapi_call_id: string
-        }
-        Returns: Json
-      }
-      cancel_booking_v2: {
-        Args: { p_booking_id: string; p_reason?: string }
-        Returns: Json
-      }
-      check_availability_v2: {
-        Args: { p_clinic_id: string; p_time_range: unknown }
+          p_client_name: string;
+          p_client_phone: string;
+          p_clinic_id: string;
+          p_end_time: string;
+          p_hold_minutes?: number;
+          p_is_new_client?: boolean;
+          p_patient_name: string;
+          p_reason?: string;
+          p_species?: string;
+          p_start_time: string;
+          p_vapi_call_id?: string;
+        };
+        Returns: Json;
+      };
+      cancel_booking: {
+        Args: { p_booking_id: string; p_reason?: string };
+        Returns: Json;
+      };
+      check_availability: {
+        Args: { p_clinic_id: string; p_time_range: unknown };
         Returns: {
-          available_count: number
-          block_reason: string
-          booked_count: number
-          capacity: number
-          is_available: boolean
-          is_blocked: boolean
-        }[]
-      }
+          available_count: number;
+          block_reason: string;
+          booked_count: number;
+          capacity: number;
+          is_available: boolean;
+          is_blocked: boolean;
+        }[];
+      };
       check_usage_limit: {
-        Args: { resource: string; user_uuid: string }
-        Returns: boolean
-      }
-      cleanup_expired_holds_v2: { Args: never; Returns: number }
-      confirm_booking_v2: { Args: { p_booking_id: string }; Returns: Json }
-      confirm_idexx_booking: {
-        Args: {
-          p_booking_id: string
-          p_idexx_appointment_id: string
-          p_idexx_client_id?: string
-          p_idexx_patient_id?: string
-        }
-        Returns: Json
-      }
-      count_booked_in_range_v2: {
-        Args: { p_clinic_id: string; p_time_range: unknown }
-        Returns: number
-      }
-      current_clerk_user_id: { Args: never; Returns: string }
-      current_org_id: { Args: never; Returns: string }
-      current_org_role: { Args: never; Returns: string }
-      current_user_id: { Args: never; Returns: string }
-      expire_old_invitations: { Args: never; Returns: number }
-      generate_confirmation_number: { Args: never; Returns: string }
-      get_active_sync_count: { Args: { p_clinic_id: string }; Returns: number }
+        Args: { resource: string; user_uuid: string };
+        Returns: boolean;
+      };
+      cleanup_expired_holds: { Args: never; Returns: number };
+      confirm_booking: { Args: { p_booking_id: string }; Returns: Json };
+      count_booked_in_range: {
+        Args: { p_clinic_id: string; p_time_range: unknown };
+        Returns: number;
+      };
+      current_clerk_user_id: { Args: never; Returns: string };
+      current_org_id: { Args: never; Returns: string };
+      current_org_role: { Args: never; Returns: string };
+      current_user_id: { Args: never; Returns: string };
+      expire_old_invitations: { Args: never; Returns: number };
+      generate_confirmation_number: { Args: never; Returns: string };
+      get_active_sync_count: { Args: { p_clinic_id: string }; Returns: number };
       get_available_slots: {
-        Args: { p_clinic_id: string; p_date: string }
-        Returns: {
-          available_count: number
-          block_reason: string
-          booked_count: number
-          capacity: number
-          is_blocked: boolean
-          is_stale: boolean
-          last_synced_at: string
-          slot_end: string
-          slot_start: string
-        }[]
-      }
-      get_available_slots_v2: {
         Args: {
-          p_clinic_id: string
-          p_date: string
-          p_duration_minutes?: number
-        }
+          p_clinic_id: string;
+          p_date: string;
+          p_duration_minutes?: number;
+        };
         Returns: {
-          available_count: number
-          block_reason: string
-          booked_count: number
-          capacity: number
-          is_blocked: boolean
-          slot_end: string
-          slot_start: string
-        }[]
-      }
+          available_count: number;
+          block_reason: string;
+          booked_count: number;
+          capacity: number;
+          is_blocked: boolean;
+          slot_end: string;
+          slot_start: string;
+        }[];
+      };
       get_current_usage: {
-        Args: { user_uuid: string }
+        Args: { user_uuid: string };
         Returns: {
-          period_end: string
-          period_start: string
-          quantity: number
-          resource_type: string
-        }[]
-      }
+          period_end: string;
+          period_start: string;
+          quantity: number;
+          resource_type: string;
+        }[];
+      };
       get_platform_comparison: {
-        Args: { p_days?: number }
+        Args: { p_days?: number };
         Returns: {
-          active_users: number
-          avg_events_per_user: number
-          avg_session_duration: number
-          platform: string
-          total_events: number
-          total_sessions: number
-        }[]
-      }
+          active_users: number;
+          avg_events_per_user: number;
+          avg_session_duration: number;
+          platform: string;
+          total_events: number;
+          total_sessions: number;
+        }[];
+      };
       get_user_engagement_stats: {
-        Args: { p_days?: number; p_user_id: string }
+        Args: { p_days?: number; p_user_id: string };
         Returns: {
-          avg_session_duration: number
-          cases_created: number
-          discharges_sent: number
-          total_events: number
-          total_sessions: number
-          unique_features: number
-        }[]
-      }
-      is_clerk_jwt: { Args: never; Returns: boolean }
-      is_org_owner_or_admin: { Args: never; Returns: boolean }
-      is_super_admin: { Args: never; Returns: boolean }
-      is_veterinarian: { Args: never; Returns: boolean }
-      safe_uid: { Args: never; Returns: string }
+          avg_session_duration: number;
+          cases_created: number;
+          discharges_sent: number;
+          total_events: number;
+          total_sessions: number;
+          unique_features: number;
+        }[];
+      };
+      is_clerk_jwt: { Args: never; Returns: boolean };
+      is_org_owner_or_admin: { Args: never; Returns: boolean };
+      is_super_admin: { Args: never; Returns: boolean };
+      is_veterinarian: { Args: never; Returns: boolean };
+      safe_uid: { Args: never; Returns: string };
       set_user_default_soap_template: {
-        Args: { template_uuid: string; user_uuid: string }
-        Returns: boolean
-      }
-      update_slot_booked_count: {
-        Args: { p_clinic_id: string; p_date: string; p_start_time: string }
-        Returns: undefined
-      }
-      update_slot_booked_counts: {
-        Args: { p_clinic_id: string; p_end_date: string; p_start_date: string }
-        Returns: {
-          slots_updated: number
-          total_appointments: number
-        }[]
-      }
-      update_slot_counts_bulk: {
-        Args: { p_clinic_id: string; p_end_date: string; p_start_date: string }
-        Returns: {
-          updated_count: number
-        }[]
-      }
+        Args: { template_uuid: string; user_uuid: string };
+        Returns: boolean;
+      };
       user_has_clinic_access: {
-        Args: { p_clinic_id: string }
-        Returns: boolean
-      }
-    }
+        Args: { p_clinic_id: string };
+        Returns: boolean;
+      };
+    };
     Enums: {
-      CaseStatus: "reviewed" | "ongoing" | "completed" | "draft"
-      CaseType: "checkup" | "emergency" | "surgery" | "follow_up"
-      CaseVisibility: "public" | "private"
-      contact_submission_status: "pending" | "reviewed" | "responded"
+      CaseStatus: "reviewed" | "ongoing" | "completed" | "draft";
+      CaseType: "checkup" | "emergency" | "surgery" | "follow_up";
+      CaseVisibility: "public" | "private";
+      contact_submission_status: "pending" | "reviewed" | "responded";
       user_role:
         | "veterinarian"
         | "vet_tech"
         | "admin"
         | "practice_owner"
-        | "client"
-      waitlist_status: "waiting" | "invited" | "joined" | "declined"
-    }
+        | "client";
+      waitlist_status: "waiting" | "invited" | "joined" | "declined";
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
+      [_ in never]: never;
+    };
+  };
+};
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  "public"
+>];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
+      Row: infer R;
     }
     ? R
     : never
@@ -4578,95 +4279,98 @@ export type Tables<
         DefaultSchema["Views"])
     ? (DefaultSchema["Tables"] &
         DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
+        Row: infer R;
       }
       ? R
       : never
-    : never
+    : never;
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
+      Insert: infer I;
     }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
+        Insert: infer I;
       }
       ? I
       : never
-    : never
+    : never;
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
+      Update: infer U;
     }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
+        Update: infer U;
       }
       ? U
       : never
-    : never
+    : never;
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+    : never;
 
 export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"] extends never
-    ? { schema: keyof DatabaseWithoutInternals }
-    : keyof DefaultSchema["CompositeTypes"] | { schema: keyof DatabaseWithoutInternals },
+  PublicCompositeTypeNameOrOptions extends
+    keyof DefaultSchema["CompositeTypes"] extends never
+      ? { schema: keyof DatabaseWithoutInternals }
+      :
+          | keyof DefaultSchema["CompositeTypes"]
+          | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+    : never;
 
 export const Constants = {
   public: {
@@ -4685,4 +4389,4 @@ export const Constants = {
       waitlist_status: ["waiting", "invited", "joined", "declined"],
     },
   },
-} as const
+} as const;

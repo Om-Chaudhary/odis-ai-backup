@@ -536,9 +536,9 @@ export async function processBookAppointment(
           startTimestamp.getTime() + slotDurationMinutes * 60 * 1000,
         );
 
-        // Insert into schedule_appointments_v2 so get_available_slots_v2 reflects booking immediately
+        // Insert into pims_appointments so get_available_slots reflects booking immediately
         const { error: v2Error } = await supabase
-          .from("schedule_appointments_v2")
+          .from("pims_appointments")
           .upsert(
             {
               clinic_id: bookingClinicId,
@@ -550,19 +550,19 @@ export async function processBookAppointment(
               provider_name: null,
               appointment_type: input.reason ?? "Appointment",
               status: "scheduled",
-              source: "vapi_idexx",
+              source: "vapi",
               last_synced_at: new Date().toISOString(),
             },
             { onConflict: "clinic_id,neo_appointment_id" },
           );
 
         if (v2Error) {
-          logger.warn("Failed to insert V2 appointment after IDEXX booking", {
+          logger.warn("Failed to insert pims_appointment after IDEXX booking", {
             error: v2Error.message,
             clinicId: bookingClinicId,
           });
         } else {
-          logger.info("V2 appointment tracked after IDEXX booking", {
+          logger.info("PIMS appointment tracked after IDEXX booking", {
             clinicId: bookingClinicId,
             date: parsedDate,
             time: parsedTime,
@@ -710,7 +710,8 @@ export async function processBookAppointment(
     .eq("clinic_id", bookingClinicId)
     .single();
 
-  const defaultSlotDuration = scheduleConfigDefault?.slot_duration_minutes ?? 15;
+  const defaultSlotDuration =
+    scheduleConfigDefault?.slot_duration_minutes ?? 15;
 
   // Convert local date+time to UTC timestamps
   const startTimestamp = fromZonedTime(
@@ -735,7 +736,7 @@ export async function processBookAppointment(
     p_vapi_call_id: ctx.callId ?? null,
   };
   const { data, error } = await supabase.rpc(
-    "book_appointment_with_hold_v2",
+    "book_appointment_with_hold",
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rpcParams as any,
   );

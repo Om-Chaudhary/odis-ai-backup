@@ -36,7 +36,7 @@ export const listAppointmentsRouter = createTRPCRouter({
 
       // Build query - using vapi_bookings table
       let query = serviceClient
-        .from("vapi_bookings")
+        .from("appointment_bookings")
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false });
 
