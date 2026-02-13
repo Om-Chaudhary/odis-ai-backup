@@ -15,8 +15,13 @@
  * If new appointment creation fails, original is restored.
  */
 
+import { fromZonedTime } from "date-fns-tz";
+
 import type { ToolContext, ToolResult } from "../../core/types";
-import type { RescheduleAppointmentInput } from "../../schemas/appointments";
+import type {
+  RescheduleAppointmentInput,
+  BookingResult,
+} from "../../schemas/appointments";
 import { processVerifyAppointment } from "./verify-appointment";
 import {
   parseDateToISO,
@@ -151,10 +156,19 @@ export async function processRescheduleAppointment(
     day: "numeric",
   });
 
+  const clinicTimezone = clinic.timezone ?? "America/Los_Angeles";
+
   // If specific time requested, check if it's available
   if (newTime) {
+    // Convert local time to UTC ISO for comparison with slot_start (which is UTC)
+    const requestedUtc = fromZonedTime(
+      `${newDate}T${newTime}`,
+      clinicTimezone,
+    ).toISOString();
     const requestedSlot = slots.find(
-      (s) => s.slot_start === newTime && s.available_count > 0,
+      (s) =>
+        new Date(s.slot_start).toISOString() === requestedUtc &&
+        s.available_count > 0,
     );
 
     if (!requestedSlot) {
@@ -260,8 +274,6 @@ export async function processRescheduleAppointment(
       .from("pims_appointments")
       .update({
         status: "cancelled",
-        cancelled_at: new Date().toISOString(),
-        cancelled_reason: `Rescheduled to ${newDate} ${newTime}`,
         updated_at: new Date().toISOString(),
       })
       .eq("id", originalId);
@@ -303,9 +315,7 @@ export async function processRescheduleAppointment(
     }
   }
 
-  // 4b. Create new booking record
-  // Build timestamptz range from date + time (clinic timezone)
-  const clinicTimezone = clinic.timezone ?? "America/Los_Angeles";
+  // 4b. Create new booking via atomic RPC (capacity checked server-side)
 
   // Fetch per-clinic slot duration from schedule config
   const { data: scheduleConfig } = await supabase
@@ -315,46 +325,44 @@ export async function processRescheduleAppointment(
     .single();
 
   const slotDuration = scheduleConfig?.slot_duration_minutes ?? 15;
-  const startTimestamp = `${newDate} ${newTime} ${clinicTimezone}`;
-  // Calculate end time by adding slot duration
-  const startDt = new Date(`${newDate}T${newTime}`);
-  const endDt = new Date(startDt.getTime() + slotDuration * 60 * 1000);
-  const endTimeStr = `${String(endDt.getHours()).padStart(2, "0")}:${String(endDt.getMinutes()).padStart(2, "0")}:00`;
-  const endTimestamp = `${newDate} ${endTimeStr} ${clinicTimezone}`;
 
-  const { data: newBooking, error: createError } = await supabase
-    .from("appointment_bookings")
-    .insert({
-      clinic_id: clinic.id,
-      vapi_call_id: callId,
-      client_name: originalAppt.client_name ?? input.client_name,
-      client_phone: originalAppt.client_phone ?? input.client_phone,
-      patient_name: originalAppt.patient_name ?? input.pet_name,
-      time_range: `[${startTimestamp},${endTimestamp})`,
-      status: "pending_sync", // Will be updated by background job
-      reason: input.reason ?? "Rescheduled appointment",
-      provider_name: originalAppt.provider_name,
-      appointment_type: originalAppt.appointment_type,
-      room_id: originalAppt.room,
-      rescheduled_from_id:
-        source === "appointment_bookings" ? originalId : null,
-      metadata: {
-        rescheduled_from: {
-          id: originalId,
-          source,
-          idexx_id: originalAppt.idexx_appointment_id,
-          original_date: originalAppt.formatted_date,
-          original_time: originalAppt.formatted_time,
-        },
-      },
-    })
-    .select()
-    .single();
+  // Convert local date+time to UTC timestamps (same pattern as book-appointment.ts)
+  const startUtc = fromZonedTime(`${newDate}T${newTime}`, clinicTimezone);
+  const endUtc = new Date(startUtc.getTime() + slotDuration * 60 * 1000);
 
-  if (createError || !newBooking) {
-    // ROLLBACK: Restore original appointment
-    logger.error("Failed to create new booking, rolling back", {
-      error: createError,
+  // Use atomic booking RPC (checks capacity server-side, prevents double bookings)
+  const rpcParams = {
+    p_clinic_id: clinic.id,
+    p_start_time: startUtc.toISOString(),
+    p_end_time: endUtc.toISOString(),
+    p_client_name: originalAppt.client_name ?? input.client_name,
+    p_client_phone: originalAppt.client_phone ?? input.client_phone,
+    p_patient_name: originalAppt.patient_name ?? input.pet_name,
+    p_species: null,
+    p_reason: input.reason ?? "Rescheduled appointment",
+    p_is_new_client: false,
+    p_vapi_call_id: callId ?? null,
+  };
+
+  const { data: rpcData, error: rpcError } = await supabase.rpc(
+    "book_appointment_with_hold",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rpcParams as any,
+  );
+
+  if (rpcError) {
+    logger.error("Failed to book rescheduled slot (RPC error)", {
+      error: rpcError,
+      clinicId: clinic.id,
+    });
+  }
+
+  const bookingResult = rpcData as unknown as BookingResult | null;
+
+  if (!bookingResult?.success) {
+    // Slot not available — ROLLBACK: restore original appointment
+    logger.warn("Rescheduled slot not available, rolling back", {
+      error: bookingResult?.error,
       originalId,
     });
 
@@ -363,8 +371,6 @@ export async function processRescheduleAppointment(
         .from("pims_appointments")
         .update({
           status: "scheduled",
-          cancelled_at: null,
-          cancelled_reason: null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", originalId);
@@ -380,14 +386,55 @@ export async function processRescheduleAppointment(
         .eq("id", originalId);
     }
 
+    // Offer alternatives from the RPC response
+    const alternatives = bookingResult?.alternatives ?? [];
+    const alternativeTimes = alternatives.slice(0, 3).map((a) => {
+      const date = new Date(a.start);
+      return date.toLocaleTimeString("en-US", {
+        timeZone: clinicTimezone,
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    });
+
+    const alternativeText =
+      alternativeTimes.length > 0
+        ? ` Available times: ${alternativeTimes.join(", ")}.`
+        : "";
+
     return {
       success: false,
-      error: "rollback_success",
-      message:
-        "I apologize, but I couldn't complete the reschedule. Don't worry - your original appointment at " +
-        `${originalAppt.formatted_time} on ${originalAppt.formatted_date} is still in place.`,
+      error: "slot_not_available",
+      message: `I'm sorry, that time slot isn't available anymore. Your original appointment is still in place.${alternativeText} Would you like to try a different time?`,
     };
   }
+
+  const newBookingId = bookingResult.booking_id!;
+
+  // Update the new booking with rescheduling metadata
+  await supabase
+    .from("appointment_bookings")
+    .update({
+      provider_name: originalAppt.provider_name,
+      appointment_type: originalAppt.appointment_type,
+      room_id: originalAppt.room,
+      rescheduled_from_id:
+        source === "appointment_bookings" ? originalId : null,
+      metadata: {
+        rescheduled_from: {
+          id: originalId,
+          source,
+          idexx_id: originalAppt.idexx_appointment_id,
+          original_date: originalAppt.formatted_date,
+          original_time: originalAppt.formatted_time,
+        },
+      },
+    })
+    .eq("id", newBookingId);
+
+  // Wrap in object for downstream compatibility
+  const newBooking = { id: newBookingId };
 
   // 4c. Log to audit table
   await supabase.from("appointment_audit_log").insert({

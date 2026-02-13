@@ -135,8 +135,6 @@ export async function processCancelAppointment(
       .from("pims_appointments")
       .update({
         status: "cancelled",
-        cancelled_at: new Date().toISOString(),
-        cancelled_reason: input.reason ?? "Cancelled via phone",
         updated_at: new Date().toISOString(),
       })
       .eq("id", appointmentId);
