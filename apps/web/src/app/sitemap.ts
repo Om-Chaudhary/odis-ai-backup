@@ -129,19 +129,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
     },
 
-    // Auth pages
-    {
-      url: `${baseUrl}/sign-in`,
-      lastModified: currentDate,
-      changeFrequency: "yearly",
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/sign-up`,
-      lastModified: currentDate,
-      changeFrequency: "yearly",
-      priority: 0.8,
-    },
+    // Note: Auth pages (/sign-in, /sign-up) removed from sitemap
+    // They are blocked by robots.txt - including them sends conflicting signals to Google
 
     // Legal pages
     {

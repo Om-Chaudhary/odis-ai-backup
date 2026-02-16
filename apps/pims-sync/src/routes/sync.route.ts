@@ -1450,7 +1450,6 @@ async function handleInboundAppointmentSync(
   const startTime = Date.now();
   const body = req.body as InboundAppointmentRequest;
 
-  // Clinic ID is required in request body
   const { clinicId } = body;
 
   if (!clinicId) {
@@ -1465,46 +1464,8 @@ async function handleInboundAppointmentSync(
 
   logger.info("Starting inbound appointment sync", { clinicId });
 
-  let syncId: string | null = null;
-
   try {
     const supabase = createSupabaseServiceClient();
-
-    // Build date range
-    const startDate = body.startDate ? new Date(body.startDate) : new Date();
-    startDate.setHours(0, 0, 0, 0);
-
-    const daysAhead = body.daysAhead ?? 7;
-    const endDate = body.endDate
-      ? new Date(body.endDate)
-      : new Date(startDate.getTime() + daysAhead * 24 * 60 * 60 * 1000);
-    endDate.setHours(23, 59, 59, 999);
-
-    const startDateStr = startDate.toISOString().split("T")[0]!;
-    const endDateStr = endDate.toISOString().split("T")[0]!;
-
-    // Create sync record
-    const { data: syncRecord, error: syncError } = await supabase
-      .from("schedule_syncs")
-      .insert({
-        clinic_id: clinicId,
-        sync_start_date: startDateStr,
-        sync_end_date: endDateStr,
-        sync_type: "appointments",
-        status: "in_progress",
-        started_at: new Date(startTime).toISOString(),
-      })
-      .select("id")
-      .single();
-
-    if (syncError) {
-      logger.error("Failed to create sync record", {
-        clinicId,
-        error: syncError.message,
-      });
-    } else {
-      syncId = syncRecord.id;
-    }
 
     // Get provider and authenticate
     const { provider, credentials, cleanup } =
@@ -1514,19 +1475,6 @@ async function handleInboundAppointmentSync(
       // Authenticate with PIMS
       const authenticated = await provider.authenticate(credentials);
       if (!authenticated) {
-        // Update sync record with failure
-        if (syncId) {
-          await supabase
-            .from("schedule_syncs")
-            .update({
-              status: "failed",
-              error_message: "PIMS authentication failed",
-              completed_at: new Date().toISOString(),
-              duration_ms: Date.now() - startTime,
-            })
-            .eq("id", syncId);
-        }
-
         res.status(401).json({
           success: false,
           error: "PIMS authentication failed",
@@ -1536,169 +1484,49 @@ async function handleInboundAppointmentSync(
         return;
       }
 
-      // Fetch appointments from IDEXX
-      logger.info("Fetching appointments from IDEXX", {
+      // Build date range options
+      const startDate = body.startDate ? new Date(body.startDate) : undefined;
+      const endDate = body.endDate ? new Date(body.endDate) : undefined;
+      const daysAhead = body.daysAhead ?? 7;
+
+      // Execute appointment sync using the service
+      const { executeAppointmentSync } =
+        await import("../services/appointment-sync.service");
+      const result = await executeAppointmentSync(
+        supabase,
+        provider,
         clinicId,
-        dateRange: { start: startDateStr, end: endDateStr },
-      });
+        {
+          startDate,
+          endDate,
+          daysAhead,
+        },
+      );
 
-      const appointments = await provider.fetchAppointments(startDate, endDate);
-
-      logger.info("Fetched appointments from IDEXX", {
-        clinicId,
-        appointmentCount: appointments.length,
-      });
-
-      // Upsert appointments to pims_appointments table
-      let appointmentsAdded = 0;
-      const appointmentsUpdated = 0; // Reserved for future use when detecting actual updates vs inserts
-      let appointmentsRemoved = 0;
-
-      if (appointments.length > 0) {
-        // Convert PIMS appointments to database format
-        const appointmentRecords = appointments.map((appt) => {
-          // Parse the startTime to extract time string
-          let timeStr = "00:00:00";
-          let endTimeStr = "00:00:00";
-
-          if (appt.startTime) {
-            const hours = String(appt.startTime.getHours()).padStart(2, "0");
-            const minutes = String(appt.startTime.getMinutes()).padStart(
-              2,
-              "0",
-            );
-            timeStr = `${hours}:${minutes}:00`;
-
-            // Calculate end time from duration (default 15 minutes)
-            const durationMs = (appt.duration ?? 15) * 60 * 1000;
-            const endTime = new Date(appt.startTime.getTime() + durationMs);
-            const endHours = String(endTime.getHours()).padStart(2, "0");
-            const endMinutes = String(endTime.getMinutes()).padStart(2, "0");
-            endTimeStr = `${endHours}:${endMinutes}:00`;
-          }
-
-          return {
-            clinic_id: clinicId,
-            neo_appointment_id: appt.id,
-            date: appt.date,
-            start_time: timeStr,
-            end_time: endTimeStr,
-            patient_name: appt.patient?.name ?? null,
-            client_name: appt.client?.name ?? null,
-            client_phone: appt.client?.phone ?? null,
-            provider_name: appt.provider?.name ?? null,
-            room_id: appt.provider?.id ?? null,
-            appointment_type: appt.type ?? null,
-            status: mapAppointmentStatus(appt.status),
-            last_synced_at: new Date().toISOString(),
-            deleted_at: null, // Clear soft delete if re-synced
-          };
+      if (result.success) {
+        res.status(200).json({
+          success: true,
+          syncId: result.syncId,
+          message: `Synced ${result.stats.found} appointments`,
+          clinic: { id: clinicId },
+          stats: {
+            appointmentsFound: result.stats.found,
+            appointmentsAdded: result.stats.added,
+            appointmentsUpdated: result.stats.updated,
+            appointmentsRemoved: result.stats.removed,
+          },
+          durationMs: result.durationMs,
+          timestamp: new Date().toISOString(),
         });
-
-        // Get clinic timezone for accurate time range conversion
-        const { data: clinicData } = await supabase
-          .from("clinics")
-          .select("timezone")
-          .eq("id", clinicId)
-          .single();
-
-        const clinicTimezone = clinicData?.timezone ?? "America/Los_Angeles";
-
-        // Convert records to time range format and write to pims_appointments
-        const timeRangeRecords = convertToV2Records(
-          clinicId,
-          appointmentRecords,
-          clinicTimezone,
-        );
-
-        const writeResult = await writeAppointmentToV2Table(
-          supabase,
-          clinicId,
-          timeRangeRecords,
-        );
-
-        if (writeResult.success) {
-          appointmentsAdded = writeResult.count;
-        } else {
-          logger.warn("pims_appointments write failed", {
-            clinicId,
-            error: writeResult.error,
-          });
-        }
-
-        // Soft-delete appointments that weren't in this sync
-        // (appointments that existed in DB but not returned by IDEXX)
-        const syncedIds = appointments.map((a) => a.id);
-        const { data: removedData, error: removeError } = await supabase
-          .from("pims_appointments")
-          .update({
-            deleted_at: new Date().toISOString(),
-            last_synced_at: new Date().toISOString(),
-          })
-          .eq("clinic_id", clinicId)
-          .gte("date", startDateStr)
-          .lte("date", endDateStr)
-          .is("deleted_at", null)
-          .not(
-            "neo_appointment_id",
-            "in",
-            `(${syncedIds.map((id) => `'${id}'`).join(",")})`,
-          )
-          .select("id");
-
-        if (removeError) {
-          logger.warn("Failed to soft-delete stale appointments", {
-            clinicId,
-            error: removeError.message,
-          });
-        } else {
-          appointmentsRemoved = removedData?.length ?? 0;
-        }
+      } else {
+        res.status(500).json({
+          success: false,
+          syncId: result.syncId,
+          error: result.error,
+          durationMs: result.durationMs,
+          timestamp: new Date().toISOString(),
+        });
       }
-
-      // Update sync record with success
-      if (syncId) {
-        await supabase
-          .from("schedule_syncs")
-          .update({
-            status: "completed",
-            appointments_added: appointmentsAdded,
-            appointments_updated: appointmentsUpdated,
-            appointments_removed: appointmentsRemoved,
-            completed_at: new Date().toISOString(),
-            duration_ms: Date.now() - startTime,
-          })
-          .eq("id", syncId);
-      }
-
-      logger.info("Inbound appointment sync completed", {
-        clinicId,
-        syncId,
-        dateRange: { start: startDateStr, end: endDateStr },
-        stats: {
-          appointmentsFound: appointments.length,
-          appointmentsAdded,
-          appointmentsUpdated,
-          appointmentsRemoved,
-        },
-        durationMs: Date.now() - startTime,
-      });
-
-      res.status(200).json({
-        success: true,
-        syncId,
-        message: `Synced ${appointments.length} appointments`,
-        clinic: { id: clinicId },
-        dateRange: { start: startDateStr, end: endDateStr },
-        stats: {
-          appointmentsFound: appointments.length,
-          appointmentsAdded,
-          appointmentsUpdated,
-          appointmentsRemoved,
-        },
-        durationMs: Date.now() - startTime,
-        timestamp: new Date().toISOString(),
-      });
     } finally {
       await cleanup();
     }
@@ -1707,27 +1535,11 @@ async function handleInboundAppointmentSync(
       error instanceof Error ? error.message : "Unknown error";
     logger.error("Inbound appointment sync failed", {
       clinicId,
-      syncId,
       error: errorMessage,
     });
 
-    // Update sync record with failure
-    if (syncId) {
-      const supabase = createSupabaseServiceClient();
-      await supabase
-        .from("schedule_syncs")
-        .update({
-          status: "failed",
-          error_message: errorMessage,
-          completed_at: new Date().toISOString(),
-          duration_ms: Date.now() - startTime,
-        })
-        .eq("id", syncId);
-    }
-
     res.status(500).json({
       success: false,
-      syncId,
       error: errorMessage,
       durationMs: Date.now() - startTime,
       timestamp: new Date().toISOString(),

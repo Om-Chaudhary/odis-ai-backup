@@ -11,6 +11,27 @@ import "./src/env.js";
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const config = {
+  async redirects() {
+    return [
+      // Fix 404s discovered by Google Search Console
+      {
+        source: "/login",
+        destination: "/sign-in",
+        permanent: true,
+      },
+      {
+        source: "/signup",
+        destination: "/sign-up",
+        permanent: true,
+      },
+      {
+        source: "/cookies",
+        destination: "/cookie-policy",
+        permanent: true,
+      },
+    ];
+  },
+
   async rewrites() {
     return [
       {
@@ -79,8 +100,9 @@ const config = {
         headers: [
           {
             key: "X-Robots-Tag",
+            // Use VERCEL_ENV directly since next.config.js runs before env.js validation
             value:
-              process.env.NEXT_PUBLIC_APP_ENV === "production"
+              process.env.VERCEL_ENV === "production"
                 ? "index, follow"
                 : "noindex, nofollow",
           },

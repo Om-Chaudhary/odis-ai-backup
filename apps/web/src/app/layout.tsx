@@ -111,6 +111,10 @@ export const metadata: Metadata = {
     canonical: siteUrl,
   },
   robots: getEnvironmentRobots(),
+  // Prevent Google from showing sitelinks searchbox (generates /search?q=... URLs)
+  other: {
+    google: "nositelinkssearchbox",
+  },
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION,
   },

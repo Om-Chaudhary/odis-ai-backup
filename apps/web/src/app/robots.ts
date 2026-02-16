@@ -28,7 +28,7 @@ export default function robots(): MetadataRoute.Robots {
         "/_next/",
         "/sign-in",
         "/sign-up",
-        "/login",
+        // Note: /login removed - route doesn't exist, redirect handles it
       ],
     },
     sitemap: `${baseUrl}/sitemap.xml`,

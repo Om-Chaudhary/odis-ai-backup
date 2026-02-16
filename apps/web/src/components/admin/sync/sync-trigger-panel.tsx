@@ -70,11 +70,26 @@ export function SyncTriggerPanel({ clinicId }: SyncTriggerPanelProps) {
     },
   });
 
+  const triggerAppointmentsMutation =
+    api.admin.sync.triggerAppointmentSync.useMutation({
+      onSuccess: (result) => {
+        toast.success(result.message ?? "Appointments sync triggered", {
+          description: "Syncing appointments from IDEXX Neo",
+        });
+        void utils.admin.sync.getActiveSyncs.invalidate();
+        void utils.admin.sync.getSyncHistory.invalidate();
+      },
+      onError: (error) => {
+        toast.error(error.message ?? "Failed to trigger appointments sync");
+      },
+    });
+
   const anyPending =
     triggerFullSyncMutation.isPending ||
     triggerCasesMutation.isPending ||
     triggerEnrichMutation.isPending ||
-    triggerReconciliationMutation.isPending;
+    triggerReconciliationMutation.isPending ||
+    triggerAppointmentsMutation.isPending;
 
   return (
     <div className="flex flex-col gap-3">
@@ -166,6 +181,26 @@ export function SyncTriggerPanel({ clinicId }: SyncTriggerPanelProps) {
                 }`}
               />
               Reconcile Only
+            </Button>
+
+            <Button
+              onClick={() => {
+                triggerAppointmentsMutation.mutate({
+                  clinicId,
+                  daysAhead: 14,
+                });
+              }}
+              disabled={anyPending}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${
+                  triggerAppointmentsMutation.isPending ? "animate-spin" : ""
+                }`}
+              />
+              Appointments
             </Button>
           </div>
         </CollapsibleContent>
