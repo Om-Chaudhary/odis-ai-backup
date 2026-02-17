@@ -14,13 +14,16 @@ import type {
   EndOfCallReportMessage,
   VapiAnalysis,
   VapiArtifact,
+  VapiMessage,
   VapiWebhookCall,
 } from "../../types";
 import {
   calculateDuration,
   calculateTotalCost,
   extractSentiment,
+  isIncompleteInboundCall,
   mapVapiStatus,
+  sanitizeIncompleteCallStructuredData,
   shouldMarkInboundCallAsFailed,
 } from "../../utils";
 import { parseAllStructuredOutputs } from "../../processors";
@@ -348,6 +351,28 @@ function buildInboundUpdateData(
     call.id,
   );
 
+  // Detect incomplete calls (greeting-only, early hang-ups, no user speech)
+  // These should NOT receive fallback outcomes from VAPI's card_type analysis
+  const incomplete = isIncompleteInboundCall({
+    durationSeconds: callData.durationSeconds,
+    transcript: callData.transcript,
+    messages: callData.transcriptMessages as VapiMessage[] | null,
+    endedReason: call.endedReason,
+  });
+
+  if (incomplete) {
+    logger.info("Incomplete call detected — skipping fallback outcomes", {
+      callId: call.id,
+      durationSeconds: callData.durationSeconds,
+      endedReason: call.endedReason,
+    });
+  }
+
+  // Sanitize structured data for incomplete calls (remove VAPI-generated card fields)
+  const finalStructuredData = incomplete
+    ? sanitizeIncompleteCallStructuredData(mergedStructuredData)
+    : mergedStructuredData;
+
   return {
     vapi_call_id: call.id,
     assistant_id: call.assistantId ?? null,
@@ -367,7 +392,7 @@ function buildInboundUpdateData(
     success_evaluation:
       (callData.analysis as { successEvaluation?: string }).successEvaluation ??
       null,
-    structured_data: mergedStructuredData,
+    structured_data: finalStructuredData,
     user_sentiment: callData.userSentiment,
     cost: callData.cost,
     ended_reason: call.endedReason ?? message.endedReason ?? null,
@@ -381,11 +406,14 @@ function buildInboundUpdateData(
       getVapiRescheduleOrCancel(mergedStructuredData) ??
       // Priority 2: Tool-set outcome (e.g., "Scheduled" from book_appointment)
       existingCall.outcome ??
-      // Priority 3: VAPI's structured output call_outcome
-      (structuredOutputs.callOutcome as { call_outcome?: string } | null)
-        ?.call_outcome ??
-      // Priority 4: Derive from VAPI card_type (info, callback, emergency, etc.)
-      deriveOutcomeFromActionCard(mergedStructuredData ?? undefined) ??
+      // Priority 3 & 4: Gated behind incomplete check
+      (incomplete
+        ? null
+        : // Priority 3: VAPI's structured output call_outcome
+          ((structuredOutputs.callOutcome as { call_outcome?: string } | null)
+            ?.call_outcome ??
+          // Priority 4: Derive from VAPI card_type (info, callback, emergency, etc.)
+          deriveOutcomeFromActionCard(mergedStructuredData ?? undefined))) ??
       null,
     call_outcome_data: structuredOutputs.callOutcome,
     pet_health_data: structuredOutputs.petHealth,
@@ -653,14 +681,16 @@ function enhanceStructuredDataWithTranscriptNames(
   );
 
   if (!hasExistingActionCard) {
-    // No existing action card - create a basic callback card with extracted names
-    enhanced.card_type = "callback";
-    enhanced.callback_data = {
-      reason: "Caller information extracted from transcript",
-      caller_name: callerNameFromTranscript,
-      pet_name: petNameFromTranscript,
-    };
-    logger.info("Created new action card from transcript names", { callId });
+    // No existing action card — names are already stored in dedicated columns
+    // (extracted_caller_name, extracted_pet_name). Do NOT create a fake callback card.
+    logger.debug(
+      "No action card to enhance — names stored in dedicated columns",
+      {
+        callId,
+        callerName: callerNameFromTranscript,
+        petName: petNameFromTranscript,
+      },
+    );
   } else {
     // Enhance existing action card data with missing names
     if (enhanced.callback_data && typeof enhanced.callback_data === "object") {

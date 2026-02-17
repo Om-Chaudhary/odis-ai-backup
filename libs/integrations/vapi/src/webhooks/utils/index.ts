@@ -43,6 +43,12 @@ export {
   type Sentiment,
 } from "./sentiment-analyzer";
 
+// Incomplete call detection
+export {
+  isIncompleteInboundCall,
+  sanitizeIncompleteCallStructuredData,
+} from "./incomplete-call-detector";
+
 // Call data enrichment
 export {
   isInboundCall,
