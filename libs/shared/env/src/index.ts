@@ -44,6 +44,12 @@ export const env = createEnv({
     SLACK_CLIENT_ID: z.string().optional(),
     SLACK_CLIENT_SECRET: z.string().optional(),
     SLACK_SIGNING_SECRET: z.string().optional(),
+    // Slack Bot Token for single-workspace notifications (ODIS team)
+    SLACK_BOT_TOKEN: z.string().optional(),
+    // Slack channel names (without #) for different notification types
+    SLACK_CHANNEL_APPOINTMENTS: z.string().default("appointments"),
+    SLACK_CHANNEL_EMERGENCIES: z.string().default("emergencies"),
+    SLACK_CHANNEL_SYSTEM: z.string().default("system-alerts"),
     // Environment identifier
     APP_ENV: z
       .enum(["development", "staging", "production"])
@@ -96,6 +102,10 @@ export const env = createEnv({
     SLACK_CLIENT_ID: process.env.SLACK_CLIENT_ID,
     SLACK_CLIENT_SECRET: process.env.SLACK_CLIENT_SECRET,
     SLACK_SIGNING_SECRET: process.env.SLACK_SIGNING_SECRET,
+    SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN,
+    SLACK_CHANNEL_APPOINTMENTS: process.env.SLACK_CHANNEL_APPOINTMENTS,
+    SLACK_CHANNEL_EMERGENCIES: process.env.SLACK_CHANNEL_EMERGENCIES,
+    SLACK_CHANNEL_SYSTEM: process.env.SLACK_CHANNEL_SYSTEM,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,

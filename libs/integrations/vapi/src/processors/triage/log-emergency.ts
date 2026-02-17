@@ -81,6 +81,33 @@ export async function processLogEmergencyTriage(
     erReferred: input.er_referred,
   });
 
+  // Send Slack notification for emergency triage (fire-and-forget)
+  void (async () => {
+    try {
+      const { notifySlack, isEnvSlackConfigured } =
+        await import("@odis-ai/integrations/slack");
+
+      if (!isEnvSlackConfigured()) {
+        return;
+      }
+
+      notifySlack("emergency_triage", {
+        clinicName: clinic.name,
+        urgency: input.urgency as "critical" | "urgent" | "moderate",
+        petName: input.pet_name,
+        species: input.species,
+        symptoms: input.symptoms,
+        action: input.action_taken,
+        phone: input.caller_phone,
+        callId: ctx.callId,
+      });
+    } catch (error) {
+      logger.error("Failed to send emergency triage Slack notification", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  })();
+
   // Build response message based on action taken
   let responseMessage: string;
   if (input.action_taken === "sent_to_er") {

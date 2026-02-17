@@ -17,6 +17,9 @@ import type {
 // Cache of WebClient instances per workspace
 const clientCache = new Map<string, WebClient>();
 
+// Singleton for env-based client
+let envClient: WebClient | null = null;
+
 /**
  * Token resolver function type
  * Used to fetch bot tokens from the database
@@ -41,6 +44,30 @@ export function setTokenResolver(resolver: TokenResolver): void {
  */
 export function isTokenResolverInitialized(): boolean {
   return isInitialized;
+}
+
+/**
+ * Get a WebClient instance using the SLACK_BOT_TOKEN environment variable.
+ * Use this for single-workspace setups (like ODIS team notifications).
+ *
+ * @returns WebClient instance or null if SLACK_BOT_TOKEN is not set
+ */
+export function getEnvSlackClient(): WebClient | null {
+  const token = process.env.SLACK_BOT_TOKEN;
+  if (!token) {
+    return null;
+  }
+
+  envClient ??= new WebClient(token);
+
+  return envClient;
+}
+
+/**
+ * Check if environment-based Slack client is available
+ */
+export function isEnvSlackConfigured(): boolean {
+  return !!process.env.SLACK_BOT_TOKEN;
 }
 
 /**
@@ -82,6 +109,7 @@ export function clearClientCache(teamId?: string): void {
     clientCache.delete(teamId);
   } else {
     clientCache.clear();
+    envClient = null;
   }
 }
 

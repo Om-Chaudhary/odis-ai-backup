@@ -13,12 +13,6 @@ import { loggers } from "@odis-ai/shared/logger";
 const logger = loggers.webhook.child("slack-notifier");
 
 /**
- * Alum Rock assistant configuration
- * TODO: Move to database-based clinic configuration
- */
-const ALUM_ROCK_ASSISTANT_ID = "ae3e6a54-17a3-4915-9c3e-48779b5dbf09";
-
-/**
  * VAPI booking record structure
  */
 interface VapiBooking {
@@ -47,50 +41,37 @@ export interface AppointmentNotificationOptions {
 }
 
 /**
- * Format appointment booking message for Slack
- *
- * @param booking - VAPI booking record
- * @returns Formatted message string
+ * Get clinic name from assistant ID
+ * Checks both inbound and outbound assistant ID fields
  */
-function formatBookingMessage(booking: VapiBooking): string {
-  const lines = [
-    `:tada: *New Appointment Booked*`,
-    ``,
-    `*Client Name:* ${booking.client_name}`,
-    `*Pet Name:* ${booking.patient_name}`,
-    `*Date:* ${booking.date}`,
-    `*Time:* ${booking.start_time}`,
-    `*Phone:* ${booking.client_phone}`,
-    `*Reason:* ${booking.reason ?? "Not specified"}`,
-  ];
-
-  if (booking.species) {
-    lines.push(`*Species:* ${booking.species}`);
+async function getClinicNameFromAssistant(
+  assistantId: string | undefined,
+  supabase: SupabaseClient,
+): Promise<string> {
+  if (!assistantId) {
+    return "Unknown Clinic";
   }
 
-  if (booking.breed) {
-    lines.push(`*Breed:* ${booking.breed}`);
-  }
+  // Dynamic import to avoid circular dependencies
+  const { getClinicByInboundAssistantId, getClinicByOutboundAssistantId } =
+    await import("@odis-ai/domain/clinics");
 
-  if (booking.is_new_client) {
-    lines.push(`*New Client* :sparkles:`);
-  }
+  // Try inbound first, then outbound
+  let clinic = await getClinicByInboundAssistantId(assistantId, supabase);
+  clinic ??= await getClinicByOutboundAssistantId(assistantId, supabase);
 
-  lines.push(``);
-  lines.push(`_Booking ID: ${booking.id}_`);
-
-  return lines.join("\n");
+  return clinic?.name ?? "Unknown Clinic";
 }
 
 /**
- * Send Slack notification for Alum Rock appointment booking
+ * Send Slack notification for appointment booking
  *
  * This is a fire-and-forget operation that runs in the background.
- * Only sends notifications for Alum Rock assistant bookings.
+ * Sends notifications for all clinics to the ODIS team Slack.
  *
  * @param options - Notification options
  */
-export function notifyAlumRockAppointmentBooked(
+export function notifyAppointmentBookedBackground(
   options: AppointmentNotificationOptions,
 ): void {
   const { vapiCallId, assistantId, supabase } = options;
@@ -98,11 +79,6 @@ export function notifyAlumRockAppointmentBooked(
   // Fire and forget - don't await
   void (async () => {
     try {
-      // Only send notifications for Alum Rock assistant
-      if (assistantId !== ALUM_ROCK_ASSISTANT_ID) {
-        return;
-      }
-
       // Check if there's a vapi_booking for this call
       const { data: booking, error: fetchError } = await supabase
         .from("appointment_bookings")
@@ -126,9 +102,16 @@ export function notifyAlumRockAppointmentBooked(
         return;
       }
 
+      // Get clinic name from assistant ID
+      const clinicName = await getClinicNameFromAssistant(
+        assistantId,
+        supabase,
+      );
+
       logger.info("Appointment booked - sending Slack notification", {
         vapiCallId,
         bookingId: booking.id,
+        clinicName,
         clientName: booking.client_name,
         petName: booking.patient_name,
         date: booking.date,
@@ -136,55 +119,40 @@ export function notifyAlumRockAppointmentBooked(
       });
 
       // Dynamic import to avoid circular dependencies
-      const { slackClient } =
-        await import("@odis-ai/integrations/slack/client");
+      const { notifySlack, isEnvSlackConfigured } =
+        await import("@odis-ai/integrations/slack");
 
-      // Get Slack workspace info for Alum Rock
-      // TODO: This should be fetched from database based on clinic configuration
-      const ALUM_ROCK_SLACK_TEAM_ID = process.env.ALUM_ROCK_SLACK_TEAM_ID;
-      const ALUM_ROCK_SLACK_CHANNEL =
-        process.env.ALUM_ROCK_SLACK_CHANNEL ?? "alum-rock";
-
-      if (!ALUM_ROCK_SLACK_TEAM_ID) {
-        logger.warn("Alum Rock Slack team ID not configured", {
+      // Check if Slack is configured
+      if (!isEnvSlackConfigured()) {
+        logger.debug("Slack not configured, skipping notification", {
           vapiCallId,
           bookingId: booking.id,
         });
         return;
       }
 
-      // Format the notification message
-      const message = formatBookingMessage(booking as VapiBooking);
+      const vapiBooking = booking as VapiBooking;
 
-      // Send the Slack notification
-      const result = await slackClient.postMessage(ALUM_ROCK_SLACK_TEAM_ID, {
-        channel: ALUM_ROCK_SLACK_CHANNEL,
-        text: "New appointment booked",
-        blocks: [
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: message,
-            },
-          },
-        ],
+      // Send notification using generic service
+      notifySlack("appointment_booked", {
+        clinicName,
+        clientName: vapiBooking.client_name,
+        petName: vapiBooking.patient_name,
+        date: vapiBooking.date,
+        time: vapiBooking.start_time,
+        phone: vapiBooking.client_phone,
+        reason: vapiBooking.reason ?? undefined,
+        species: vapiBooking.species ?? undefined,
+        breed: vapiBooking.breed ?? undefined,
+        isNewClient: vapiBooking.is_new_client ?? undefined,
+        bookingId: vapiBooking.id,
       });
 
-      if (result.ok) {
-        logger.info("Slack notification sent successfully", {
-          vapiCallId,
-          bookingId: booking.id,
-          channel: ALUM_ROCK_SLACK_CHANNEL,
-          messageTs: result.ts,
-        });
-      } else {
-        logger.error("Failed to send Slack notification", {
-          vapiCallId,
-          bookingId: booking.id,
-          error: result.error,
-        });
-      }
+      logger.info("Slack notification queued", {
+        vapiCallId,
+        bookingId: booking.id,
+        clinicName,
+      });
     } catch (error) {
       logger.error("Failed to send appointment booking notification", {
         vapiCallId,
@@ -207,9 +175,16 @@ export function notifyAppointmentBooked(
   assistantId: string | undefined,
   supabase: SupabaseClient,
 ): void {
-  notifyAlumRockAppointmentBooked({
+  notifyAppointmentBookedBackground({
     vapiCallId,
     assistantId,
     supabase,
   });
 }
+
+/**
+ * @deprecated Use notifyAppointmentBookedBackground instead
+ * Kept for backward compatibility
+ */
+export const notifyAlumRockAppointmentBooked =
+  notifyAppointmentBookedBackground;

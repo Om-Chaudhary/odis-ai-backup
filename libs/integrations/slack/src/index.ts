@@ -11,8 +11,30 @@ export {
   setTokenResolver,
   clearClientCache,
   isTokenResolverInitialized,
+  getEnvSlackClient,
+  isEnvSlackConfigured,
 } from "./client";
 export type { TokenResolver } from "./client";
+
+// Notification Service
+export {
+  sendSlackNotification,
+  notifySlack,
+  formatNotification,
+  formatters,
+  getFormatter,
+  NOTIFICATION_CHANNELS,
+} from "./notifications";
+export type {
+  SlackNotificationType,
+  NotificationPayloadMap,
+  SendNotificationOptions,
+  AppointmentBookedPayload,
+  EmergencyTriagePayload,
+  CallFailedPayload,
+  SyncErrorPayload,
+  AdminAlertPayload,
+} from "./notifications";
 
 // Initialization
 export { initializeSlackClient, ensureSlackClientInitialized } from "./init";
