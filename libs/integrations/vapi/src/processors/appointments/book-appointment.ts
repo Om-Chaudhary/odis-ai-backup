@@ -788,7 +788,46 @@ export async function processBookAppointment(
     };
   }
 
-  // Booking successful
+  // Booking successful — write structured_data + outcome to inbound_vapi_calls
+  // This prevents hallucinated dates from VAPI's end-of-call analysis overriding
+  // the actual booking date. Mirrors the Del Valle and IDEXX paths.
+  if (callId) {
+    const { error: updateError } = await supabase
+      .from("inbound_vapi_calls")
+      .update({
+        structured_data: {
+          appointment: {
+            date: parsedDate,
+            time: parsedTime,
+            client_name: input.client_name,
+            client_phone: input.client_phone,
+            patient_name: input.patient_name,
+            reason: input.reason ?? null,
+            species: input.species ?? null,
+            is_new_client: input.is_new_client ?? false,
+            booking_id: result.booking_id,
+            confirmation_number: result.confirmation_number,
+            booked_at: new Date().toISOString(),
+          },
+        },
+        call_analysis: {
+          outcome: "scheduled",
+          appointment_booked: true,
+        },
+        outcome: "Scheduled",
+      })
+      .eq("vapi_call_id", callId);
+
+    if (updateError) {
+      // Non-fatal: booking succeeded, just log the update failure
+      logger.error("Failed to update inbound call with booking data", {
+        error: updateError,
+        callId,
+        bookingId: result.booking_id,
+      });
+    }
+  }
+
   logger.info("Appointment booked successfully", {
     bookingId: result.booking_id,
     confirmationNumber: result.confirmation_number,

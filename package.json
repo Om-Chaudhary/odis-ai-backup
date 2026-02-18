@@ -38,6 +38,7 @@
     "docs:serve": "nx serve docs",
     "docs:clear": "nx clear docs",
     "backfill:inbound-outcomes": "tsx apps/web/src/scripts/backfill-inbound-outcomes.ts",
+    "backfill:hallucinated-dates": "tsx scripts/backfill/backfill-hallucinated-dates.ts",
     "backfill:clean-false-outcomes": "tsx scripts/backfill/backfill-clean-false-outcomes.ts",
     "mobile:start": "nx start mobile",
     "mobile:ios": "nx run-ios mobile",

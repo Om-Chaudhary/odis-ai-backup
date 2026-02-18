@@ -293,6 +293,32 @@ export function getActionCardData(
 ): ActionCardData | null {
   // Use structured data if available and valid
   if (structuredData?.card_type) {
+    // Defense-in-depth: when a real booking exists with a date, prefer the
+    // booking's date/time over structured_data which may contain hallucinated
+    // values from VAPI's end-of-call analysis.
+    if (
+      (structuredData.card_type === "scheduled" ||
+        structuredData.card_type === "rescheduled") &&
+      booking?.date
+    ) {
+      return {
+        ...structuredData,
+        appointment_data: {
+          ...structuredData.appointment_data,
+          patient_name:
+            booking.patient_name ??
+            structuredData.appointment_data?.patient_name,
+          client_name:
+            booking.client_name ??
+            structuredData.appointment_data?.client_name,
+          date: booking.date,
+          time: booking.start_time ?? structuredData.appointment_data?.time,
+          reason:
+            booking.reason ??
+            structuredData.appointment_data?.reason,
+        },
+      };
+    }
     return structuredData;
   }
 
