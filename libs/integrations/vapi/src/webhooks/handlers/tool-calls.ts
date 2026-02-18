@@ -35,6 +35,8 @@ const KNOWN_TOOLS = [
   "leave_message",
   // Info tools
   "get_clinic_hours",
+  // Triage tools
+  "log_emergency_triage",
 ] as const;
 
 /**

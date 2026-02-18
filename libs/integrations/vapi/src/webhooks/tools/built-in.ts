@@ -17,7 +17,9 @@ import {
   processBookAppointment,
 } from "../../processors/appointments";
 import { processLeaveMessage } from "../../processors/messaging";
+import { processLogEmergencyTriage } from "../../processors/triage";
 import { LeaveMessageSchema } from "../../schemas/messaging";
+import { LogEmergencyTriageSchema } from "../../schemas/triage";
 import { BookAppointmentSchema } from "../../schemas/appointments";
 
 const logger = loggers.webhook.child("built-in-tools");
@@ -379,6 +381,62 @@ export function registerBuiltInTools(): void {
     },
   });
 
+  // Log emergency triage tool - records ER triage outcomes
+  registerTool({
+    name: "log_emergency_triage",
+    description:
+      "Log emergency triage outcomes when a caller is referred to ER or triaged",
+    handler: async (params, context) => {
+      logger.info("Log emergency triage called", {
+        callId: context.callId,
+        assistantId: context.assistantId,
+      });
+
+      if (!context.assistantId) {
+        return {
+          error: "Assistant ID not available",
+          message: "Unable to log triage. Assistant context not found.",
+        };
+      }
+
+      const parsed = LogEmergencyTriageSchema.safeParse(params);
+      if (!parsed.success) {
+        logger.warn("Log emergency triage validation failed", {
+          callId: context.callId,
+          errors: parsed.error.flatten(),
+        });
+        return {
+          error: "validation_error",
+          message:
+            "I need some information to log this emergency. Please provide the caller's name, phone number, pet name, symptoms, and urgency level.",
+        };
+      }
+
+      const supabase = await createServiceClient();
+      const clinic = await findClinicWithConfigByAssistantId(
+        supabase,
+        context.assistantId,
+      );
+
+      const result = await processLogEmergencyTriage(parsed.data, {
+        callId: context.callId,
+        toolCallId: context.toolCallId,
+        assistantId: context.assistantId,
+        clinic,
+        supabase,
+        logger,
+      });
+
+      logger.info("Log emergency triage completed", {
+        success: result.success,
+        callId: context.callId,
+        clinicId: clinic?.id,
+      });
+
+      return { ...result };
+    },
+  });
+
   logger.info("Built-in tools registered", {
     tools: [
       "book_appointment",
@@ -386,6 +444,7 @@ export function registerBuiltInTools(): void {
       "check_availability",
       "check_availability_range",
       "leave_message",
+      "log_emergency_triage",
     ],
   });
 }

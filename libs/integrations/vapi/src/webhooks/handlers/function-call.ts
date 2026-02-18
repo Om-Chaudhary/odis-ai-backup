@@ -22,6 +22,7 @@ const KNOWN_TOOLS = [
   "book_appointment",
   "leave_message",
   "get_clinic_hours",
+  "log_emergency_triage",
 ] as const;
 
 /**
