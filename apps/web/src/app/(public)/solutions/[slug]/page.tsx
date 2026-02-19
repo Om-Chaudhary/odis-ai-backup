@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -23,10 +21,6 @@ const contentNavigation = [
   { name: "Solutions", href: "/solutions" },
   { name: "Compare", href: "/compare" },
 ];
-
-export function generateStaticParams() {
-  return solutionSlugs.map((slug) => ({ slug }));
-}
 
 export async function generateMetadata({
   params,

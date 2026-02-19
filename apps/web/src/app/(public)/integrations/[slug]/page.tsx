@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -535,13 +533,6 @@ const integrations: Record<
     ],
   },
 };
-
-// Generate static params for all integration pages
-export function generateStaticParams() {
-  return Object.keys(integrations).map((slug) => ({
-    slug,
-  }));
-}
 
 // Generate metadata dynamically based on the integration
 export async function generateMetadata({
