@@ -953,45 +953,45 @@ const FeatureDescription = ({ children }: { children?: React.ReactNode }) => {
 
 const features = [
   {
-    title: "Automated Discharge Follow-ups",
+    title: "After-Hours Coverage",
     description:
-      "Every patient gets a next-day call. No staff time. No forgotten callbacks. 94% connection rate.",
-    skeleton: <DischargeCallAnimation />,
+      "The 11PM emergency question. The Sunday appointment request. Odis handles it all.",
+    skeleton: <VoiceWaveSkeleton />,
     className: "col-span-1 border-b lg:col-span-4 lg:border-r",
-  },
-  {
-    title: "Live Call Dashboard",
-    description:
-      "See calls as they happen. Track outcomes, sentiment, and appointments booked in real-time.",
-    skeleton: <CallActivitySkeleton />,
-    className: "col-span-1 border-b lg:col-span-2",
-  },
-  {
-    title: "Syncs With Your PIMS",
-    description:
-      "Connects to IDEXX Neo, ezyVet, and Cornerstone. Patient data flows automatically.",
-    skeleton: <PimsIntegrationSkeleton />,
-    className: "col-span-1 lg:col-span-3 lg:border-r",
-  },
-  {
-    title: "See Your ROI",
-    description:
-      "Track hours saved, appointments recovered, and dollar impact—updated daily.",
-    skeleton: <AnalyticsSkeleton />,
-    className: "col-span-1 border-b lg:col-span-3 lg:border-none",
   },
   {
     title: "Books Appointments Automatically",
     description:
       "Callers book directly during the call. Real-time calendar sync. No double-booking.",
     skeleton: <SchedulingSkeleton />,
+    className: "col-span-1 border-b lg:col-span-2",
+  },
+  {
+    title: "Live Call Dashboard",
+    description:
+      "See calls as they happen. Track outcomes, sentiment, and appointments booked in real-time.",
+    skeleton: <CallActivitySkeleton />,
     className: "col-span-1 lg:col-span-2 lg:border-r",
   },
   {
-    title: "24/7 After-Hours Coverage",
+    title: "Automated Discharge Follow-ups",
     description:
-      "The 11PM emergency question. The Sunday appointment request. Odis handles it all.",
-    skeleton: <VoiceWaveSkeleton />,
+      "Catch post-op concerns early, book rechecks when needed, and keep owners in the loop—without adding to your team's plate.",
+    skeleton: <DischargeCallAnimation />,
+    className: "col-span-1 border-b lg:col-span-4 lg:border-none",
+  },
+  {
+    title: "Syncs With Your PIMS",
+    description:
+      "Connects to IDEXX Neo, ezyVet, and Cornerstone. Patient data flows automatically.",
+    skeleton: <PimsIntegrationSkeleton />,
+    className: "col-span-1 lg:col-span-2 lg:border-r",
+  },
+  {
+    title: "See Your ROI",
+    description:
+      "Track hours saved, appointments recovered, and dollar impact—updated daily.",
+    skeleton: <AnalyticsSkeleton />,
     className: "col-span-1 lg:col-span-4",
   },
 ];
@@ -1011,7 +1011,7 @@ export function FeaturesSection() {
   };
 
   return (
-    <LazyMotion features={domAnimation} strict>
+    <LazyMotion features={domAnimation}>
       <section
         ref={sectionRef}
         id="features"
@@ -1052,13 +1052,14 @@ export function FeaturesSection() {
             </span>{" "}
             Every Week
           </m.h2>
-          <m.p
+          <m.div
             variants={fadeUpVariant}
-            className="mx-auto max-w-2xl text-base text-slate-600 sm:text-lg"
+            className="mx-auto flex max-w-2xl items-center justify-center gap-4 text-base text-slate-600 sm:gap-6 sm:text-lg"
           >
-            Answer after-hours calls automatically. Follow up on every discharge without lifting a finger.
-            See the impact in real-time.
-          </m.p>
+            <span>Answer after-hours calls automatically</span>
+            <span className="h-5 w-px bg-teal-400/60" aria-hidden="true" />
+            <span>Never let a discharge follow-up slip through the cracks</span>
+          </m.div>
         </m.div>
 
         {/* Features Grid */}

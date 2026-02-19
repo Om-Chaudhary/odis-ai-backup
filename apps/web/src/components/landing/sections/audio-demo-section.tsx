@@ -268,7 +268,7 @@ export function AudioDemoSection() {
   };
 
   return (
-    <LazyMotion features={domAnimation} strict>
+    <LazyMotion features={domAnimation}>
     <section
       ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="sample-calls"
@@ -309,7 +309,7 @@ export function AudioDemoSection() {
 
           {/* Subtitle */}
           <p className="mx-auto max-w-xl text-base text-slate-600 sm:text-lg">
-            These are actual discharge follow-up calls—unedited. Listen to how Odis
+            These are actual post-visit follow-up calls—unedited. Listen to how Odis
             handles real conversations with real clients.
           </p>
         </m.div>
@@ -356,7 +356,7 @@ export function AudioDemoSection() {
         >
           <div className="inline-flex flex-col items-center gap-4 rounded-2xl border border-teal-200/50 bg-gradient-to-br from-white/90 to-teal-50/60 px-8 py-6 backdrop-blur-sm sm:px-10 sm:py-7">
             <p className="text-sm font-medium text-slate-700">
-              Want to hear how Odis would sound for your clinic?
+              Want to hear how Odis would sound for your practice?
             </p>
             <Link
               href="/demo"

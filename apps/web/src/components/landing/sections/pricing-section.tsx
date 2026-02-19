@@ -48,7 +48,7 @@ export function PricingSection() {
   };
 
   return (
-    <LazyMotion features={domAnimation} strict>
+    <LazyMotion features={domAnimation}>
     <section
       ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="pricing"
@@ -130,7 +130,7 @@ export function PricingSection() {
               <div className="flex flex-wrap items-center justify-center gap-4 pt-2 text-sm text-slate-500">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-teal-500" />
-                  No credit card required
+                  Tailored to your practice
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Shield className="h-4 w-4 text-teal-500" />

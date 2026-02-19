@@ -173,7 +173,7 @@ export const TestimonialsSection = () => {
   };
 
   return (
-    <LazyMotion features={domAnimation} strict>
+    <LazyMotion features={domAnimation}>
     <section
       ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="testimonials"

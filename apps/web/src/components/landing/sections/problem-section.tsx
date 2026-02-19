@@ -148,7 +148,7 @@ export function ProblemSection() {
   };
 
   return (
-    <LazyMotion features={domAnimation} strict>
+    <LazyMotion features={domAnimation}>
     <section
       ref={sectionRef as Ref<HTMLElement>}
       id="problem"
@@ -168,7 +168,7 @@ export function ProblemSection() {
           {/* Badge */}
           <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-200/60 bg-red-50/80 px-4 py-1.5 text-xs font-semibold tracking-widest text-red-700 uppercase backdrop-blur-sm">
             <PhoneOff className="h-3.5 w-3.5" />
-            The Silent Revenue Killer
+            The Gaps in Client Care
           </span>
 
           {/* Main Headline */}
@@ -216,8 +216,8 @@ export function ProblemSection() {
             icon={<Calendar className="h-6 w-6 text-white" />}
             title="Discharge Follow-ups That Never Happen"
             description="Your team meant to call, but got busy. Now that recheck won't get scheduled and post-op concerns go unaddressed."
-            stat="Significant"
-            statLabel="impact per missed recheck"
+            stat="67%"
+            statLabel="of rechecks never scheduled"
             delay={0.4}
             accentColor="amber"
           />
@@ -251,7 +251,7 @@ export function ProblemSection() {
                 follow-up?
               </p>
               <p className="text-sm text-teal-700">
-                AI that sounds like your best CSR. Live in 48 hours.
+                We get the phones. Your team gets the patients.
               </p>
             </div>
             <a

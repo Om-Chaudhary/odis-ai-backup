@@ -134,7 +134,7 @@ export function HeroSection() {
   };
 
   return (
-    <LazyMotion features={domAnimation} strict>
+    <LazyMotion features={domAnimation}>
       <section
         id="home"
         ref={sectionRef}
@@ -354,22 +354,26 @@ export function HeroSection() {
                 </m.h1>
 
                 {/* Description */}
-                <m.p
+                <m.div
                   variants={fadeInUpVariants}
-                  className="mt-5 max-w-[26rem] text-[15px] leading-[1.7] text-pretty text-white/50 sm:mt-6 sm:max-w-lg sm:text-[17px] sm:leading-[1.7]"
+                  className="mt-5 max-w-[26rem] sm:mt-6 sm:max-w-lg"
                 >
-                  Odis AI handles your clinic's inbound and outbound calls, from
-                  scheduling appointments to post-visit follow-ups.{" "}
-                  <AnimatedGradientText
-                    speed={2}
-                    colorFrom="#2dd4bf"
-                    colorVia="#5eead4"
-                    colorTo="#2dd4bf"
-                    className="font-semibold"
-                  >
-                    Your team focuses on care. We handle the phones.
-                  </AnimatedGradientText>
-                </m.p>
+                  <p className="text-[15px] leading-[1.7] text-pretty text-white/50 sm:text-[17px] sm:leading-[1.7]">
+                    Odis AI handles your clinic's inbound and outbound calls, from
+                    scheduling appointments to post-visit follow-ups.
+                  </p>
+                  <div className="mt-3">
+                    <AnimatedGradientText
+                      speed={2}
+                      colorFrom="#2dd4bf"
+                      colorVia="#5eead4"
+                      colorTo="#2dd4bf"
+                      className="text-[15px] font-semibold whitespace-nowrap sm:text-[17px]"
+                    >
+                      Your team focuses on care. We handle the phones.
+                    </AnimatedGradientText>
+                  </div>
+                </m.div>
 
                 {/* CTAs */}
                 <m.div

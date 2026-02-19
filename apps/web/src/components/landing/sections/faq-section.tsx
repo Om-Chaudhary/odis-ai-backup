@@ -47,13 +47,13 @@ const defaultFAQs: FAQItem[] = [
   {
     question: "How natural does the AI actually sound?",
     answer:
-      "Listen to our demo calls—they're real, unscripted conversations with actual pet parents. Most callers don't realize they're talking to AI. The voice is warm, conversational, and trained specifically for veterinary contexts.",
+      "Listen to our demo calls—they're real, unscripted conversations with actual pet parents. AI disclosure is set up per your practice's preferences, and most callers talk to Odis just like they would a person. The voice is warm, conversational, and trained specifically for veterinary contexts.",
     category: "technology",
   },
   {
     question: "What exactly can Odis do on a call?",
     answer:
-      "For inbound: answer questions about your clinic, book appointments with real-time calendar sync, take messages, triage urgency, and route emergencies. For outbound: call every discharged patient, check on recovery, answer follow-up questions, and schedule rechecks.",
+      "Odis answers after-hours calls, books appointments with real-time calendar sync, takes messages, triages urgency, and routes emergencies to your on-call team. On the outbound side, Odis follows up with discharged patients on your schedule to check on recovery, answer follow-up questions, and schedule rechecks—so nothing slips through the cracks.",
     category: "technology",
   },
   {
@@ -77,7 +77,7 @@ const defaultFAQs: FAQItem[] = [
   {
     question: "What does it cost compared to hiring staff?",
     answer:
-      "Most clinics see meaningful recovered revenue and saved time—far exceeding the cost. No benefits, no sick days, no training time. And Odis works nights and weekends without overtime.",
+      "Most clinics see meaningful recovered revenue and saved time—far exceeding the cost. Odis typically pays for itself within the first week or two through booked appointments and recaptured clients alone. And it works nights and weekends without overtime.",
     category: "support",
   },
 ];
@@ -115,7 +115,7 @@ export const FAQSection = ({
   };
 
   return (
-    <LazyMotion features={domAnimation} strict>
+    <LazyMotion features={domAnimation}>
     <section
       ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="faq"
