@@ -29,6 +29,10 @@ const contentNavigation = [
   { name: "Compare", href: "/compare" },
 ];
 
+export function generateStaticParams() {
+  return comparisonSlugs.map((slug) => ({ slug }));
+}
+
 export async function generateMetadata({
   params,
 }: {
