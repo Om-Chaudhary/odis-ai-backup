@@ -18,6 +18,52 @@ interface EmailTabContentProps {
   emailWasSent: boolean;
   emailCanBeSent: boolean;
   hasOwnerEmail: boolean;
+  patientName?: string;
+}
+
+/**
+ * Build a fallback StructuredDischargeContent when the DB has none,
+ * so we always show the styled EmailStructuredPreview.
+ */
+function buildLocalFallback(
+  patientName: string,
+  emailContent: string,
+  dischargeSummary: string,
+): StructuredDischargeContent {
+  const summaryText =
+    dischargeSummary && dischargeSummary.length >= 20
+      ? dischargeSummary
+      : emailContent && emailContent.length >= 20
+        ? emailContent
+        : `Discharge instructions were provided for ${patientName} following the completed call.`;
+  return {
+    patientName,
+    visitSummary: summaryText,
+    homeCare: {
+      activity: "Follow all take-home instructions provided at discharge",
+    },
+    followUp: {
+      required: true,
+      date: "As directed by your veterinarian",
+      reason: "Post-visit follow-up",
+    },
+    warningSigns: [
+      "Lethargy or loss of appetite lasting more than 24 hours",
+      "Vomiting, diarrhea, or other new symptoms",
+      "Signs of pain or distress",
+    ],
+  };
+}
+
+/**
+ * Try to extract a patient name from emailContent like
+ * "DISCHARGE INSTRUCTIONS FOR DUSTY\n..."
+ */
+function extractPatientName(emailContent: string): string | null {
+  const match = emailContent.match(
+    /DISCHARGE INSTRUCTIONS FOR ([A-Z][A-Z\s'-]+)/i,
+  );
+  return match?.[1]?.trim() ?? null;
 }
 
 /**
@@ -28,7 +74,23 @@ export function EmailTabContent({
   emailWasSent,
   emailCanBeSent,
   hasOwnerEmail,
+  patientName,
 }: EmailTabContentProps) {
+  // Resolve structured content: use DB value, or build a fallback from available data
+  const resolvedContent: StructuredDischargeContent | null = (() => {
+    if (caseData.structuredContent) return caseData.structuredContent;
+    const name =
+      patientName ||
+      extractPatientName(caseData.emailContent) ||
+      null;
+    if (!name) return null;
+    return buildLocalFallback(
+      name,
+      caseData.emailContent,
+      caseData.dischargeSummary,
+    );
+  })();
+
   // If email was sent, show the sent email content
   if (emailWasSent) {
     return (
@@ -40,9 +102,9 @@ export function EmailTabContent({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {caseData.structuredContent ? (
+          {resolvedContent ? (
             <div className="max-h-96 overflow-auto">
-              <EmailStructuredPreview content={caseData.structuredContent} />
+              <EmailStructuredPreview content={resolvedContent} />
             </div>
           ) : (
             <div className="bg-muted/50 max-h-96 overflow-auto rounded-md p-3">
@@ -119,9 +181,9 @@ export function EmailTabContent({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {caseData.structuredContent ? (
+        {resolvedContent ? (
           <div className="max-h-96 overflow-auto">
-            <EmailStructuredPreview content={caseData.structuredContent} />
+            <EmailStructuredPreview content={resolvedContent} />
           </div>
         ) : (
           <div className="bg-muted/50 max-h-96 overflow-auto rounded-md p-3">

@@ -204,6 +204,7 @@ export function CommunicationTabsPanel({
           dischargeSummary={dischargeSummary}
           emailSent={emailSent}
           hasOwnerEmail={hasOwnerEmail}
+          patientName={patientName}
         />
       </TabsContent>
     </Tabs>
@@ -292,6 +293,42 @@ interface EmailContentProps {
   dischargeSummary: string;
   emailSent: boolean;
   hasOwnerEmail: boolean;
+  patientName?: string;
+}
+
+/**
+ * Generate fallback structured content from discharge summary text
+ * so the email tab shows the nice EmailStructuredPreview instead of plain text.
+ */
+function buildFallbackStructuredContent(
+  dischargeSummary: string,
+  patientName?: string,
+  emailContent?: string,
+): StructuredDischargeContent | null {
+  if (!patientName) return null;
+  const summaryText =
+    dischargeSummary && dischargeSummary.length >= 20
+      ? dischargeSummary
+      : emailContent && emailContent.length >= 20
+        ? emailContent
+        : `Discharge instructions were provided for ${patientName} following the completed call.`;
+  return {
+    patientName,
+    visitSummary: summaryText,
+    homeCare: {
+      activity: "Follow all take-home instructions provided at discharge",
+    },
+    followUp: {
+      required: true,
+      date: "As directed by your veterinarian",
+      reason: "Post-visit follow-up",
+    },
+    warningSigns: [
+      "Lethargy or loss of appetite lasting more than 24 hours",
+      "Vomiting, diarrhea, or other new symptoms",
+      "Signs of pain or distress",
+    ],
+  };
 }
 
 function EmailContent({
@@ -300,17 +337,24 @@ function EmailContent({
   dischargeSummary,
   emailSent,
   hasOwnerEmail,
+  patientName,
 }: EmailContentProps) {
+  // Use structured content if available, otherwise build a fallback
+  const effectiveStructuredContent =
+    structuredContent ??
+    buildFallbackStructuredContent(dischargeSummary, patientName, emailContent);
+
   return (
     <EmailTabContent
       caseData={{
-        structuredContent,
+        structuredContent: effectiveStructuredContent,
         emailContent: emailContent ?? "",
         dischargeSummary: dischargeSummary ?? "",
       }}
       emailWasSent={emailSent}
       emailCanBeSent={!emailSent && hasOwnerEmail}
       hasOwnerEmail={hasOwnerEmail}
+      patientName={patientName}
     />
   );
 }
