@@ -35,6 +35,7 @@ const NAV_LINKS = [
   { name: "Solutions", href: "#how-it-works" },
   { name: "Contact", href: "#pricing" },
   { name: "About", href: "/about" },
+  { name: "Blog", href: "/blog" },
 ];
 
 // Stagger container

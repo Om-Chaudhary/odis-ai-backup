@@ -23,6 +23,7 @@ const navigationLinks = [
   { name: "Features", link: "#features" },
   { name: "How It Works", link: "#how-it-works" },
   { name: "Testimonials", link: "#testimonials" },
+  { name: "Blog", link: "/blog" },
 ];
 
 export const LandingNavbar = () => {
@@ -115,15 +116,29 @@ export const LandingNavbar = () => {
               <NavigationMenuList className="gap-1">
                 {navigationLinks.map((link) => (
                   <NavigationMenuItem key={link.name}>
-                    <NavigationMenuLink
-                      className={cn(
-                        navigationMenuTriggerStyle(),
-                        "text-muted-foreground cursor-pointer bg-transparent transition-all hover:bg-white/10 hover:text-slate-800 focus:bg-white/10",
-                      )}
-                      onClick={() => handleLinkClick(link.link)}
-                    >
-                      {link.name}
-                    </NavigationMenuLink>
+                    {link.link.startsWith("#") ? (
+                      <NavigationMenuLink
+                        className={cn(
+                          navigationMenuTriggerStyle(),
+                          "text-muted-foreground cursor-pointer bg-transparent transition-all hover:bg-white/10 hover:text-slate-800 focus:bg-white/10",
+                        )}
+                        onClick={() => handleLinkClick(link.link)}
+                      >
+                        {link.name}
+                      </NavigationMenuLink>
+                    ) : (
+                      <NavigationMenuLink asChild>
+                        <Link
+                          href={link.link}
+                          className={cn(
+                            navigationMenuTriggerStyle(),
+                            "text-muted-foreground bg-transparent transition-all hover:bg-white/10 hover:text-slate-800 focus:bg-white/10",
+                          )}
+                        >
+                          {link.name}
+                        </Link>
+                      </NavigationMenuLink>
+                    )}
                   </NavigationMenuItem>
                 ))}
               </NavigationMenuList>
@@ -198,15 +213,26 @@ export const LandingNavbar = () => {
               className="relative z-40 bg-background border-t border-white/10 md:hidden"
             >
               <div className="space-y-1 px-6 py-4">
-                {navigationLinks.map((link) => (
-                  <button
-                    key={link.name}
-                    onClick={() => handleLinkClick(link.link)}
-                    className="block w-full rounded-lg px-4 py-3 text-left text-base font-medium text-slate-800 transition-colors hover:bg-white/10"
-                  >
-                    {link.name}
-                  </button>
-                ))}
+                {navigationLinks.map((link) =>
+                  link.link.startsWith("#") ? (
+                    <button
+                      key={link.name}
+                      onClick={() => handleLinkClick(link.link)}
+                      className="block w-full rounded-lg px-4 py-3 text-left text-base font-medium text-slate-800 transition-colors hover:bg-white/10"
+                    >
+                      {link.name}
+                    </button>
+                  ) : (
+                    <Link
+                      key={link.name}
+                      href={link.link}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block w-full rounded-lg px-4 py-3 text-left text-base font-medium text-slate-800 transition-colors hover:bg-white/10"
+                    >
+                      {link.name}
+                    </Link>
+                  ),
+                )}
 
                 {isLoadingAuth ? (
                   // Loading skeleton
