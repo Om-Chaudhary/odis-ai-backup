@@ -1,17 +1,24 @@
--- Add room-based filtering for availability checks
--- When scheduling_room_names is set, only appointments in those rooms count toward capacity.
--- This allows clinics like Masson to only check "Exam Room One" for availability
--- while ignoring Technician, Surgery, Hospitalization, etc.
--- When NULL (default), all rooms count (existing behavior for Alumrock, etc.)
+-- Masson room-level scheduling: capacity override
+--
+-- The sync service (pims-sync) now filters appointments by IDEXX resource ID
+-- before writing to pims_appointments. Only the correct room's appointments
+-- exist in the table, so SQL functions do NOT need room-name filtering.
+--
+-- This migration:
+-- 1. Adds scheduling_room_names column (kept for documentation, not used in queries)
+-- 2. Restores count_booked_in_range to NOT filter by room (sync handles it)
+-- 3. Restores check_availability to NOT pass room filter
+-- 4. Sets Masson capacity to 1 (single exam room)
 
--- 1. Add column to clinic_schedule_config
+-- 1. Add column to clinic_schedule_config (informational only)
 ALTER TABLE clinic_schedule_config
 ADD COLUMN IF NOT EXISTS scheduling_room_names text[];
 
 COMMENT ON COLUMN clinic_schedule_config.scheduling_room_names IS
-  'When set, only count appointments from these IDEXX rooms (provider_name) toward capacity. NULL = count all rooms.';
+  'Informational: which IDEXX rooms this clinic uses for scheduling. Actual filtering happens at sync time via resource IDs.';
 
--- 2. Update count_booked_in_range to accept optional room filter
+-- 2. Restore count_booked_in_range WITHOUT room filtering
+-- (sync already ensures only the correct room's appointments are in the table)
 CREATE OR REPLACE FUNCTION count_booked_in_range(
   p_clinic_id uuid,
   p_time_range tstzrange,
@@ -24,15 +31,12 @@ DECLARE
 BEGIN
   SELECT COUNT(*) INTO v_count
   FROM (
-    -- Appointments from PIMS
+    -- Appointments from PIMS (already room-filtered by sync)
     SELECT id FROM pims_appointments
     WHERE clinic_id = p_clinic_id
       AND time_range && p_time_range
       AND deleted_at IS NULL
       AND status NOT IN ('cancelled', 'no_show')
-      AND (p_scheduling_rooms IS NULL
-           OR provider_name = ANY(p_scheduling_rooms)
-           OR appointment_type = 'block')
 
     UNION ALL
 
@@ -50,7 +54,7 @@ BEGIN
 END;
 $$;
 
--- 3. Update check_availability to read room filter from config and pass it
+-- 3. Restore check_availability WITHOUT room filter pass-through
 CREATE OR REPLACE FUNCTION check_availability(
   p_clinic_id uuid,
   p_time_range tstzrange
@@ -72,7 +76,6 @@ DECLARE
   v_end_time time;
   v_blocked boolean := false;
   v_block_reason text;
-  v_scheduling_rooms text[];
 BEGIN
   -- Extract day of week and time from time range
   v_day_of_week := EXTRACT(DOW FROM lower(p_time_range) AT TIME ZONE (
@@ -100,9 +103,9 @@ BEGIN
     RETURN;
   END IF;
 
-  -- Get capacity and room filter from config
-  SELECT COALESCE(csc.default_capacity, 2), csc.scheduling_room_names
-  INTO v_capacity, v_scheduling_rooms
+  -- Get capacity from config
+  SELECT COALESCE(csc.default_capacity, 2)
+  INTO v_capacity
   FROM clinic_schedule_config csc
   WHERE csc.clinic_id = p_clinic_id;
 
@@ -110,8 +113,8 @@ BEGIN
     v_capacity := 2;
   END IF;
 
-  -- Count booked (with optional room filter)
-  v_booked := count_booked_in_range(p_clinic_id, p_time_range, v_scheduling_rooms);
+  -- Count booked (sync already filtered to correct room)
+  v_booked := count_booked_in_range(p_clinic_id, p_time_range);
 
   RETURN QUERY SELECT
     v_booked < v_capacity,
@@ -123,7 +126,7 @@ BEGIN
 END;
 $$;
 
--- 4. Set Masson to only check Exam Room One with capacity 1
+-- 4. Set Masson capacity to 1 (single exam room for scheduling)
 UPDATE clinic_schedule_config
 SET scheduling_room_names = ARRAY['Exam Room One'],
     default_capacity = 1

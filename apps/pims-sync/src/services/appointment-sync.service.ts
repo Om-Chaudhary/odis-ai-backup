@@ -15,14 +15,18 @@ import { createTimeRange, timeRangeToPostgres } from "@odis-ai/shared/util";
 const logger = createLogger("appointment-sync");
 
 /**
- * Room filter for availability scheduling.
- * When a clinic has an entry here, only appointments in the listed rooms
- * are written to pims_appointments (used by availability checks).
+ * Resource-ID filter for availability scheduling.
+ * IDEXX columns (rooms) each have a numeric resource ID returned as `provider.id`.
+ * When a clinic has an entry here, only appointments whose `provider.id` matches
+ * one of the listed IDs are written to pims_appointments.
  * Clinics not listed here include all rooms (default behavior).
+ *
+ * Masson column→ID mapping (from IDEXX Neo):
+ *   Exam Room One → "7", Exam Room Two → "9", Surgery/Drop Off → "6"
  */
-const CLINIC_SCHEDULING_ROOMS: Record<string, string[]> = {
-  // Masson Veterinary Hospital: only Exam Room One for scheduling
-  "efcc1733-7a7b-4eab-8104-a6f49defd7a6": ["Exam Room One"],
+const CLINIC_SCHEDULING_RESOURCE_IDS: Record<string, string[]> = {
+  // Masson Veterinary Hospital: only Exam Room One (resource ID "7")
+  "efcc1733-7a7b-4eab-8104-a6f49defd7a6": ["7"],
 };
 
 export interface AppointmentSyncOptions {
@@ -125,36 +129,37 @@ export async function executeAppointmentSync(
 
     const allAppointments = await provider.fetchAppointments(startDate, endDate);
 
-    // Apply room filter: only include appointments from specific rooms for scheduling.
-    // When set, only these rooms count toward availability (e.g. Masson: Exam Room One only).
+    // Apply resource-ID filter: only include appointments from specific IDEXX columns.
+    // When set, only these rooms count toward availability (e.g. Masson: resource ID "7" = Exam Room One).
     // Other clinics (e.g. Alumrock) have no filter and include all rooms.
-    const roomFilter = CLINIC_SCHEDULING_ROOMS[clinicId];
+    const resourceFilter = CLINIC_SCHEDULING_RESOURCE_IDS[clinicId];
 
-    if (roomFilter) {
-      // Log unique room values to diagnose what IDEXX API actually returns.
-      // Use string interpolation — Railway truncates structured objects.
-      const roomValues = new Map<string, number>();
+    if (resourceFilter) {
+      // Log unique resource IDs to confirm the mapping is correct.
+      const idCounts = new Map<string, number>();
       for (const a of allAppointments) {
-        const key = `name="${a.provider?.name ?? "NULL"}" id="${a.provider?.id ?? "NULL"}"`;
-        roomValues.set(key, (roomValues.get(key) ?? 0) + 1);
+        const key = a.provider?.id ?? "NULL";
+        idCounts.set(key, (idCounts.get(key) ?? 0) + 1);
       }
-      const roomSummary = Array.from(roomValues.entries())
-        .map(([room, count]) => `${room}: ${count}`)
+      const idSummary = Array.from(idCounts.entries())
+        .map(([id, count]) => `id=${id}: ${count}`)
         .join(", ");
       logger.info(
-        `[${clinicId}] IDEXX rooms (${allAppointments.length} total): ${roomSummary} | allowed: ${roomFilter.join(", ")}`,
+        `[${clinicId}] IDEXX resource IDs (${allAppointments.length} total): ${idSummary} | allowed IDs: ${resourceFilter.join(", ")}`,
       );
     }
 
-    const appointments = roomFilter
+    const appointments = resourceFilter
       ? allAppointments.filter(
-          (a) => a.type === "block" || matchesRoomFilter(a, roomFilter),
+          (a) =>
+            a.type === "block" ||
+            matchesResourceFilter(a, resourceFilter),
         )
       : allAppointments;
 
-    if (roomFilter) {
+    if (resourceFilter) {
       logger.info(
-        `[${clinicId}] Room filter: ${allAppointments.length} total -> ${appointments.length} after filter (allowed: ${roomFilter.join(", ")})`,
+        `[${clinicId}] Resource filter: ${allAppointments.length} total -> ${appointments.length} after filter (allowed IDs: ${resourceFilter.join(", ")})`,
       );
     }
 
@@ -423,23 +428,16 @@ async function writeAppointmentToV2Table(
 }
 
 /**
- * Check if an appointment matches the room filter.
- * Compares provider.name and provider.id (resourceId) against allowed room names.
- * Uses case-insensitive exact matching with trimming.
+ * Check if an appointment matches the resource-ID filter.
+ * Compares `provider.id` (the IDEXX resource/column ID) against allowed IDs.
  */
-function matchesRoomFilter(
+function matchesResourceFilter(
   appointment: { provider?: { name?: string | null; id?: string | null } },
-  allowedRooms: string[],
+  allowedResourceIds: string[],
 ): boolean {
-  const providerName = appointment.provider?.name?.trim().toLowerCase();
-  const providerId = appointment.provider?.id?.trim().toLowerCase();
-  const normalizedRooms = allowedRooms.map((r) => r.trim().toLowerCase());
-
-  return normalizedRooms.some((room) => {
-    if (providerName && providerName === room) return true;
-    if (providerId && providerId === room) return true;
-    return false;
-  });
+  const resourceId = appointment.provider?.id?.trim();
+  if (!resourceId) return false;
+  return allowedResourceIds.includes(resourceId);
 }
 
 /**
