@@ -153,9 +153,17 @@ async function fetchBookingsForDate(
 
   if (pimsData) {
     for (const row of pimsData) {
+      // Skip tech appointments — they don't use the exam room
+      const isTech = (row.appointment_type ?? "")
+        .toLowerCase()
+        .includes("tech");
       console.log(
-        `${LOG_PREFIX} pims_appointment: time_range=${JSON.stringify(row.time_range)}, status=${row.status}, provider=${row.provider_name}, type=${row.appointment_type}`,
+        `${LOG_PREFIX} pims_appointment: time_range=${JSON.stringify(row.time_range)}, status=${row.status}, provider=${row.provider_name}, type=${row.appointment_type}, isTech=${isTech}`,
       );
+      if (isTech) {
+        console.log(`${LOG_PREFIX}   → SKIPPED (tech appointment)`);
+        continue;
+      }
       const parsed = safeParseTimeRange(row.time_range, "pims_appointments");
       if (parsed) {
         console.log(

@@ -22,11 +22,14 @@ const logger = createLogger("appointment-sync");
  * Clinics not listed here include all rooms (default behavior).
  *
  * Masson column→ID mapping (from IDEXX Neo):
- *   Exam Room One → "7", Exam Room Two → "9", Surgery/Drop Off → "6"
+ *   Resource "7" → Tech Appointments column (not real exam slots)
+ *   Resource "9" → Exam room column (Annual Exam, Brief Exam, Follow-up, etc.)
+ *   Resource "6" → Surgery/Drop Off
  */
 const CLINIC_SCHEDULING_RESOURCE_IDS: Record<string, string[]> = {
-  // Masson Veterinary Hospital: only Exam Room One (resource ID "7")
-  "efcc1733-7a7b-4eab-8104-a6f49defd7a6": ["7"],
+  // Masson Veterinary Hospital: only the exam room (resource ID "9")
+  // Resource "7" is tech appointments — those should not count as booked.
+  "efcc1733-7a7b-4eab-8104-a6f49defd7a6": ["9"],
 };
 
 export interface AppointmentSyncOptions {
@@ -130,7 +133,7 @@ export async function executeAppointmentSync(
     const allAppointments = await provider.fetchAppointments(startDate, endDate);
 
     // Apply resource-ID filter: only include appointments from specific IDEXX columns.
-    // When set, only these rooms count toward availability (e.g. Masson: resource ID "7" = Exam Room One).
+    // When set, only these rooms count toward availability (e.g. Masson: resource ID "9" = exam room).
     // Other clinics (e.g. Alumrock) have no filter and include all rooms.
     const resourceFilter = CLINIC_SCHEDULING_RESOURCE_IDS[clinicId];
 
