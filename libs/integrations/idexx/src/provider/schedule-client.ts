@@ -165,9 +165,10 @@ export class IdexxScheduleClient {
       return [];
     }
 
-    // Filter out blocks and rosters, map to PimsAppointment
+    // Filter out rosters only — blocks are included so they occupy time slots
+    // in pims_appointments and prevent availability from being offered
     return rawAppointments
-      .filter((appt) => !appt.is_block && !appt.is_roster)
+      .filter((appt) => !appt.is_roster)
       .map((appt) => this.mapApiAppointment(appt));
   }
 
@@ -219,8 +220,10 @@ export class IdexxScheduleClient {
         id: appt.resourceId ?? null,
         name: appt.provider ?? null,
       },
-      type: appt.type_description ?? "Appointment",
-      reason: appt.reason ?? null,
+      // Mark IDEXX schedule blocks (e.g. "TP has Dr. appt") as type "block"
+      // so they occupy time slots in pims_appointments and are skipped by case sync
+      type: appt.is_block ? "block" : (appt.type_description ?? "Appointment"),
+      reason: appt.is_block ? (appt.title ?? appt.reason ?? null) : (appt.reason ?? null),
     };
   }
 

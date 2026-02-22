@@ -111,10 +111,16 @@ export class InboundSyncService {
         ); // Force immediate update
       }
 
-      // Process each appointment
+      // Process each appointment (skip blocks — they occupy time slots but don't create cases)
       for (let i = 0; i < appointments.length; i++) {
         const appointment = appointments[i];
         if (!appointment) continue;
+
+        // Skip IDEXX schedule blocks (e.g. "TP has Dr. appt") — no case needed
+        if (appointment.type === "block") {
+          stats.skipped++;
+          continue;
+        }
 
         try {
           const result = await this.processAppointment(appointment);
