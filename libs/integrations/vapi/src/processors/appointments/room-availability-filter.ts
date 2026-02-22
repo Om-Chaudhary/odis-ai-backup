@@ -13,6 +13,11 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@odis-ai/shared/types";
+import {
+  parsePostgresTimeRange,
+  rangesOverlap,
+  type TimeRange,
+} from "@odis-ai/shared/util";
 import type { AvailableSlot } from "../../schemas/appointments";
 
 /**
@@ -24,43 +29,29 @@ const CLINIC_CAPACITY_OVERRIDES: Record<string, number> = {
   "efcc1733-7a7b-4eab-8104-a6f49defd7a6": 1,
 };
 
-/**
- * A booking that occupies a time range.
- */
-interface Booking {
-  start: Date;
-  end: Date;
-}
+const LOG_PREFIX = "[room-availability-filter]";
 
 /**
- * Parse a Postgres tstzrange string like:
- *   ["2026-02-23 17:00:00+00","2026-02-23 17:30:00+00")
- * Returns start/end Date objects, or null if unparseable.
+ * Safely parse a time_range value, logging on failure.
  */
-function parseTstzRange(range: unknown): { start: Date; end: Date } | null {
-  if (typeof range !== "string" || range.length < 5) return null;
-
-  // Remove brackets: [" or (" at start, ") or "] at end
-  const inner = range.slice(1, -1);
-  const parts = inner.split(",");
-  if (parts.length !== 2) return null;
-
-  const startStr = parts[0]!.trim().replace(/^"/, "").replace(/"$/, "");
-  const endStr = parts[1]!.trim().replace(/^"/, "").replace(/"$/, "");
-
-  const start = new Date(startStr);
-  const end = new Date(endStr);
-
-  if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
-  return { start, end };
-}
-
-/**
- * Check if two time ranges overlap.
- * Uses half-open intervals: [start, end)
- */
-function rangesOverlap(a: Booking, b: Booking): boolean {
-  return a.start < b.end && b.start < a.end;
+function safeParseTimeRange(
+  raw: unknown,
+  source: string,
+): TimeRange | null {
+  if (typeof raw !== "string" || raw.length < 5) {
+    console.warn(
+      `${LOG_PREFIX} Unparseable time_range from ${source}: type=${typeof raw}, value=${JSON.stringify(raw)}`,
+    );
+    return null;
+  }
+  try {
+    return parsePostgresTimeRange(raw);
+  } catch (err) {
+    console.error(
+      `${LOG_PREFIX} Failed to parse time_range from ${source}: raw=${JSON.stringify(raw)}, error=${err}`,
+    );
+    return null;
+  }
 }
 
 /**
@@ -81,6 +72,10 @@ export async function applyRoomFilterToSlots(
   const capacityOverride = CLINIC_CAPACITY_OVERRIDES[clinicId];
   if (capacityOverride == null || slots.length === 0) return slots;
 
+  console.log(
+    `${LOG_PREFIX} Starting recount for clinic=${clinicId}, date=${date}, capacity=${capacityOverride}, slots=${slots.length}`,
+  );
+
   // Fetch actual bookings from the database (2 queries total)
   const bookings = await fetchBookingsForDate(
     supabase as SupabaseClient<Database>,
@@ -88,11 +83,20 @@ export async function applyRoomFilterToSlots(
     date,
   );
 
+  console.log(
+    `${LOG_PREFIX} Total bookings found: ${bookings.length}`,
+  );
+
   return slots.map((slot) => {
     // Don't modify blocked slots
-    if (slot.is_blocked) return slot;
+    if (slot.is_blocked) {
+      console.log(
+        `${LOG_PREFIX} Slot ${slot.slot_start} BLOCKED (skipping recount)`,
+      );
+      return slot;
+    }
 
-    const slotRange: Booking = {
+    const slotRange: TimeRange = {
       start: new Date(slot.slot_start),
       end: new Date(slot.slot_end),
     };
@@ -103,6 +107,10 @@ export async function applyRoomFilterToSlots(
     ).length;
 
     const availableCount = Math.max(capacityOverride - bookedCount, 0);
+
+    console.log(
+      `${LOG_PREFIX} Slot ${slot.slot_start}: sql_booked=${slot.booked_count}, ts_booked=${bookedCount}, capacity=${capacityOverride}, available=${availableCount}`,
+    );
 
     return {
       ...slot,
@@ -121,37 +129,73 @@ async function fetchBookingsForDate(
   supabase: SupabaseClient<Database>,
   clinicId: string,
   date: string,
-): Promise<Booking[]> {
-  const bookings: Booking[] = [];
+): Promise<TimeRange[]> {
+  const bookings: TimeRange[] = [];
 
   // 1. PIMS appointments (synced from IDEXX, already room-filtered by pims-sync)
-  const { data: pimsData } = await supabase
+  const { data: pimsData, error: pimsError } = await supabase
     .from("pims_appointments")
-    .select("time_range")
+    .select("time_range, status, deleted_at, provider_name, appointment_type")
     .eq("clinic_id", clinicId)
     .eq("date", date)
     .is("deleted_at", null)
     .not("status", "in", '("cancelled","no_show")');
 
+  if (pimsError) {
+    console.error(
+      `${LOG_PREFIX} pims_appointments query ERROR: ${JSON.stringify(pimsError)}`,
+    );
+  }
+
+  console.log(
+    `${LOG_PREFIX} pims_appointments query: clinic_id=${clinicId}, date=${date} → ${pimsData?.length ?? 0} rows`,
+  );
+
   if (pimsData) {
     for (const row of pimsData) {
-      const parsed = parseTstzRange(row.time_range);
-      if (parsed) bookings.push(parsed);
+      console.log(
+        `${LOG_PREFIX} pims_appointment: time_range=${JSON.stringify(row.time_range)}, status=${row.status}, provider=${row.provider_name}, type=${row.appointment_type}`,
+      );
+      const parsed = safeParseTimeRange(row.time_range, "pims_appointments");
+      if (parsed) {
+        console.log(
+          `${LOG_PREFIX}   → parsed: start=${parsed.start.toISOString()}, end=${parsed.end.toISOString()}`,
+        );
+        bookings.push(parsed);
+      }
     }
   }
 
   // 2. Active appointment bookings (VAPI holds + confirmed bookings)
-  const { data: holdData } = await supabase
+  const { data: holdData, error: holdError } = await supabase
     .from("appointment_bookings")
     .select("time_range, status, hold_expires_at")
     .eq("clinic_id", clinicId)
     .eq("date", date)
     .or("status.eq.confirmed,and(status.eq.pending,hold_expires_at.gt.now())");
 
+  if (holdError) {
+    console.error(
+      `${LOG_PREFIX} appointment_bookings query ERROR: ${JSON.stringify(holdError)}`,
+    );
+  }
+
+  console.log(
+    `${LOG_PREFIX} appointment_bookings query: clinic_id=${clinicId}, date=${date} → ${holdData?.length ?? 0} rows`,
+  );
+
   if (holdData) {
     for (const row of holdData) {
-      const parsed = parseTstzRange(row.time_range);
-      if (parsed) bookings.push(parsed);
+      console.log(
+        `${LOG_PREFIX} appointment_booking: time_range=${JSON.stringify(row.time_range)}, status=${row.status}, hold_expires_at=${row.hold_expires_at}`,
+      );
+      const parsed = safeParseTimeRange(row.time_range, "appointment_bookings");
+      if (parsed) {
+        console.log(
+          `${LOG_PREFIX}   → parsed: start=${parsed.start.toISOString()}, end=${parsed.end.toISOString()}`,
+        );
+        bookings.push(parsed);
+      }
     }
   }
 
