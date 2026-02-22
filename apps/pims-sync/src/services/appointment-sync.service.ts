@@ -3,6 +3,7 @@
  *
  * Core logic for syncing appointments from PIMS to pims_appointments table.
  * Extracted from sync.route.ts for reuse by both API endpoints and scheduler.
+ * Includes IDEXX schedule blocks (is_block) as of 2026-02-21.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
