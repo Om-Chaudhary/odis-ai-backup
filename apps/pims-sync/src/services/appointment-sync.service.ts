@@ -205,7 +205,7 @@ export async function executeAppointmentSync(
         .not(
           "neo_appointment_id",
           "in",
-          `(${syncedIds.map((id) => `'${id}'`).join(",")})`,
+          `(${syncedIds.join(",")})`,
         )
         .select("id");
 
