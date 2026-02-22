@@ -152,8 +152,9 @@ export async function executeAppointmentSync(
     const appointments = resourceFilter
       ? allAppointments.filter(
           (a) =>
-            a.type === "block" ||
-            matchesResourceFilter(a, resourceFilter),
+            matchesResourceFilter(a, resourceFilter) ||
+            // Include clinic-wide blocks (no resource ID) but NOT blocks from other rooms
+            (a.type === "block" && !a.provider?.id),
         )
       : allAppointments;
 
