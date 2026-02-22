@@ -29,8 +29,6 @@ import { config } from "../config";
 import { createSupabaseServiceClient } from "../lib/supabase";
 import type { IdexxProvider } from "@odis-ai/integrations/idexx";
 import type { PimsCredentials } from "@odis-ai/domain/sync";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { createTimeRange, timeRangeToPostgres } from "@odis-ai/shared/util";
 
 export const syncRouter: ReturnType<typeof Router> = Router();
 
@@ -915,6 +913,7 @@ async function handleFullSync(
       }
 
       // --- Phase 2b: Sync Appointments ---
+      // Uses executeAppointmentSync service (includes room filter + soft-delete)
       const appointmentStart = Date.now();
       logger.info("Starting inbound appointments phase", { clinicId });
 
@@ -931,92 +930,24 @@ async function handleFullSync(
               durationMs: Date.now() - appointmentStart,
             };
           } else {
-            const startDate = new Date();
-            startDate.setHours(0, 0, 0, 0);
-
             const daysAhead = body.appointmentDaysAhead ?? 14;
-            const endDate = new Date(
-              startDate.getTime() + daysAhead * 24 * 60 * 60 * 1000,
+
+            const { executeAppointmentSync } =
+              await import("../services/appointment-sync.service");
+            const syncResult = await executeAppointmentSync(
+              supabase,
+              provider,
+              clinicId,
+              { daysAhead },
             );
-
-            const startDateStr = startDate.toISOString().split("T")[0]!;
-            const endDateStr = endDate.toISOString().split("T")[0]!;
-
-            const appointments = await provider.fetchAppointments(
-              startDate,
-              endDate,
-            );
-
-            if (appointments.length > 0) {
-              const appointmentRecords = appointments.map((appt) => {
-                let timeStr = "00:00:00";
-                let endTimeStr = "00:00:00";
-
-                if (appt.startTime) {
-                  const hours = String(appt.startTime.getHours()).padStart(
-                    2,
-                    "0",
-                  );
-                  const minutes = String(appt.startTime.getMinutes()).padStart(
-                    2,
-                    "0",
-                  );
-                  timeStr = `${hours}:${minutes}:00`;
-
-                  const durationMs = (appt.duration ?? 15) * 60 * 1000;
-                  const endTime = new Date(
-                    appt.startTime.getTime() + durationMs,
-                  );
-                  const endHours = String(endTime.getHours()).padStart(2, "0");
-                  const endMinutes = String(endTime.getMinutes()).padStart(
-                    2,
-                    "0",
-                  );
-                  endTimeStr = `${endHours}:${endMinutes}:00`;
-                }
-
-                return {
-                  clinic_id: clinicId,
-                  neo_appointment_id: appt.id,
-                  date: appt.date,
-                  start_time: timeStr,
-                  end_time: endTimeStr,
-                  patient_name: appt.patient?.name ?? null,
-                  client_name: appt.client?.name ?? null,
-                  client_phone: appt.client?.phone ?? null,
-                  provider_name: appt.provider?.name ?? null,
-                  room_id: appt.provider?.id ?? null,
-                  appointment_type: appt.type ?? null,
-                  status: mapAppointmentStatus(appt.status),
-                  last_synced_at: new Date().toISOString(),
-                  deleted_at: null,
-                };
-              });
-
-              // Write to pims_appointments table
-              const { data: clinicTzData } = await supabase
-                .from("clinics")
-                .select("timezone")
-                .eq("id", clinicId)
-                .single();
-
-              const timezone = clinicTzData?.timezone ?? "America/Los_Angeles";
-              const timeRangeRecords = convertToV2Records(
-                clinicId,
-                appointmentRecords,
-                timezone,
-              );
-              await writeAppointmentToV2Table(
-                supabase,
-                clinicId,
-                timeRangeRecords,
-              );
-            }
 
             results.inbound.appointments = {
-              success: true,
-              appointmentsFound: appointments.length,
-              durationMs: Date.now() - appointmentStart,
+              success: syncResult.success,
+              appointmentsFound: syncResult.stats.found,
+              appointmentsAdded: syncResult.stats.added,
+              appointmentsRemoved: syncResult.stats.removed,
+              durationMs: syncResult.durationMs,
+              ...(syncResult.error ? { error: syncResult.error } : {}),
             };
           }
         } finally {
@@ -1547,184 +1478,3 @@ async function handleInboundAppointmentSync(
   }
 }
 
-/**
- * Map PIMS appointment status to standardized status
- */
-function mapAppointmentStatus(status: string | null | undefined): string {
-  if (!status) return "scheduled";
-
-  const statusLower = status.toLowerCase();
-
-  if (
-    statusLower.includes("cancel") ||
-    statusLower === "cancelled" ||
-    statusLower === "canceled"
-  ) {
-    return "cancelled";
-  }
-  if (
-    statusLower.includes("no show") ||
-    statusLower === "no_show" ||
-    statusLower === "noshow"
-  ) {
-    return "no_show";
-  }
-  if (
-    statusLower.includes("final") ||
-    statusLower === "finalized" ||
-    statusLower === "complete" ||
-    statusLower === "completed"
-  ) {
-    return "finalized";
-  }
-  if (
-    statusLower.includes("progress") ||
-    statusLower === "in_progress" ||
-    statusLower === "checked_in"
-  ) {
-    return "in_progress";
-  }
-
-  return "scheduled";
-}
-
-// ============================================================================
-// TIME RANGE V2 TABLE FUNCTIONS
-// ============================================================================
-
-interface AppointmentV2Record {
-  clinic_id: string;
-  time_range: string;
-  neo_appointment_id: string;
-  patient_name: string | null;
-  client_name: string | null;
-  client_phone: string | null;
-  provider_name: string | null;
-  room_id: string | null;
-  appointment_type: string | null;
-  status: string;
-  source: string;
-  sync_hash: string | null;
-  last_synced_at: string;
-  deleted_at: string | null;
-}
-
-/**
- * Write appointments to pims_appointments table (time range-based)
- *
- * @param supabase - Supabase client
- * @param clinicId - Clinic UUID
- * @param appointments - Appointment records with time ranges
- */
-async function writeAppointmentToV2Table(
-  supabase: SupabaseClient,
-  clinicId: string,
-  appointments: AppointmentV2Record[],
-): Promise<{ success: boolean; count: number; error?: string }> {
-  if (appointments.length === 0) {
-    return { success: true, count: 0 };
-  }
-
-  try {
-    // Upsert in batches
-    const batchSize = 100;
-    let totalUpserted = 0;
-
-    for (let i = 0; i < appointments.length; i += batchSize) {
-      const batch = appointments.slice(i, i + batchSize);
-      const { error } = await supabase.from("pims_appointments").upsert(batch, {
-        onConflict: "clinic_id,neo_appointment_id",
-      });
-
-      if (error) {
-        logger.error("Failed to upsert pims_appointments batch", {
-          clinicId,
-          batchIndex: i,
-          error: error.message,
-        });
-        return { success: false, count: totalUpserted, error: error.message };
-      }
-
-      totalUpserted += batch.length;
-    }
-
-    logger.info("Appointments written to pims_appointments", {
-      clinicId,
-      count: totalUpserted,
-    });
-
-    return { success: true, count: totalUpserted };
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    logger.error("Failed to write appointments to pims_appointments", {
-      clinicId,
-      error: errorMessage,
-    });
-    return { success: false, count: 0, error: errorMessage };
-  }
-}
-
-/**
- * Converts appointment records to v2 time range format
- */
-function convertToV2Records(
-  clinicId: string,
-  records: Array<{
-    neo_appointment_id: string;
-    date: string;
-    start_time: string;
-    end_time: string;
-    patient_name: string | null;
-    client_name: string | null;
-    client_phone: string | null;
-    provider_name: string | null;
-    room_id: string | null;
-    appointment_type: string | null;
-    status: string;
-  }>,
-  timezone = "America/Los_Angeles",
-): AppointmentV2Record[] {
-  const DEFAULT_DURATION_MINUTES = 15;
-
-  return records.map((record) => {
-    // When IDEXX returns no duration (start_time == end_time), default to 15 minutes
-    let endTime = record.end_time;
-    if (record.start_time === record.end_time) {
-      const [h, m] = record.start_time.split(":").map(Number);
-      const d = new Date(
-        2000,
-        0,
-        1,
-        h ?? 0,
-        (m ?? 0) + DEFAULT_DURATION_MINUTES,
-      );
-      endTime = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:00`;
-    }
-
-    // Create time range from date + start/end times
-    const timeRange = createTimeRange(
-      record.date,
-      record.start_time,
-      endTime,
-      timezone,
-    );
-
-    return {
-      clinic_id: clinicId,
-      time_range: timeRangeToPostgres(timeRange),
-      neo_appointment_id: record.neo_appointment_id,
-      patient_name: record.patient_name,
-      client_name: record.client_name,
-      client_phone: record.client_phone,
-      provider_name: record.provider_name,
-      room_id: record.room_id,
-      appointment_type: record.appointment_type,
-      status: record.status,
-      source: "idexx",
-      sync_hash: null, // Will be computed if needed
-      last_synced_at: new Date().toISOString(),
-      deleted_at: null,
-    };
-  });
-}

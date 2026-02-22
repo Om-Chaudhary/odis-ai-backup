@@ -129,8 +129,24 @@ export async function executeAppointmentSync(
     // When set, only these rooms count toward availability (e.g. Masson: Exam Room One only).
     // Other clinics (e.g. Alumrock) have no filter and include all rooms.
     const roomFilter = CLINIC_SCHEDULING_ROOMS[clinicId];
+
+    if (roomFilter) {
+      // Log unique room values to diagnose what IDEXX API actually returns
+      const roomValues = new Map<string, number>();
+      for (const a of allAppointments) {
+        const key = `name="${a.provider?.name ?? "NULL"}" id="${a.provider?.id ?? "NULL"}"`;
+        roomValues.set(key, (roomValues.get(key) ?? 0) + 1);
+      }
+      logger.info("IDEXX room values (before filter)", {
+        clinicId,
+        totalFromPims: allAppointments.length,
+        uniqueRooms: Object.fromEntries(roomValues),
+        allowedRooms: roomFilter,
+      });
+    }
+
     const appointments = roomFilter
-      ? allAppointments.filter((a) => roomFilter.includes(a.provider?.name ?? ""))
+      ? allAppointments.filter((a) => matchesRoomFilter(a, roomFilter))
       : allAppointments;
 
     if (roomFilter) {
@@ -404,6 +420,26 @@ async function writeAppointmentToV2Table(
     });
     return { success: false, count: 0, error: errorMessage };
   }
+}
+
+/**
+ * Check if an appointment matches the room filter.
+ * Compares provider.name and provider.id (resourceId) against allowed room names.
+ * Uses case-insensitive exact matching with trimming.
+ */
+function matchesRoomFilter(
+  appointment: { provider?: { name?: string | null; id?: string | null } },
+  allowedRooms: string[],
+): boolean {
+  const providerName = appointment.provider?.name?.trim().toLowerCase();
+  const providerId = appointment.provider?.id?.trim().toLowerCase();
+  const normalizedRooms = allowedRooms.map((r) => r.trim().toLowerCase());
+
+  return normalizedRooms.some((room) => {
+    if (providerName && providerName === room) return true;
+    if (providerId && providerId === room) return true;
+    return false;
+  });
 }
 
 /**
