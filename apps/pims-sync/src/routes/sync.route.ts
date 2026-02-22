@@ -944,8 +944,6 @@ async function handleFullSync(
             results.inbound.appointments = {
               success: syncResult.success,
               appointmentsFound: syncResult.stats.found,
-              appointmentsAdded: syncResult.stats.added,
-              appointmentsRemoved: syncResult.stats.removed,
               durationMs: syncResult.durationMs,
               ...(syncResult.error ? { error: syncResult.error } : {}),
             };
