@@ -14,6 +14,17 @@ import { createTimeRange, timeRangeToPostgres } from "@odis-ai/shared/util";
 
 const logger = createLogger("appointment-sync");
 
+/**
+ * Room filter for availability scheduling.
+ * When a clinic has an entry here, only appointments in the listed rooms
+ * are written to pims_appointments (used by availability checks).
+ * Clinics not listed here include all rooms (default behavior).
+ */
+const CLINIC_SCHEDULING_ROOMS: Record<string, string[]> = {
+  // Masson Veterinary Hospital: only Exam Room One for scheduling
+  "efcc1733-7a7b-4eab-8104-a6f49defd7a6": ["Exam Room One"],
+};
+
 export interface AppointmentSyncOptions {
   startDate?: Date;
   endDate?: Date;
@@ -112,7 +123,24 @@ export async function executeAppointmentSync(
       dateRange: { start: startDateStr, end: endDateStr },
     });
 
-    const appointments = await provider.fetchAppointments(startDate, endDate);
+    const allAppointments = await provider.fetchAppointments(startDate, endDate);
+
+    // Apply room filter: only include appointments from specific rooms for scheduling.
+    // When set, only these rooms count toward availability (e.g. Masson: Exam Room One only).
+    // Other clinics (e.g. Alumrock) have no filter and include all rooms.
+    const roomFilter = CLINIC_SCHEDULING_ROOMS[clinicId];
+    const appointments = roomFilter
+      ? allAppointments.filter((a) => roomFilter.includes(a.provider?.name ?? ""))
+      : allAppointments;
+
+    if (roomFilter) {
+      logger.info("Applied room filter for scheduling", {
+        clinicId,
+        totalFromPims: allAppointments.length,
+        afterFilter: appointments.length,
+        allowedRooms: roomFilter,
+      });
+    }
 
     logger.info("Fetched appointments from PIMS", {
       clinicId,
