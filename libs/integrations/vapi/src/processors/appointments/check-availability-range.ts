@@ -10,6 +10,7 @@ import type {
   CheckAvailabilityRangeInput,
   AvailableSlot,
 } from "../../schemas/appointments";
+import { applyRoomFilterToSlots } from "./room-availability-filter";
 
 const DEFAULT_TIMEZONE = "America/Los_Angeles";
 
@@ -119,7 +120,13 @@ export async function processCheckAvailabilityRange(
     });
 
     if (!error && slots) {
-      const typedSlots = slots as AvailableSlot[];
+      // Apply room filter for clinics that only use specific rooms
+      const typedSlots = await applyRoomFilterToSlots(
+        slots as AvailableSlot[],
+        availabilityClinicId,
+        dateStr,
+        supabase,
+      );
       const openSlots = typedSlots.filter(
         (slot) => !slot.is_blocked && slot.available_count > 0,
       );
@@ -171,7 +178,14 @@ export async function processCheckAvailabilityRange(
     });
 
     if (detailedSlots) {
-      const openSlots = (detailedSlots as AvailableSlot[]).filter(
+      // Apply room filter for clinics that only use specific rooms
+      const filteredDetailedSlots = await applyRoomFilterToSlots(
+        detailedSlots as AvailableSlot[],
+        availabilityClinicId,
+        firstAvailable.date,
+        supabase,
+      );
+      const openSlots = filteredDetailedSlots.filter(
         (slot) => !slot.is_blocked && slot.available_count > 0,
       );
       firstAvailableTimes = openSlots.map((slot) => {

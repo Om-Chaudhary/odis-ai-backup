@@ -131,18 +131,19 @@ export async function executeAppointmentSync(
     const roomFilter = CLINIC_SCHEDULING_ROOMS[clinicId];
 
     if (roomFilter) {
-      // Log unique room values to diagnose what IDEXX API actually returns
+      // Log unique room values to diagnose what IDEXX API actually returns.
+      // Use string interpolation — Railway truncates structured objects.
       const roomValues = new Map<string, number>();
       for (const a of allAppointments) {
         const key = `name="${a.provider?.name ?? "NULL"}" id="${a.provider?.id ?? "NULL"}"`;
         roomValues.set(key, (roomValues.get(key) ?? 0) + 1);
       }
-      logger.info("IDEXX room values (before filter)", {
-        clinicId,
-        totalFromPims: allAppointments.length,
-        uniqueRooms: Object.fromEntries(roomValues),
-        allowedRooms: roomFilter,
-      });
+      const roomSummary = Array.from(roomValues.entries())
+        .map(([room, count]) => `${room}: ${count}`)
+        .join(", ");
+      logger.info(
+        `[${clinicId}] IDEXX rooms (${allAppointments.length} total): ${roomSummary} | allowed: ${roomFilter.join(", ")}`,
+      );
     }
 
     const appointments = roomFilter
@@ -150,12 +151,9 @@ export async function executeAppointmentSync(
       : allAppointments;
 
     if (roomFilter) {
-      logger.info("Applied room filter for scheduling", {
-        clinicId,
-        totalFromPims: allAppointments.length,
-        afterFilter: appointments.length,
-        allowedRooms: roomFilter,
-      });
+      logger.info(
+        `[${clinicId}] Room filter: ${allAppointments.length} total -> ${appointments.length} after filter (allowed: ${roomFilter.join(", ")})`,
+      );
     }
 
     logger.info("Fetched appointments from PIMS", {

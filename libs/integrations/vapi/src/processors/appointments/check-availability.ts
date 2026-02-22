@@ -10,6 +10,7 @@ import type {
   CheckAvailabilityInput,
   AvailableSlot,
 } from "../../schemas/appointments";
+import { applyRoomFilterToSlots } from "./room-availability-filter";
 
 const DEFAULT_TIMEZONE = "America/Los_Angeles";
 
@@ -103,7 +104,15 @@ export async function processCheckAvailability(
     };
   }
 
-  const availableSlots = (slots as AvailableSlot[]) ?? [];
+  // Apply room filter: for clinics like Masson that only use specific rooms,
+  // re-query pims_appointments with provider_name filter and recalculate counts.
+  const rawSlots = (slots as AvailableSlot[]) ?? [];
+  const availableSlots = await applyRoomFilterToSlots(
+    rawSlots,
+    availabilityClinicId,
+    input.date,
+    supabase,
+  );
   const openSlots = availableSlots.filter(
     (slot) => !slot.is_blocked && slot.available_count > 0,
   );
