@@ -90,14 +90,17 @@ export async function applyRoomFilterToSlots(
   const firstSlotStart = slots[0]!.slot_start;
   const lastSlotEnd = slots[slots.length - 1]!.slot_end;
 
-  // Query pims_appointments filtered by room name
+  // Query pims_appointments filtered by room name OR block appointments.
+  // Blocks may have NULL provider_name even when in a specific room column,
+  // so we include all blocks to ensure they count toward capacity.
+  const roomList = roomFilter.join(",");
   const { data: filteredAppts, error: apptError } = await supabase
     .from("pims_appointments")
     .select("time_range")
     .eq("clinic_id", clinicId)
     .is("deleted_at", null)
     .not("status", "in", "(cancelled,no_show)")
-    .in("provider_name", roomFilter)
+    .or(`provider_name.in.(${roomList}),appointment_type.eq.block`)
     .filter("time_range", "ov", `[${firstSlotStart},${lastSlotEnd})`);
 
   // Query active appointment_bookings (VAPI bookings — no room filter, always count)

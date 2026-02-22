@@ -147,7 +147,9 @@ export async function executeAppointmentSync(
     }
 
     const appointments = roomFilter
-      ? allAppointments.filter((a) => matchesRoomFilter(a, roomFilter))
+      ? allAppointments.filter(
+          (a) => a.type === "block" || matchesRoomFilter(a, roomFilter),
+        )
       : allAppointments;
 
     if (roomFilter) {
