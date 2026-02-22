@@ -5,8 +5,12 @@
  * for scheduling (e.g., Masson uses only "Exam Room One").
  *
  * The SQL get_available_slots() function counts ALL rooms. This module
- * re-queries pims_appointments with a provider_name filter and recalculates
+ * re-queries pims_appointments with a room filter and recalculates
  * the booked/available counts per slot.
+ *
+ * IMPORTANT: Uses only safe PostgREST operators (.eq, .is, .not, .in).
+ * Complex filtering (room matching, block inclusion) is done in TypeScript
+ * to avoid PostgREST parsing issues with spaces in values.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -21,6 +25,16 @@ import type { AvailableSlot } from "../../schemas/appointments";
 const CLINIC_SCHEDULING_ROOMS: Record<string, string[]> = {
   // Masson Veterinary Hospital: only Exam Room One for scheduling
   "efcc1733-7a7b-4eab-8104-a6f49defd7a6": ["Exam Room One"],
+};
+
+/**
+ * Capacity overrides per clinic.
+ * When set, overrides the capacity from clinic_schedule_config.
+ * Masson has 1 scheduling room so capacity should be 1.
+ */
+const CLINIC_CAPACITY_OVERRIDES: Record<string, number> = {
+  // Masson: single exam room = capacity 1
+  "efcc1733-7a7b-4eab-8104-a6f49defd7a6": 1,
 };
 
 /**
@@ -70,9 +84,9 @@ function rangesOverlap(
 /**
  * Apply room filter to availability slots.
  *
- * Re-queries pims_appointments with provider_name filter and recalculates
- * booked/available counts. appointment_bookings (our own VAPI bookings)
- * always count regardless of room.
+ * Re-queries pims_appointments for the given date and filters in TypeScript
+ * to include only appointments in the configured rooms OR block appointments.
+ * appointment_bookings (our own VAPI bookings) always count regardless of room.
  *
  * If the clinic has no room filter, returns slots unchanged.
  * On query errors, falls back to the original (unfiltered) slots.
@@ -86,36 +100,41 @@ export async function applyRoomFilterToSlots(
   const roomFilter = CLINIC_SCHEDULING_ROOMS[clinicId];
   if (!roomFilter || slots.length === 0) return slots;
 
-  // Build a day-wide time range for the query using first/last slot bounds
-  const firstSlotStart = slots[0]!.slot_start;
-  const lastSlotEnd = slots[slots.length - 1]!.slot_end;
+  const capacityOverride = CLINIC_CAPACITY_OVERRIDES[clinicId];
 
-  // Query pims_appointments filtered by room name OR block appointments.
-  // Blocks may have NULL provider_name even when in a specific room column,
-  // so we include all blocks to ensure they count toward capacity.
-  const roomList = roomFilter.join(",");
-  const { data: filteredAppts, error: apptError } = await supabase
+  // SAFE query: only .eq(), .is(), .not() — no .or(), no .filter() on tstzrange.
+  // Fetch ALL appointments for this clinic+date, then filter in TypeScript.
+  const { data: allAppts, error: apptError } = await supabase
     .from("pims_appointments")
-    .select("time_range")
+    .select("time_range, provider_name, appointment_type")
     .eq("clinic_id", clinicId)
+    .eq("date", date)
     .is("deleted_at", null)
-    .not("status", "in", "(cancelled,no_show)")
-    .or(`provider_name.in.(${roomList}),appointment_type.eq.block`)
-    .filter("time_range", "ov", `[${firstSlotStart},${lastSlotEnd})`);
+    .not("status", "in", "(cancelled,no_show)");
 
-  // Query active appointment_bookings (VAPI bookings — no room filter, always count)
+  // Query active appointment_bookings (VAPI bookings — no room filter, always count).
+  // Use date filter instead of tstzrange overlap for safety.
   const { data: bookings, error: bookingError } = await supabase
     .from("appointment_bookings")
     .select("time_range, status, hold_expires_at")
     .eq("clinic_id", clinicId)
-    .in("status", ["pending", "confirmed"])
-    .filter("time_range", "ov", `[${firstSlotStart},${lastSlotEnd})`);
+    .eq("date", date)
+    .in("status", ["pending", "confirmed"]);
 
   // On error, fall back to unfiltered slots (safer than returning wrong data)
   if (apptError || bookingError) return slots;
 
+  // Filter appointments in TypeScript: include if room matches OR it's a block.
+  // Block appointments have NULL provider_name but still occupy the time slot.
+  const roomLower = roomFilter.map((r) => r.trim().toLowerCase());
+  const roomAppts = (allAppts ?? []).filter(
+    (a) =>
+      a.appointment_type === "block" ||
+      roomLower.includes((a.provider_name ?? "").trim().toLowerCase()),
+  );
+
   // Parse appointment time ranges
-  const apptRanges = (filteredAppts ?? [])
+  const apptRanges = roomAppts
     .map((a) => parseTimeRange(a.time_range))
     .filter((r): r is { start: Date; end: Date } => r !== null);
 
@@ -147,11 +166,20 @@ export async function applyRoomFilterToSlots(
     const overlappingBookings = activeBookingRanges.filter((r) =>
       rangesOverlap(slotRange, r),
     ).length;
-    const bookedCount = overlappingAppts + overlappingBookings;
-    const availableCount = Math.max(slot.capacity - bookedCount, 0);
+
+    // Sanity check: never report FEWER booked than the SQL function already found.
+    // If our app-level filter somehow misses appointments, fall back to SQL count.
+    const bookedCount = Math.max(
+      overlappingAppts + overlappingBookings,
+      slot.booked_count,
+    );
+
+    const effectiveCapacity = capacityOverride ?? slot.capacity;
+    const availableCount = Math.max(effectiveCapacity - bookedCount, 0);
 
     return {
       ...slot,
+      capacity: effectiveCapacity,
       booked_count: bookedCount,
       available_count: availableCount,
     };
