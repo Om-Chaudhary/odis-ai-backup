@@ -268,118 +268,119 @@ export function AudioDemoSection() {
   };
 
   return (
-    <LazyMotion features={domAnimation}>
-    <section
-      ref={sectionRef as React.LegacyRef<HTMLElement>}
-      id="sample-calls"
-      className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
-    >
-      {/* Warm violet background - purple hints blending with teal */}
-      <SectionBackground variant="warm-violet" />
+    <LazyMotion features={domAnimation} strict>
+      <section
+        ref={sectionRef as React.LegacyRef<HTMLElement>}
+        id="sample-calls"
+        className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
+      >
+        {/* Warm violet background - purple hints blending with teal */}
+        <SectionBackground variant="warm-violet" />
 
-      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <m.div
-          variants={disableAnimations ? {} : fadeUpVariant}
-          initial={disableAnimations ? false : "hidden"}
-          animate={isInView ? "visible" : "hidden"}
-          transition={{ ...transition, delay: 0 }}
-          className="mb-12 text-center lg:mb-16"
-        >
-          {/* Pill badge with verification */}
-          <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full border border-teal-200/60 bg-teal-50/80 px-4 py-1.5 text-xs font-semibold tracking-widest text-teal-700 uppercase backdrop-blur-sm">
-              <Headphones className="h-3.5 w-3.5" />
-              Live Demos
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/60 bg-emerald-50/80 px-3 py-1.5 text-xs font-medium text-emerald-700">
-              <CheckCircle2 className="h-3 w-3" />
-              Real Calls
-            </span>
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
+          <m.div
+            variants={disableAnimations ? {} : fadeUpVariant}
+            initial={disableAnimations ? false : "hidden"}
+            animate={isInView ? "visible" : "hidden"}
+            transition={{ ...transition, delay: 0 }}
+            className="mb-12 text-center lg:mb-16"
+          >
+            {/* Pill badge with verification */}
+            <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border border-teal-200/60 bg-teal-50/80 px-4 py-1.5 text-xs font-semibold tracking-widest text-teal-700 uppercase backdrop-blur-sm">
+                <Headphones className="h-3.5 w-3.5" />
+                Live Demos
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/60 bg-emerald-50/80 px-3 py-1.5 text-xs font-medium text-emerald-700">
+                <CheckCircle2 className="h-3 w-3" />
+                Real Calls
+              </span>
+            </div>
+
+            {/* Title */}
+            <h2 className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl">
+              Real Calls.{" "}
+              <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                Real Pet Parents.
+              </span>{" "}
+              No Scripts.
+            </h2>
+
+            {/* Subtitle */}
+            <p className="mx-auto max-w-xl text-base text-slate-600 sm:text-lg">
+              These are actual discharge follow-up calls—unedited. Listen to how
+              Odis handles real conversations with real clients.
+            </p>
+          </m.div>
+
+          {/* Single column with alternating rotation */}
+          <div className="mx-auto flex max-w-lg flex-col gap-12 py-4 sm:gap-16 md:gap-20">
+            {demoCards.map((card, index) => {
+              const isActive = activeCardId === card.id;
+              const shouldBlur =
+                !isMobile && activeCardId !== null && !isActive;
+              // Alternate rotation: even indices = rotate left, odd = rotate right
+              const rotation = isMobile ? 0 : index % 2 === 0 ? -2 : 2;
+
+              return (
+                <AudioDemoCard
+                  key={card.id}
+                  card={card}
+                  index={index}
+                  isPlaying={playingId === card.id}
+                  progress={progress[card.id] ?? 0}
+                  onTogglePlay={() => handleTogglePlay(card.id)}
+                  onSeek={(p) => handleSeek(card.id, p)}
+                  onSpeedChange={(s) => handleSpeedChange(card.id, s)}
+                  onVolumeChange={(v) => handleVolumeChange(card.id, v)}
+                  currentSpeed={speeds[card.id] ?? 1}
+                  currentVolume={volumes[card.id] ?? 1}
+                  rotation={rotation}
+                  disableAnimations={disableAnimations}
+                  // Blur effect
+                  isBlurred={shouldBlur}
+                  onHoverStart={() => !isMobile && setHoveredId(card.id)}
+                  onHoverEnd={() => !isMobile && setHoveredId(null)}
+                />
+              );
+            })}
           </div>
 
-          {/* Title */}
-          <h2 className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl">
-            Real Calls.{" "}
-            <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
-              Real Pet Parents.
-            </span>{" "}
-            No Scripts.
-          </h2>
-
-          {/* Subtitle */}
-          <p className="mx-auto max-w-xl text-base text-slate-600 sm:text-lg">
-            These are actual post-visit follow-up calls—unedited. Listen to how Odis
-            handles real conversations with real clients.
-          </p>
-        </m.div>
-
-        {/* Single column with alternating rotation */}
-        <div className="mx-auto flex max-w-lg flex-col gap-12 py-4 sm:gap-16 md:gap-20">
-          {demoCards.map((card, index) => {
-            const isActive = activeCardId === card.id;
-            const shouldBlur = !isMobile && activeCardId !== null && !isActive;
-            // Alternate rotation: even indices = rotate left, odd = rotate right
-            const rotation = isMobile ? 0 : index % 2 === 0 ? -2 : 2;
-
-            return (
-              <AudioDemoCard
-                key={card.id}
-                card={card}
-                index={index}
-                isPlaying={playingId === card.id}
-                progress={progress[card.id] ?? 0}
-                onTogglePlay={() => handleTogglePlay(card.id)}
-                onSeek={(p) => handleSeek(card.id, p)}
-                onSpeedChange={(s) => handleSpeedChange(card.id, s)}
-                onVolumeChange={(v) => handleVolumeChange(card.id, v)}
-                currentSpeed={speeds[card.id] ?? 1}
-                currentVolume={volumes[card.id] ?? 1}
-                rotation={rotation}
-                disableAnimations={disableAnimations}
-                // Blur effect
-                isBlurred={shouldBlur}
-                onHoverStart={() => !isMobile && setHoveredId(card.id)}
-                onHoverEnd={() => !isMobile && setHoveredId(null)}
-              />
-            );
-          })}
+          {/* Bottom CTA */}
+          <m.div
+            variants={disableAnimations ? {} : fadeUpVariant}
+            initial={disableAnimations ? false : "hidden"}
+            animate={isInView ? "visible" : "hidden"}
+            transition={{ ...transition, delay: 0.4 }}
+            className="mt-12 text-center lg:mt-16"
+          >
+            <div className="inline-flex flex-col items-center gap-4 rounded-2xl border border-teal-200/50 bg-gradient-to-br from-white/90 to-teal-50/60 px-8 py-6 backdrop-blur-sm sm:px-10 sm:py-7">
+              <p className="text-sm font-medium text-slate-700">
+                Want to hear how Odis would sound for your clinic?
+              </p>
+              <Link
+                href="/demo"
+                className={cn(
+                  "group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full px-7 py-3",
+                  "bg-gradient-to-r from-teal-600 to-emerald-600",
+                  "text-sm font-semibold text-white shadow-lg shadow-teal-500/25",
+                  "transition-all duration-300",
+                  "hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30",
+                )}
+              >
+                {/* Shimmer effect */}
+                <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                <Calendar className="relative h-4 w-4" />
+                <span className="relative">Get a Custom Demo</span>
+              </Link>
+              <p className="text-xs text-slate-500">
+                15 minutes · No commitment · Live in 48 hours
+              </p>
+            </div>
+          </m.div>
         </div>
-
-        {/* Bottom CTA */}
-        <m.div
-          variants={disableAnimations ? {} : fadeUpVariant}
-          initial={disableAnimations ? false : "hidden"}
-          animate={isInView ? "visible" : "hidden"}
-          transition={{ ...transition, delay: 0.4 }}
-          className="mt-12 text-center lg:mt-16"
-        >
-          <div className="inline-flex flex-col items-center gap-4 rounded-2xl border border-teal-200/50 bg-gradient-to-br from-white/90 to-teal-50/60 px-8 py-6 backdrop-blur-sm sm:px-10 sm:py-7">
-            <p className="text-sm font-medium text-slate-700">
-              Want to hear how Odis would sound for your practice?
-            </p>
-            <Link
-              href="/demo"
-              className={cn(
-                "group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full px-7 py-3",
-                "bg-gradient-to-r from-teal-600 to-emerald-600",
-                "text-sm font-semibold text-white shadow-lg shadow-teal-500/25",
-                "transition-all duration-300",
-                "hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30",
-              )}
-            >
-              {/* Shimmer effect */}
-              <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <Calendar className="relative h-4 w-4" />
-              <span className="relative">Get a Custom Demo</span>
-            </Link>
-            <p className="text-xs text-slate-500">
-              15 minutes · No commitment · Live in 48 hours
-            </p>
-          </div>
-        </m.div>
-      </div>
-    </section>
+      </section>
     </LazyMotion>
   );
 }

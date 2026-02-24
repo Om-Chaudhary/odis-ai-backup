@@ -89,7 +89,6 @@ const defaultNavigation: NavItem[] = [
   { name: "Features", href: "#features", isAnchor: true },
   { name: "How It Works", href: "#how-it-works", isAnchor: true },
   { name: "Testimonials", href: "#testimonials", isAnchor: true },
-  { name: "Blog", href: "/blog" },
 ];
 
 /**
