@@ -75,6 +75,9 @@ export const DEMO_PHONE_NAMES: Record<string, string> = {
   "+14082346798": "Rocky Panicun",
 
   // Happy Tails Veterinary Clinic calls
+  "9255554872": "Annika Sharma",
+  "19255554872": "Annika Sharma",
+  "+19255554872": "Annika Sharma",
   "4087810860": "Prince Owner",
   "14087810860": "Prince Owner",
   "+14087810860": "Prince Owner",
@@ -437,6 +440,68 @@ const DEMO_TOMORROW = new Date(Date.now() + 24 * 60 * 60 * 1000)
  * Demo calls array - for cases that need call records but don't exist in DB
  */
 export const DEMO_CALLS = [
+  // Happy Tails Veterinary Clinic calls - Annika Sharma / Sumo limping (Scheduled)
+  {
+    id: "happy-tails-call-annika-sumo",
+    vapi_call_id: "happy-tails-vapi-annika-sumo",
+    assistant_id: "happy-tails-assistant",
+    clinic_name: "Happy Tails Veterinary Clinic",
+    customer_phone: "9255554872",
+    customer_number: "9255554872",
+    status: "completed",
+    type: "inbound",
+    outcome: "scheduled",
+    user_sentiment: "neutral",
+    duration_seconds: 158,
+    cost: 0.22,
+    transcript:
+      "Assistant: Hi. Thanks for calling Animal Wellness Center. This is Stacy, the virtual assistant answering after hours calls. How can I help you?\n\nUser: Hi, Stacy. Um, yes. I'm calling because I'm really worried about my dog. He started limping pretty badly a few hours ago, and I'm not sure if I should take him to the emergency vet or what I should do.\n\nAssistant: I'm sorry to hear that your dog is limping. Let's make sure we take care of him. Can your dog walk on the leg right now? Is he eating and drinking normally?\n\nUser: He can walk on it, but he really doesn't wanna put any weight on it. He keeps trying to hold it up when he's standing. He ate dinner fine, and he's been drinking water. So I think so.\n\nAssistant: Since he can still walk on it and is eating and drinking normally, it doesn't sound like an emergency right now. However, it's best to schedule an appointment to have it checked out. Would you like me to help book that for you?\n\nUser: Yes, please.\n\nAssistant: Great. What day would you like to come in? And do you prefer morning or afternoon?\n\nUser: Your first available appointment would be best.\n\nAssistant: Our first available appointment is tomorrow, Wednesday, February eighteenth at 11:30 AM. Does that work for you?\n\nUser: Yes. That works.\n\nAssistant: Great. Are you a current client? Or is this your first time with us?\n\nUser: I'm a current client.\n\nAssistant: Perfect. Could you confirm your first and last name and your dog's name?\n\nUser: Annika Sharma. And my dog's name is Sumo.\n\nAssistant: Thank you, Annika. The reason for Sumo's visit? Should I note it as limping?\n\nUser: Yes.\n\nAssistant: Got it. Could you please provide the best phone number to reach you?\n\nUser: Yeah. It's 925-555-4872.\n\nAssistant: Thank you. To confirm, I have you scheduled for Wednesday, February eighteenth at 11:30 AM for Sumo to address the limping. Is that correct?\n\nUser: Yes. That is correct.\n\nAssistant: Perfect. You're all set for tomorrow at 11:30 AM. Someone from the clinic will follow up tomorrow regarding the appointment. Is there anything else I can help you with?\n\nUser: No. That's all.\n\nAssistant: Thank you, Annika. Take care of Sumo, and have a good night.",
+    summary:
+      "Annika Sharma called concerned about her dog Sumo limping and not putting weight on his leg. Determined not an emergency since Sumo can still walk and is eating/drinking normally. Appointment scheduled for Wednesday, February 18th at 11:30 AM.",
+    recording_url: "/audio/Annika_Sharma.wav",
+    created_at: "2026-02-18T05:28:00.000Z", // Feb 17 at 9:28 PM PST = Feb 18 05:28 UTC
+    updated_at: "2026-02-18T05:28:00.000Z",
+    started_at: "2026-02-18T05:28:00.000Z",
+    ended_at: "2026-02-18T05:30:38.000Z", // 2 min 38 sec later
+    ended_reason: "customer-ended-call",
+    actions_taken: ["Appointment scheduled via AI"],
+    phone_number_id: null,
+    user_id: null,
+    attention_types: null,
+    attention_severity: null,
+    attention_summary: null,
+    attention_flagged_at: null,
+    cleaned_transcript: null,
+    display_transcript: null,
+    use_display_transcript: false,
+    action_confirmed: null,
+    call_analysis: null,
+    call_outcome_data: null,
+    escalation_data: null,
+    follow_up_data: null,
+    medication_compliance_data: null,
+    owner_sentiment_data: null,
+    pet_health_data: null,
+    structured_data: {
+      card_type: "scheduled",
+      appointment_data: {
+        patient_name: "Sumo",
+        client_name: "Annika Sharma",
+        date: "2026-02-18",
+        time: "11:30",
+        reason: "Limping, not putting weight on leg",
+      },
+    },
+    success_evaluation: null,
+    transcript_messages: null,
+    metadata: null,
+    stereo_recording_url: null,
+    extracted_caller_phone: null,
+    extracted_caller_name: null,
+    extracted_pet_name: null,
+    clinic_phone: null,
+  },
+
   // Happy Tails Veterinary Clinic calls - Prince Pedialyte (Info)
   {
     id: "happy-tails-call-prince-pedialyte",

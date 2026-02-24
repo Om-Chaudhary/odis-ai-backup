@@ -72,40 +72,15 @@ async function main(): Promise<void> {
 
   scriptLog.info(`Found clinic: ${clinic.name} (id: ${clinic.id})`);
 
-  // 2. Get user IDs for this clinic
-  const { data: users, error: usersError } = await supabase
-    .from("users")
-    .select("id")
-    .eq("clinic_id", clinic.id);
-
-  if (usersError || !users?.length) {
-    // Try via clinic_users join table
-    const { data: clinicUsers } = await supabase
-      .from("clinic_users")
-      .select("user_id")
-      .eq("clinic_id", clinic.id);
-
-    if (!clinicUsers?.length) {
-      scriptLog.error("No users found for this clinic");
-      return;
-    }
-
-    const userIds = clinicUsers.map((u) => u.user_id);
-    scriptLog.info(`Found ${userIds.length} users via clinic_users table`);
-    await updateCasesForUsers(supabase, userIds);
-    return;
-  }
-
-  const userIds = users.map((u) => u.id);
-  scriptLog.info(`Found ${userIds.length} users for clinic`);
-  await updateCasesForUsers(supabase, userIds);
+  // 2. Get all cases for this clinic directly
+  await updateCasesForClinic(supabase, clinic.id);
 }
 
-async function updateCasesForUsers(
+async function updateCasesForClinic(
   supabase: ReturnType<typeof createScriptSupabaseClient>,
-  userIds: string[],
+  clinicId: string,
 ): Promise<void> {
-  // 3. Get all cases for these users
+  // 3. Get all cases for this clinic
   const { data: cases, error: casesError } = await supabase
     .from("cases")
     .select(
@@ -116,7 +91,7 @@ async function updateCasesForUsers(
       scheduled_discharge_emails (id, sent_at, status)
     `,
     )
-    .in("user_id", userIds);
+    .eq("clinic_id", clinicId);
 
   if (casesError) {
     scriptLog.error("Failed to fetch cases:", casesError.message);
