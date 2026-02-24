@@ -953,45 +953,45 @@ const FeatureDescription = ({ children }: { children?: React.ReactNode }) => {
 
 const features = [
   {
-    title: "After-Hours Coverage",
+    title: "Automated Discharge Follow-ups",
     description:
-      "The 11PM emergency question. The Sunday appointment request. Odis handles it all.",
-    skeleton: <VoiceWaveSkeleton />,
+      "Every patient gets a next-day call. No staff time. No forgotten callbacks. 94% connection rate.",
+    skeleton: <DischargeCallAnimation />,
     className: "col-span-1 border-b lg:col-span-4 lg:border-r",
-  },
-  {
-    title: "Books Appointments Automatically",
-    description:
-      "Callers book directly during the call. Real-time calendar sync. No double-booking.",
-    skeleton: <SchedulingSkeleton />,
-    className: "col-span-1 border-b lg:col-span-2",
   },
   {
     title: "Live Call Dashboard",
     description:
       "See calls as they happen. Track outcomes, sentiment, and appointments booked in real-time.",
     skeleton: <CallActivitySkeleton />,
-    className: "col-span-1 lg:col-span-2 lg:border-r",
-  },
-  {
-    title: "Automated Discharge Follow-ups",
-    description:
-      "Catch post-op concerns early, book rechecks when needed, and keep owners in the loop—without adding to your team's plate.",
-    skeleton: <DischargeCallAnimation />,
-    className: "col-span-1 border-b lg:col-span-4 lg:border-none",
+    className: "col-span-1 border-b lg:col-span-2",
   },
   {
     title: "Syncs With Your PIMS",
     description:
       "Connects to IDEXX Neo, ezyVet, and Cornerstone. Patient data flows automatically.",
     skeleton: <PimsIntegrationSkeleton />,
-    className: "col-span-1 lg:col-span-2 lg:border-r",
+    className: "col-span-1 lg:col-span-3 lg:border-r",
   },
   {
     title: "See Your ROI",
     description:
       "Track hours saved, appointments recovered, and dollar impact—updated daily.",
     skeleton: <AnalyticsSkeleton />,
+    className: "col-span-1 border-b lg:col-span-3 lg:border-none",
+  },
+  {
+    title: "Books Appointments Automatically",
+    description:
+      "Callers book directly during the call. Real-time calendar sync. No double-booking.",
+    skeleton: <SchedulingSkeleton />,
+    className: "col-span-1 lg:col-span-2 lg:border-r",
+  },
+  {
+    title: "24/7 After-Hours Coverage",
+    description:
+      "The 11PM emergency question. The Sunday appointment request. Odis handles it all.",
+    skeleton: <VoiceWaveSkeleton />,
     className: "col-span-1 lg:col-span-4",
   },
 ];
@@ -1011,95 +1011,96 @@ export function FeaturesSection() {
   };
 
   return (
-    <LazyMotion features={domAnimation}>
+    <LazyMotion features={domAnimation} strict>
       <section
         ref={sectionRef}
         id="features"
         className="relative z-20 w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
       >
-      {/* Background */}
-      <SectionBackground variant="hero-glow" />
+        {/* Background */}
+        <SectionBackground variant="hero-glow" />
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <m.div
-          variants={fadeUpVariant}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          transition={{ ...transition, delay: 0.1 }}
-          className="mb-12 text-center lg:mb-16"
-        >
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
           <m.div
             variants={fadeUpVariant}
-            className="mb-5 flex flex-wrap items-center justify-center gap-2"
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+            transition={{ ...transition, delay: 0.1 }}
+            className="mb-12 text-center lg:mb-16"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-teal-200/60 bg-teal-50/80 px-4 py-1.5 text-xs font-semibold tracking-widest text-teal-700 uppercase backdrop-blur-sm">
-              <Zap className="h-3.5 w-3.5" />
-              Platform Features
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/60 bg-slate-50/80 px-3 py-1.5 text-xs font-medium text-slate-600">
-              <Shield className="h-3 w-3" />
-              HIPAA Compliant
-            </span>
+            <m.div
+              variants={fadeUpVariant}
+              className="mb-5 flex flex-wrap items-center justify-center gap-2"
+            >
+              <span className="inline-flex items-center gap-2 rounded-full border border-teal-200/60 bg-teal-50/80 px-4 py-1.5 text-xs font-semibold tracking-widest text-teal-700 uppercase backdrop-blur-sm">
+                <Zap className="h-3.5 w-3.5" />
+                Platform Features
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/60 bg-slate-50/80 px-3 py-1.5 text-xs font-medium text-slate-600">
+                <Shield className="h-3 w-3" />
+                HIPAA Compliant
+              </span>
+            </m.div>
+            <m.h2
+              variants={fadeUpVariant}
+              className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl"
+            >
+              Two Ways Odis{" "}
+              <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                Saves You Hours
+              </span>{" "}
+              Every Week
+            </m.h2>
+            <m.p
+              variants={fadeUpVariant}
+              className="mx-auto max-w-2xl text-base text-slate-600 sm:text-lg"
+            >
+              Answer after-hours calls automatically. Follow up on every
+              discharge without lifting a finger. See the impact in real-time.
+            </m.p>
           </m.div>
-          <m.h2
-            variants={fadeUpVariant}
-            className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl"
-          >
-            Two Ways Odis{" "}
-            <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
-              Saves You Hours
-            </span>{" "}
-            Every Week
-          </m.h2>
-          <m.div
-            variants={fadeUpVariant}
-            className="mx-auto flex max-w-2xl items-center justify-center gap-4 text-base text-slate-600 sm:gap-6 sm:text-lg"
-          >
-            <span>Answer after-hours calls automatically</span>
-            <span className="h-5 w-px bg-teal-400/60" aria-hidden="true" />
-            <span>Never let a discharge follow-up slip through the cracks</span>
-          </m.div>
-        </m.div>
 
-        {/* Features Grid */}
-        <div className="relative">
-          <div className="mt-12 grid grid-cols-1 lg:grid-cols-6">
-            {features.map((feature, idx) => (
-              <BlurFade
-                key={feature.title}
-                delay={0.15 + idx * 0.1}
-                inView
-                inViewMargin="-50px"
-                className={feature.className}
-              >
-                <FeatureCard>
-                  <FeatureTitle>{feature.title}</FeatureTitle>
-                  <FeatureDescription>{feature.description}</FeatureDescription>
-                  <div className="flex-1">{feature.skeleton}</div>
-                </FeatureCard>
-              </BlurFade>
-            ))}
+          {/* Features Grid */}
+          <div className="relative">
+            <div className="mt-12 grid grid-cols-1 lg:grid-cols-6">
+              {features.map((feature, idx) => (
+                <BlurFade
+                  key={feature.title}
+                  delay={0.15 + idx * 0.1}
+                  inView
+                  inViewMargin="-50px"
+                  className={feature.className}
+                >
+                  <FeatureCard>
+                    <FeatureTitle>{feature.title}</FeatureTitle>
+                    <FeatureDescription>
+                      {feature.description}
+                    </FeatureDescription>
+                    <div className="flex-1">{feature.skeleton}</div>
+                  </FeatureCard>
+                </BlurFade>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Mini CTA */}
-        <m.div
-          variants={fadeUpVariant}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          transition={{ ...transition, delay: 0.5 }}
-          className="mt-12 flex justify-center lg:mt-16"
-        >
-          <Link
-            href="#how-it-works"
-            className="group inline-flex items-center gap-2 rounded-full bg-white/80 px-5 py-2.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200/80 backdrop-blur-sm transition-all hover:bg-white hover:text-teal-700 hover:shadow-lg hover:ring-teal-300/50"
+          {/* Mini CTA */}
+          <m.div
+            variants={fadeUpVariant}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+            transition={{ ...transition, delay: 0.5 }}
+            className="mt-12 flex justify-center lg:mt-16"
           >
-            <span>See how it works</span>
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </Link>
-        </m.div>
-      </div>
+            <Link
+              href="#how-it-works"
+              className="group inline-flex items-center gap-2 rounded-full bg-white/80 px-5 py-2.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200/80 backdrop-blur-sm transition-all hover:bg-white hover:text-teal-700 hover:shadow-lg hover:ring-teal-300/50"
+            >
+              <span>See how it works</span>
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </m.div>
+        </div>
       </section>
     </LazyMotion>
   );

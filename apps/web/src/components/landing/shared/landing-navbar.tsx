@@ -23,7 +23,6 @@ const navigationLinks = [
   { name: "Features", link: "#features" },
   { name: "How It Works", link: "#how-it-works" },
   { name: "Testimonials", link: "#testimonials" },
-  { name: "Blog", link: "/blog" },
 ];
 
 export const LandingNavbar = () => {
@@ -116,29 +115,15 @@ export const LandingNavbar = () => {
               <NavigationMenuList className="gap-1">
                 {navigationLinks.map((link) => (
                   <NavigationMenuItem key={link.name}>
-                    {link.link.startsWith("#") ? (
-                      <NavigationMenuLink
-                        className={cn(
-                          navigationMenuTriggerStyle(),
-                          "text-muted-foreground cursor-pointer bg-transparent transition-all hover:bg-white/10 hover:text-slate-800 focus:bg-white/10",
-                        )}
-                        onClick={() => handleLinkClick(link.link)}
-                      >
-                        {link.name}
-                      </NavigationMenuLink>
-                    ) : (
-                      <NavigationMenuLink asChild>
-                        <Link
-                          href={link.link}
-                          className={cn(
-                            navigationMenuTriggerStyle(),
-                            "text-muted-foreground bg-transparent transition-all hover:bg-white/10 hover:text-slate-800 focus:bg-white/10",
-                          )}
-                        >
-                          {link.name}
-                        </Link>
-                      </NavigationMenuLink>
-                    )}
+                    <NavigationMenuLink
+                      className={cn(
+                        navigationMenuTriggerStyle(),
+                        "text-muted-foreground cursor-pointer bg-transparent transition-all hover:bg-white/10 hover:text-slate-800 focus:bg-white/10",
+                      )}
+                      onClick={() => handleLinkClick(link.link)}
+                    >
+                      {link.name}
+                    </NavigationMenuLink>
                   </NavigationMenuItem>
                 ))}
               </NavigationMenuList>
@@ -210,29 +195,18 @@ export const LandingNavbar = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="relative z-40 bg-background border-t border-white/10 md:hidden"
+              className="bg-background relative z-40 border-t border-white/10 md:hidden"
             >
               <div className="space-y-1 px-6 py-4">
-                {navigationLinks.map((link) =>
-                  link.link.startsWith("#") ? (
-                    <button
-                      key={link.name}
-                      onClick={() => handleLinkClick(link.link)}
-                      className="block w-full rounded-lg px-4 py-3 text-left text-base font-medium text-slate-800 transition-colors hover:bg-white/10"
-                    >
-                      {link.name}
-                    </button>
-                  ) : (
-                    <Link
-                      key={link.name}
-                      href={link.link}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="block w-full rounded-lg px-4 py-3 text-left text-base font-medium text-slate-800 transition-colors hover:bg-white/10"
-                    >
-                      {link.name}
-                    </Link>
-                  ),
-                )}
+                {navigationLinks.map((link) => (
+                  <button
+                    key={link.name}
+                    onClick={() => handleLinkClick(link.link)}
+                    className="block w-full rounded-lg px-4 py-3 text-left text-base font-medium text-slate-800 transition-colors hover:bg-white/10"
+                  >
+                    {link.name}
+                  </button>
+                ))}
 
                 {isLoadingAuth ? (
                   // Loading skeleton

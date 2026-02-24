@@ -30,7 +30,11 @@ const steps = [
     title: "Connect Your Systems",
     description:
       "We plug into your PIMS (IDEXX Neo, ezyVet, Cornerstone) and phone system. Takes 30 minutes.",
-    highlights: ["No IT work required", "Real-time calendar sync", "Secure & HIPAA compliant"],
+    highlights: [
+      "No IT work required",
+      "Real-time calendar sync",
+      "Secure & HIPAA compliant",
+    ],
     color: "teal",
   },
   {
@@ -39,7 +43,11 @@ const steps = [
     title: "We Train Odis For You",
     description:
       "Our team configures Odis with your services, hours, protocols, and voice preferences. You approve before go-live.",
-    highlights: ["Custom to your clinic", "Your rules & workflows", "Test calls before launch"],
+    highlights: [
+      "Custom to your clinic",
+      "Your rules & workflows",
+      "Test calls before launch",
+    ],
     color: "emerald",
   },
   {
@@ -48,7 +56,11 @@ const steps = [
     title: "Go Live in 48 Hours",
     description:
       "Odis starts answering after-hours calls and making discharge follow-ups. Track results in your dashboard.",
-    highlights: ["24/7 inbound coverage", "Automated discharge calls", "Real-time analytics"],
+    highlights: [
+      "24/7 inbound coverage",
+      "Automated discharge calls",
+      "Real-time analytics",
+    ],
     color: "cyan",
   },
 ];
@@ -369,121 +381,121 @@ export const HowItWorksSection = () => {
   };
 
   return (
-    <LazyMotion features={domAnimation}>
+    <LazyMotion features={domAnimation} strict>
       <section
         ref={sectionRef as React.LegacyRef<HTMLElement>}
         id="how-it-works"
         className="relative w-full overflow-hidden py-20 sm:py-24 md:py-32 lg:py-40"
       >
-      <SectionBackground variant="cool-blue" />
+        <SectionBackground variant="cool-blue" />
 
-      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <m.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ ...transition, delay: 0.1 }}
-          className="mb-16 text-center sm:mb-20 lg:mb-24"
-        >
-          {/* Badge */}
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          {/* Header */}
           <m.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={isInView ? { opacity: 1, scale: 1 } : {}}
-            transition={{ ...transition, delay: 0.15 }}
-            className="mb-5 inline-flex items-center gap-2 rounded-full border border-teal-200/70 bg-gradient-to-r from-teal-50/90 to-emerald-50/90 px-4 py-1.5 shadow-lg shadow-teal-500/10"
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ ...transition, delay: 0.1 }}
+            className="mb-16 text-center sm:mb-20 lg:mb-24"
           >
-            <Sparkles className="h-3.5 w-3.5 text-teal-500" />
-            <span className="text-xs font-semibold tracking-wide text-teal-700 uppercase">
-              How It Works
-            </span>
+            {/* Badge */}
+            <m.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={isInView ? { opacity: 1, scale: 1 } : {}}
+              transition={{ ...transition, delay: 0.15 }}
+              className="mb-5 inline-flex items-center gap-2 rounded-full border border-teal-200/70 bg-gradient-to-r from-teal-50/90 to-emerald-50/90 px-4 py-1.5 shadow-lg shadow-teal-500/10"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-teal-500" />
+              <span className="text-xs font-semibold tracking-wide text-teal-700 uppercase">
+                How It Works
+              </span>
+            </m.div>
+
+            <h2 className="font-display mb-5 text-3xl font-semibold tracking-tight text-slate-800 sm:text-4xl md:text-5xl">
+              Live in{" "}
+              <span className="relative inline-block">
+                <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                  48 Hours
+                </span>
+                <m.span
+                  initial={{ scaleX: 0 }}
+                  animate={isInView ? { scaleX: 1 } : {}}
+                  transition={{ duration: 0.7, delay: 0.5, ease: "easeOut" }}
+                  className="absolute -bottom-1.5 left-0 h-[3px] w-full origin-left rounded-full bg-gradient-to-r from-teal-500 to-emerald-500"
+                />
+              </span>
+            </h2>
+
+            <p className="text-muted-foreground mx-auto max-w-xl text-base sm:text-lg">
+              Get OdisAI answering calls for your clinic in days, not weeks.
+            </p>
           </m.div>
 
-          <h2 className="font-display mb-5 text-3xl font-semibold tracking-tight text-slate-800 sm:text-4xl md:text-5xl">
-            Live in{" "}
-            <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
-                48 Hours
-              </span>
-              <m.span
-                initial={{ scaleX: 0 }}
-                animate={isInView ? { scaleX: 1 } : {}}
-                transition={{ duration: 0.7, delay: 0.5, ease: "easeOut" }}
-                className="absolute -bottom-1.5 left-0 h-[3px] w-full origin-left rounded-full bg-gradient-to-r from-teal-500 to-emerald-500"
+          {/* Timeline */}
+          <div className="relative">
+            {/* Vertical progress line (desktop only) */}
+            <div className="pointer-events-none absolute top-0 left-1/2 hidden h-full w-[2px] -translate-x-1/2 overflow-hidden rounded-full md:block">
+              <div className="h-full w-full bg-teal-200/40" />
+              <m.div
+                style={{ height: lineProgress }}
+                className="absolute top-0 left-0 w-full bg-gradient-to-b from-teal-500 via-emerald-500 to-teal-400"
               />
-            </span>
-          </h2>
+            </div>
 
-          <p className="text-muted-foreground mx-auto max-w-xl text-base sm:text-lg">
-            Get OdisAI answering calls for your clinic in days, not weeks.
-          </p>
-        </m.div>
-
-        {/* Timeline */}
-        <div className="relative">
-          {/* Vertical progress line (desktop only) */}
-          <div className="pointer-events-none absolute top-0 left-1/2 hidden h-full w-[2px] -translate-x-1/2 overflow-hidden rounded-full md:block">
-            <div className="h-full w-full bg-teal-200/40" />
-            <m.div
-              style={{ height: lineProgress }}
-              className="absolute top-0 left-0 w-full bg-gradient-to-b from-teal-500 via-emerald-500 to-teal-400"
-            />
+            {/* Steps */}
+            <div className="relative space-y-10 md:space-y-16">
+              {steps.map((step, index) => (
+                <TimelineStep
+                  key={index}
+                  step={step}
+                  index={index}
+                  shouldReduceMotion={shouldReduceMotion}
+                />
+              ))}
+            </div>
           </div>
 
-          {/* Steps */}
-          <div className="relative space-y-10 md:space-y-16">
-            {steps.map((step, index) => (
-              <TimelineStep
-                key={index}
-                step={step}
-                index={index}
-                shouldReduceMotion={shouldReduceMotion}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Footer with CTA */}
-        <m.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ ...transition, delay: 0.7 }}
-          className="mt-16 flex flex-col items-center gap-6 sm:mt-20"
-        >
-          <div className="inline-flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-teal-100/80 bg-gradient-to-br from-white/90 to-teal-50/60 px-6 py-4 shadow-xl shadow-teal-500/[0.05] backdrop-blur-sm sm:gap-5 sm:px-8">
-            {[
-              "No lengthy contracts",
-              "Cancel anytime",
-              "Free trial available",
-            ].map((text, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 shadow-sm shadow-teal-500/25">
-                  <Check className="h-3 w-3 text-white" strokeWidth={3} />
-                </div>
-                <span className="text-sm font-medium text-slate-600">
-                  {text}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* CTA Button */}
-          <Link
-            href="/demo"
-            className={cn(
-              "group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full px-7 py-3",
-              "bg-gradient-to-r from-teal-600 to-emerald-600",
-              "text-sm font-semibold text-white shadow-lg shadow-teal-500/25",
-              "transition-all duration-300",
-              "hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30",
-            )}
+          {/* Footer with CTA */}
+          <m.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ ...transition, delay: 0.7 }}
+            className="mt-16 flex flex-col items-center gap-6 sm:mt-20"
           >
-            {/* Shimmer effect */}
-            <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-            <Calendar className="relative h-4 w-4" />
-            <span className="relative">Get Started Today</span>
-          </Link>
-        </m.div>
-      </div>
+            <div className="inline-flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-teal-100/80 bg-gradient-to-br from-white/90 to-teal-50/60 px-6 py-4 shadow-xl shadow-teal-500/[0.05] backdrop-blur-sm sm:gap-5 sm:px-8">
+              {[
+                "No lengthy contracts",
+                "Cancel anytime",
+                "Free trial available",
+              ].map((text, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 shadow-sm shadow-teal-500/25">
+                    <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                  </div>
+                  <span className="text-sm font-medium text-slate-600">
+                    {text}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA Button */}
+            <Link
+              href="/demo"
+              className={cn(
+                "group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full px-7 py-3",
+                "bg-gradient-to-r from-teal-600 to-emerald-600",
+                "text-sm font-semibold text-white shadow-lg shadow-teal-500/25",
+                "transition-all duration-300",
+                "hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30",
+              )}
+            >
+              {/* Shimmer effect */}
+              <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <Calendar className="relative h-4 w-4" />
+              <span className="relative">Get Started Today</span>
+            </Link>
+          </m.div>
+        </div>
       </section>
     </LazyMotion>
   );

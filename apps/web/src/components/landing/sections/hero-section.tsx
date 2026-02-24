@@ -35,7 +35,6 @@ const NAV_LINKS = [
   { name: "Solutions", href: "#how-it-works" },
   { name: "Contact", href: "#pricing" },
   { name: "About", href: "/about" },
-  { name: "Blog", href: "/blog" },
 ];
 
 // Stagger container
@@ -135,7 +134,7 @@ export function HeroSection() {
   };
 
   return (
-    <LazyMotion features={domAnimation}>
+    <LazyMotion features={domAnimation} strict>
       <section
         id="home"
         ref={sectionRef}
@@ -355,26 +354,22 @@ export function HeroSection() {
                 </m.h1>
 
                 {/* Description */}
-                <m.div
+                <m.p
                   variants={fadeInUpVariants}
-                  className="mt-5 max-w-[26rem] sm:mt-6 sm:max-w-lg"
+                  className="mt-5 max-w-[26rem] text-[15px] leading-[1.7] text-pretty text-white/50 sm:mt-6 sm:max-w-lg sm:text-[17px] sm:leading-[1.7]"
                 >
-                  <p className="text-[15px] leading-[1.7] text-pretty text-white/50 sm:text-[17px] sm:leading-[1.7]">
-                    Odis AI handles your clinic's inbound and outbound calls, from
-                    scheduling appointments to post-visit follow-ups.
-                  </p>
-                  <div className="mt-3">
-                    <AnimatedGradientText
-                      speed={2}
-                      colorFrom="#2dd4bf"
-                      colorVia="#5eead4"
-                      colorTo="#2dd4bf"
-                      className="text-[15px] font-semibold whitespace-nowrap sm:text-[17px]"
-                    >
-                      Your team focuses on care. We handle the phones.
-                    </AnimatedGradientText>
-                  </div>
-                </m.div>
+                  Odis AI handles your clinic's inbound and outbound calls, from
+                  scheduling appointments to post-visit follow-ups.{" "}
+                  <AnimatedGradientText
+                    speed={2}
+                    colorFrom="#2dd4bf"
+                    colorVia="#5eead4"
+                    colorTo="#2dd4bf"
+                    className="font-semibold"
+                  >
+                    Your team focuses on care. We handle the phones.
+                  </AnimatedGradientText>
+                </m.p>
 
                 {/* CTAs */}
                 <m.div
