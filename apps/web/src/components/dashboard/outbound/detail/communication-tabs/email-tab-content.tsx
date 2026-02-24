@@ -38,6 +38,7 @@ function buildLocalFallback(
         : `Discharge instructions were provided for ${patientName} following the completed call.`;
   return {
     patientName,
+    appointmentSummary: summaryText,
     visitSummary: summaryText,
     homeCare: {
       activity: "Follow all take-home instructions provided at discharge",

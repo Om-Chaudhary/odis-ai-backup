@@ -661,8 +661,20 @@ function injectAndSortDemoCalls<T extends BaseCall>(
     return call;
   });
 
+  // Deduplicate: remove DB calls that match a demo call by phone number.
+  // Demo calls have edited/shorter audio that should take priority.
+  const demoPhones = new Set(
+    demoCallsWithOverrides
+      .map((c) => (c.customer_phone ?? "").replace(/\D/g, ""))
+      .filter(Boolean),
+  );
+  const dedupedDbCalls = calls.filter((c) => {
+    const phone = ((c as { customer_phone?: string }).customer_phone ?? "").replace(/\D/g, "");
+    return !phone || !demoPhones.has(phone);
+  });
+
   // Cast demo calls to the same type as input calls for array compatibility
-  const allCalls = [...(demoCallsWithOverrides as unknown as T[]), ...calls];
+  const allCalls = [...(demoCallsWithOverrides as unknown as T[]), ...dedupedDbCalls];
 
   const andreaCallIndex = allCalls.findIndex(
     (call) =>

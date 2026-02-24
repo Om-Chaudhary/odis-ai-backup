@@ -428,6 +428,11 @@ export function getDemoAppointments(): AppointmentRequest[] {
 // Demo Calls
 // =============================================================================
 
+/** Tomorrow's date in YYYY-MM-DD format (for scheduled appointment demos) */
+const DEMO_TOMORROW = new Date(Date.now() + 24 * 60 * 60 * 1000)
+  .toISOString()
+  .split("T")[0]!;
+
 /**
  * Demo calls array - for cases that need call records but don't exist in DB
  */
@@ -475,7 +480,12 @@ export const DEMO_CALLS = [
     medication_compliance_data: null,
     owner_sentiment_data: null,
     pet_health_data: null,
-    structured_data: null,
+    structured_data: {
+      card_type: "info",
+      info_data: {
+        reason: "Pedialyte hydration advice before surgery",
+      },
+    },
     success_evaluation: null,
     transcript_messages: null,
     metadata: null,
@@ -532,7 +542,14 @@ export const DEMO_CALLS = [
     medication_compliance_data: null,
     owner_sentiment_data: null,
     pet_health_data: null,
-    structured_data: null,
+    structured_data: {
+      card_type: "emergency",
+      emergency_data: {
+        symptoms: ["Recurring seizures"],
+        er_name: null,
+        urgency_level: "critical",
+      },
+    },
     success_evaluation: null,
     transcript_messages: null,
     metadata: null,
@@ -586,7 +603,16 @@ export const DEMO_CALLS = [
     medication_compliance_data: null,
     owner_sentiment_data: null,
     pet_health_data: null,
-    structured_data: null,
+    structured_data: {
+      card_type: "scheduled",
+      appointment_data: {
+        patient_name: "Milo",
+        client_name: "Rochelle Woodward",
+        date: DEMO_TOMORROW,
+        time: "09:30",
+        reason: "Eye discharge and squinting",
+      },
+    },
     success_evaluation: null,
     transcript_messages: null,
     metadata: null,
@@ -640,7 +666,14 @@ export const DEMO_CALLS = [
     medication_compliance_data: null,
     owner_sentiment_data: null,
     pet_health_data: null,
-    structured_data: null,
+    structured_data: {
+      card_type: "cancellation",
+      appointment_data: {
+        patient_name: "Mabel",
+        client_name: "Shirley Steger",
+        cancellation_reason: "Family emergency, will call back to reschedule",
+      },
+    },
     success_evaluation: null,
     transcript_messages: null,
     metadata: null,
@@ -694,7 +727,16 @@ export const DEMO_CALLS = [
     medication_compliance_data: null,
     owner_sentiment_data: null,
     pet_health_data: null,
-    structured_data: null,
+    structured_data: {
+      card_type: "scheduled",
+      appointment_data: {
+        patient_name: "Matcha",
+        client_name: "Justine Carlsow",
+        date: DEMO_TOMORROW,
+        time: "08:45",
+        reason: "Vaccines",
+      },
+    },
     success_evaluation: null,
     transcript_messages: null,
     metadata: null,
@@ -748,7 +790,15 @@ export const DEMO_CALLS = [
     medication_compliance_data: null,
     owner_sentiment_data: null,
     pet_health_data: null,
-    structured_data: null,
+    structured_data: {
+      card_type: "callback",
+      callback_data: {
+        reason: "Blood test results callback",
+        phone_number: "4083735832",
+        caller_name: "Lisette Duarte",
+        pet_name: "Cat",
+      },
+    },
     success_evaluation: null,
     transcript_messages: null,
     metadata: null,
