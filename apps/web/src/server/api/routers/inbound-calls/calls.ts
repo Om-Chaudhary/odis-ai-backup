@@ -719,5 +719,14 @@ function injectAndSortDemoCalls<T extends BaseCall>(
     );
   }
 
+  // Force the Annika/Sumo call to the top so it's always visible
+  const annikaIdx = allCalls.findIndex(
+    (c) => c.id === "happy-tails-call-annika-sumo",
+  );
+  if (annikaIdx > 0) {
+    const [call] = allCalls.splice(annikaIdx, 1);
+    if (call) allCalls.unshift(call);
+  }
+
   return allCalls;
 }
