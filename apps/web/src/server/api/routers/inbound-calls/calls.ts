@@ -663,13 +663,14 @@ function injectAndSortDemoCalls<T extends BaseCall>(
 
   // Deduplicate: remove DB calls that match a demo call by phone number.
   // Demo calls have edited/shorter audio that should take priority.
+  // Compare last 10 digits to handle +1 country code differences.
   const demoPhones = new Set(
     demoCallsWithOverrides
-      .map((c) => (c.customer_phone ?? "").replace(/\D/g, ""))
+      .map((c) => (c.customer_phone ?? "").replace(/\D/g, "").slice(-10))
       .filter(Boolean),
   );
   const dedupedDbCalls = calls.filter((c) => {
-    const phone = ((c as { customer_phone?: string }).customer_phone ?? "").replace(/\D/g, "");
+    const phone = ((c as { customer_phone?: string }).customer_phone ?? "").replace(/\D/g, "").slice(-10);
     return !phone || !demoPhones.has(phone);
   });
 
