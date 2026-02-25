@@ -46,15 +46,15 @@ const CLINIC_HOURS_CONFIG: Record<string, ClinicHoursConfig> = {
     lunchBreak: { start: "12:00", end: "14:00" },
   },
 
-  // TODO: Add Alumrock clinic ID once resolved from database
-  // Alumrock Animal Hospital — uncomment and replace ID when known
-  // "ALUMROCK_CLINIC_ID": {
-  //   defaultHours: { open: "09:00", close: "18:00" },
-  //   dayOverrides: {
-  //     0: { open: "09:00", close: "17:00" }, // Sunday: 9am-5pm
-  //   },
-  //   lunchBreak: { start: "12:00", end: "14:00" },
-  // },
+  // Alum Rock Animal Hospital
+  "33f3bbb8-6613-45bc-a1f2-d55e30c243ae": {
+    defaultHours: { open: "08:00", close: "19:00" }, // Mon-Fri: 8am-7pm
+    dayOverrides: {
+      0: { open: "09:00", close: "17:00" }, // Sunday: 9am-5pm
+      6: { open: "08:00", close: "18:00" }, // Saturday: 8am-6pm
+    },
+    lunchBreak: { start: "12:00", end: "14:00" },
+  },
 };
 
 /**
