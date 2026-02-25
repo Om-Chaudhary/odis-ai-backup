@@ -17,8 +17,6 @@ import {
   pbkdf2Sync,
   randomBytes,
 } from "crypto";
-import { env } from "@odis-ai/shared/env";
-
 const ALGORITHM = "aes-256-gcm";
 const KEY_LENGTH = 32; // 256 bits
 const IV_LENGTH = 12; // 96 bits for GCM (recommended)
@@ -42,7 +40,7 @@ function deriveKey(keyId: string): Buffer {
 
   // Fall back to default key
   if (keyId === "default" || keyId === "v1") {
-    const defaultKey = env.IDEXX_ENCRYPTION_KEY;
+    const defaultKey = process.env.IDEXX_ENCRYPTION_KEY;
     if (!defaultKey) {
       throw new Error(
         `IDEXX_ENCRYPTION_KEY not configured. Set IDEXX_ENCRYPTION_KEY or IDEXX_ENCRYPTION_KEY_${keyId.toUpperCase()} environment variable.`,
