@@ -2,12 +2,13 @@
  * Diagnostic endpoint for availability debugging.
  *
  * GET /api/debug/masson-availability?date=2026-02-23
+ * GET /api/debug/masson-availability?date=2026-02-25&clinic=alumrock
  * GET /api/debug/masson-availability?lookup=alum rock   ← find clinic UUID by name
  *
  * Returns raw database contents, SQL RPC output, and TypeScript recount
  * so we can identify exactly what's wrong before attempting more fixes.
  *
- * Uses service client (bypasses RLS). Hardcoded to Masson clinic ID.
+ * Uses service client (bypasses RLS).
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -20,6 +21,12 @@ import {
 import { applyClinicHoursFilter } from "@odis-ai/integrations/vapi/processors/appointments/clinic-hours-filter";
 
 const MASSON_CLINIC_ID = "efcc1733-7a7b-4eab-8104-a6f49defd7a6";
+const ALUMROCK_CLINIC_ID = "33f3bbb8-6613-45bc-a1f2-d55e30c243ae";
+
+const CLINIC_MAP: Record<string, string> = {
+  masson: MASSON_CLINIC_ID,
+  alumrock: ALUMROCK_CLINIC_ID,
+};
 
 export async function GET(request: NextRequest) {
   // ── Clinic lookup mode: ?lookup=<name fragment> ──
@@ -48,10 +55,14 @@ export async function GET(request: NextRequest) {
   const date = request.nextUrl.searchParams.get("date");
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return NextResponse.json(
-      { error: "Missing or invalid ?date=YYYY-MM-DD parameter or ?lookup=<name>" },
+      { error: "Missing or invalid ?date=YYYY-MM-DD parameter or ?lookup=<name>. Optional: &clinic=alumrock" },
       { status: 400 },
     );
   }
+
+  // Support ?clinic=alumrock or ?clinic=masson (default: masson)
+  const clinicParam = (request.nextUrl.searchParams.get("clinic") ?? "masson").toLowerCase();
+  const CLINIC_ID = CLINIC_MAP[clinicParam] ?? MASSON_CLINIC_ID;
 
   const supabase = await createServiceClient();
 
@@ -61,7 +72,7 @@ export async function GET(request: NextRequest) {
     .select(
       "time_range, date, status, deleted_at, provider_name, room_id, appointment_type, patient_name",
     )
-    .eq("clinic_id", MASSON_CLINIC_ID)
+    .eq("clinic_id", CLINIC_ID)
     .eq("date", date)
     .is("deleted_at", null)
     .not("status", "in", '("cancelled","no_show")');
@@ -72,14 +83,14 @@ export async function GET(request: NextRequest) {
     .select(
       "time_range, date, status, deleted_at, provider_name, room_id, appointment_type, patient_name",
     )
-    .eq("clinic_id", MASSON_CLINIC_ID)
+    .eq("clinic_id", CLINIC_ID)
     .eq("date", date);
 
   // ── Section 2: All dates (no date filter) to catch UTC mismatch ──
   const { data: pimsAllDates, error: pimsAllDatesError } = await supabase
     .from("pims_appointments")
     .select("date, time_range")
-    .eq("clinic_id", MASSON_CLINIC_ID)
+    .eq("clinic_id", CLINIC_ID)
     .is("deleted_at", null)
     .not("status", "in", '("cancelled","no_show")')
     .gte("date", shiftDate(date, -1))
@@ -97,14 +108,14 @@ export async function GET(request: NextRequest) {
   const { data: bookingRows, error: bookingError } = await supabase
     .from("appointment_bookings")
     .select("time_range, status, hold_expires_at, date")
-    .eq("clinic_id", MASSON_CLINIC_ID)
+    .eq("clinic_id", CLINIC_ID)
     .eq("date", date);
 
   // ── Section 4: Raw SQL RPC output ──
   const { data: rpcSlots, error: rpcError } = await supabase.rpc(
     "get_available_slots",
     {
-      p_clinic_id: MASSON_CLINIC_ID,
+      p_clinic_id: CLINIC_ID,
       p_date: date,
     },
   );
@@ -253,7 +264,7 @@ export async function GET(request: NextRequest) {
 
   const hoursFiltered = applyClinicHoursFilter(
     slotsForHoursFilter,
-    MASSON_CLINIC_ID,
+    CLINIC_ID,
     CLINIC_TIMEZONE,
   );
 
@@ -263,14 +274,15 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     _meta: {
-      clinic_id: MASSON_CLINIC_ID,
+      clinic_id: CLINIC_ID,
+      clinic_name: clinicParam,
       date,
       generated_at: new Date().toISOString(),
     },
 
     pims_appointments: {
       query: {
-        clinic_id: MASSON_CLINIC_ID,
+        clinic_id: CLINIC_ID,
         date,
         filters: 'deleted_at IS NULL, status NOT IN ("cancelled","no_show")',
       },
