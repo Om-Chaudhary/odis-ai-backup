@@ -1,7 +1,8 @@
 /**
- * Diagnostic endpoint for Masson availability debugging.
+ * Diagnostic endpoint for availability debugging.
  *
  * GET /api/debug/masson-availability?date=2026-02-23
+ * GET /api/debug/masson-availability?lookup=alum rock   ← find clinic UUID by name
  *
  * Returns raw database contents, SQL RPC output, and TypeScript recount
  * so we can identify exactly what's wrong before attempting more fixes.
@@ -16,14 +17,38 @@ import {
   rangesOverlap,
   type TimeRange,
 } from "@odis-ai/shared/util";
+import { applyClinicHoursFilter } from "@odis-ai/integrations/vapi/processors/appointments/clinic-hours-filter";
 
 const MASSON_CLINIC_ID = "efcc1733-7a7b-4eab-8104-a6f49defd7a6";
 
 export async function GET(request: NextRequest) {
+  // ── Clinic lookup mode: ?lookup=<name fragment> ──
+  const lookup = request.nextUrl.searchParams.get("lookup");
+  if (lookup) {
+    const supabase = await createServiceClient();
+    const { data: clinics, error } = await supabase
+      .from("clinics")
+      .select("id, name, timezone, pims_type, business_hours")
+      .ilike("name", `%${lookup}%`);
+
+    return NextResponse.json({
+      query: lookup,
+      error,
+      count: clinics?.length ?? 0,
+      clinics: clinics?.map((c) => ({
+        id: c.id,
+        name: c.name,
+        timezone: c.timezone,
+        pims_type: c.pims_type,
+        business_hours: c.business_hours,
+      })),
+    });
+  }
+
   const date = request.nextUrl.searchParams.get("date");
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return NextResponse.json(
-      { error: "Missing or invalid ?date=YYYY-MM-DD parameter" },
+      { error: "Missing or invalid ?date=YYYY-MM-DD parameter or ?lookup=<name>" },
       { status: 400 },
     );
   }
@@ -204,6 +229,38 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // ── Section 6: Clinic hours filter ──
+  const CLINIC_TIMEZONE = "America/Los_Angeles";
+  type SlotShape = {
+    slot_start: string;
+    slot_end: string;
+    is_blocked: boolean;
+    booked_count: number;
+    capacity: number;
+    available_count: number;
+    block_reason: string | null;
+  };
+
+  const slotsForHoursFilter: SlotShape[] = slotRecounts.map((s) => ({
+    slot_start: s.slot_start,
+    slot_end: s.slot_end,
+    is_blocked: s.is_blocked,
+    booked_count: s.ts_booked,
+    capacity: s.capacity,
+    available_count: s.available,
+    block_reason: null,
+  }));
+
+  const hoursFiltered = applyClinicHoursFilter(
+    slotsForHoursFilter,
+    MASSON_CLINIC_ID,
+    CLINIC_TIMEZONE,
+  );
+
+  const hoursFilteredOpen = hoursFiltered.filter(
+    (s) => !s.is_blocked && s.available_count > 0,
+  );
+
   return NextResponse.json({
     _meta: {
       clinic_id: MASSON_CLINIC_ID,
@@ -251,6 +308,22 @@ export async function GET(request: NextRequest) {
       bookings_parsed: bookingsParsed,
       active_booking_count: activeBookings.length,
       slots: slotRecounts,
+    },
+
+    clinic_hours_filter: {
+      timezone: CLINIC_TIMEZONE,
+      input_slots: slotsForHoursFilter.length,
+      blocked_by_hours: slotsForHoursFilter.length - hoursFilteredOpen.length,
+      open_after_filter: hoursFilteredOpen.length,
+      open_slots: hoursFilteredOpen.map((s) => ({
+        slot_start: s.slot_start,
+        available_count: s.available_count,
+      })),
+      all_slots: hoursFiltered.map((s) => ({
+        slot_start: s.slot_start,
+        is_blocked: s.is_blocked,
+        available_count: s.available_count,
+      })),
     },
   });
 }
