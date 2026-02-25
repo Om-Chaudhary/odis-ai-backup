@@ -46,13 +46,14 @@ const CLINIC_HOURS_CONFIG: Record<string, ClinicHoursConfig> = {
     lunchBreak: { start: "12:00", end: "14:00" },
   },
 
-  // Alum Rock Animal Hospital (no lunch block)
+  // Alum Rock Animal Hospital
   "33f3bbb8-6613-45bc-a1f2-d55e30c243ae": {
-    defaultHours: { open: "08:00", close: "19:00" }, // Mon-Fri: 8am-7pm
+    defaultHours: { open: "09:00", close: "17:30" }, // Mon-Fri: 9am-5:30pm (SQL blocks before 9am and after 5:30pm)
     dayOverrides: {
       0: { open: "09:00", close: "17:00" }, // Sunday: 9am-5pm
-      6: { open: "08:00", close: "18:00" }, // Saturday: 8am-6pm
+      6: { open: "09:00", close: "17:30" }, // Saturday: 9am-5:30pm
     },
+    lunchBreak: { start: "13:00", end: "14:00" }, // 1pm-2pm lunch block
   },
 };
 
