@@ -21,7 +21,7 @@ watchPatterns = [
 healthcheckPath = "/health"
 healthcheckTimeout = 60
 startCommand = "node main.js"
-restartPolicyType = "on-failure"
+restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
 
 # Resource configuration
