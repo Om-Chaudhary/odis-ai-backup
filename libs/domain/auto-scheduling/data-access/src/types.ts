@@ -230,6 +230,8 @@ export interface CaseForEligibility {
     };
   } | null;
   hasDischargeSummary: boolean;
+  /** Case metadata for deep euthanasia/deceased detection (PIMS + IDEXX) */
+  metadata: Record<string, unknown> | null;
 }
 
 /* ========================================

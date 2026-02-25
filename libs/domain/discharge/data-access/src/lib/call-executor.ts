@@ -350,17 +350,16 @@ async function enrichCallVariablesWithBlockCheck(
 
     // CRITICAL: Check for blocked extreme cases using FRESH case data
     // This catches cases where notes were updated after scheduling
+    const caseMetadata = caseInfo.case.metadata as Record<string, unknown> | null;
+    const idexxConsultNotes = (caseMetadata?.idexx as Record<string, unknown>)
+      ?.consultation_notes as string | undefined;
+    const pimsConsultNotes = (caseMetadata?.pimsConsultation as Record<string, unknown>)
+      ?.notes as string | undefined;
     const blockedCheck = isBlockedExtremeCase({
       caseType: caseInfo.entities.caseType,
       dischargeSummary: caseInfo.dischargeSummaries?.[0]?.content,
-      consultationNotes: (caseInfo.case.metadata as Record<string, unknown>)
-        ?.idexx
-        ? ((
-            (caseInfo.case.metadata as Record<string, unknown>)
-              ?.idexx as Record<string, unknown>
-          )?.consultation_notes as string | undefined)
-        : undefined,
-      metadata: caseInfo.case.metadata as Record<string, unknown> | null,
+      consultationNotes: idexxConsultNotes ?? pimsConsultNotes ?? undefined,
+      metadata: caseMetadata,
     });
 
     if (blockedCheck.blocked) {

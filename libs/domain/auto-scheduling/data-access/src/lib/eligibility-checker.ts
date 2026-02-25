@@ -5,6 +5,7 @@
  */
 
 import type { SupabaseClientType } from "@odis-ai/shared/types/supabase";
+import { isBlockedExtremeCase } from "@odis-ai/shared/util/discharge-readiness";
 import type {
   CaseForEligibility,
   EligibilityResult,
@@ -16,17 +17,38 @@ const DEFAULT_EXCLUDED_CASE_TYPES = ["euthanasia", "deceased", "death"];
 
 /**
  * Check if a case is an extreme case (euthanasia, deceased, etc.)
+ * Uses both the stored extreme_case_check field AND deep metadata scan
+ * to catch PIMS-synced cases where the DB field may not be populated.
  */
 function isExtremeCase(caseData: CaseForEligibility): boolean {
+  // Check the stored extreme_case_check field first (fast path)
   const extremeCheck = caseData.extremeCaseCheck;
-  if (!extremeCheck) return false;
+  if (extremeCheck) {
+    if (extremeCheck.isExtremeCase) return true;
 
-  if (extremeCheck.isExtremeCase) return true;
+    const category = extremeCheck.category?.toLowerCase();
+    if (
+      DEFAULT_EXCLUDED_CASE_TYPES.some(
+        (type) => category?.includes(type) ?? false,
+      )
+    ) {
+      return true;
+    }
+  }
 
-  const category = extremeCheck.category?.toLowerCase();
-  return DEFAULT_EXCLUDED_CASE_TYPES.some(
-    (type) => category?.includes(type) ?? false,
-  );
+  // Deep scan: check PIMS/IDEXX metadata, clinical notes, billing items
+  // This catches cases where extreme_case_check is NULL (e.g. PIMS-synced cases)
+  const entityCaseType = (
+    caseData.entityExtraction as Record<string, unknown> | null
+  )?.caseType as string | undefined;
+  const blockedCheck = isBlockedExtremeCase({
+    caseType: entityCaseType,
+    dischargeSummary: null,
+    consultationNotes: null,
+    metadata: caseData.metadata,
+  });
+
+  return blockedCheck.blocked;
 }
 
 /**
@@ -221,6 +243,7 @@ export async function getEligibleCases(
       scheduling_source,
       extreme_case_check,
       entity_extraction,
+      metadata,
       discharge_summaries!left(id)
     `,
     )
@@ -251,5 +274,6 @@ export async function getEligibleCases(
     hasDischargeSummary: Array.isArray(c.discharge_summaries)
       ? c.discharge_summaries.length > 0
       : !!c.discharge_summaries,
+    metadata: c.metadata as Record<string, unknown> | null,
   }));
 }

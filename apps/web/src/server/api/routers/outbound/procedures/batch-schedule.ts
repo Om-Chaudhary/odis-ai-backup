@@ -677,14 +677,15 @@ async function processSingleCase({
   baseCallTime,
 }: ProcessCaseParams): Promise<BatchScheduleResult> {
   // Check for blocked extreme cases
-  const idexxMetadata = getIdexxMetadata(
-    caseInfo.case.metadata as Record<string, unknown> | null,
-  );
+  const caseMetadata = caseInfo.case.metadata as Record<string, unknown> | null;
+  const idexxMetadata = getIdexxMetadata(caseMetadata);
+  const pimsConsultNotes = (caseMetadata?.pimsConsultation as Record<string, unknown>)
+    ?.notes as string | undefined;
   const blockedCheck = isBlockedExtremeCase({
     caseType: caseInfo.entities?.caseType,
     dischargeSummary: caseInfo.dischargeSummaries?.[0]?.content,
-    consultationNotes: idexxMetadata?.consultation_notes,
-    metadata: caseInfo.case.metadata as Record<string, unknown> | null,
+    consultationNotes: idexxMetadata?.consultation_notes ?? pimsConsultNotes ?? undefined,
+    metadata: caseMetadata,
   });
 
   if (blockedCheck.blocked) {

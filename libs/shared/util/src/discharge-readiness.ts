@@ -111,12 +111,20 @@ export function checkCaseDischargeReadiness(
 ): DischargeReadinessResult {
   const missingRequirements: string[] = [];
 
-  // === CONDITION 0: Check for euthanasia case - never send discharge ===
-  const entities = caseData.metadata?.entities as EntityMetadata | undefined;
-  if (entities?.caseType === "euthanasia") {
+  // === CONDITION 0: Check for euthanasia/deceased case - never send discharge ===
+  const blockedCheck = isBlockedExtremeCase({
+    caseType: (caseData.metadata?.entities as EntityMetadata | undefined)
+      ?.caseType,
+    dischargeSummary: caseData.discharge_summaries?.[0]?.content,
+    consultationNotes: null,
+    metadata: caseData.metadata as Record<string, unknown> | null,
+  });
+  if (blockedCheck.blocked) {
     return {
       isReady: false,
-      missingRequirements: ["Case is euthanasia - discharge not applicable"],
+      missingRequirements: [
+        `Case is blocked from discharge: ${blockedCheck.reason}`,
+      ],
     };
   }
 
@@ -212,6 +220,7 @@ const BLOCKED_KEYWORDS = [
   "euthanasia",
   "euthanize",
   "euthanized",
+  "eutha ",
   "doa",
   "dead on arrival",
   "deceased",
@@ -222,6 +231,7 @@ const BLOCKED_KEYWORDS = [
   "put to sleep",
   "pts",
   "humanely euthanized",
+  "cremation",
 ];
 
 /**
@@ -285,11 +295,56 @@ export function isBlockedExtremeCase(caseData: {
       contentParts.push(idexxNotes);
     }
 
-    // Check appointment type
+    // Check IDEXX appointment type
     const appointmentType = (caseData.metadata.idexx as Record<string, unknown>)
       ?.appointment_type as string | undefined;
     if (appointmentType) {
       contentParts.push(appointmentType);
+    }
+
+    // Check PIMS consultation notes (Alum Rock and other PIMS-synced clinics)
+    const pimsConsultation = caseData.metadata.pimsConsultation as
+      | Record<string, unknown>
+      | undefined;
+    if (pimsConsultation) {
+      const pimsNotes = pimsConsultation.notes as string | undefined;
+      if (pimsNotes) {
+        contentParts.push(pimsNotes);
+      }
+      const pimsReason = pimsConsultation.reason as string | undefined;
+      if (pimsReason) {
+        contentParts.push(pimsReason);
+      }
+      // Check billing items (e.g. "EUTHANASIA UNDER SEDATION")
+      const pimsProducts = pimsConsultation.productsServices as
+        | string
+        | undefined;
+      if (pimsProducts) {
+        contentParts.push(pimsProducts);
+      }
+    }
+
+    // Check entities.clinical fields (populated by both IDEXX and PIMS enrichment)
+    const entities = caseData.metadata.entities as
+      | Record<string, unknown>
+      | undefined;
+    if (entities) {
+      const clinical = entities.clinical as
+        | Record<string, unknown>
+        | undefined;
+      if (clinical) {
+        const clinicalNotes = clinical.clinicalNotes as string | undefined;
+        if (clinicalNotes) {
+          contentParts.push(clinicalNotes);
+        }
+        // Check products/services array (e.g. ["EUTHANASIA UNDER SEDATION"])
+        const products = clinical.productsServicesProvided as
+          | string[]
+          | undefined;
+        if (products) {
+          contentParts.push(products.join(" "));
+        }
+      }
     }
 
     // Check entities caseType

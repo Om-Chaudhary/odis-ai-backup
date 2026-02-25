@@ -97,17 +97,16 @@ export const approveRouter = createTRPCRouter({
 
       // Block scheduling for extreme cases (euthanasia, DOA, deceased, humane ending)
       // These cases should never receive follow-up calls
+      const approveMetadata = caseInfo.case.metadata as Record<string, unknown> | null;
+      const idexxConsultNotes = (approveMetadata?.idexx as Record<string, unknown>)
+        ?.consultation_notes as string | undefined;
+      const pimsConsultNotes = (approveMetadata?.pimsConsultation as Record<string, unknown>)
+        ?.notes as string | undefined;
       const blockedCheck = isBlockedExtremeCase({
         caseType: caseInfo.entities?.caseType,
         dischargeSummary: caseInfo.dischargeSummaries?.[0]?.content,
-        consultationNotes: (caseInfo.case.metadata as Record<string, unknown>)
-          ?.idexx
-          ? ((
-              (caseInfo.case.metadata as Record<string, unknown>)
-                ?.idexx as Record<string, unknown>
-            )?.consultation_notes as string | undefined)
-          : undefined,
-        metadata: caseInfo.case.metadata as Record<string, unknown> | null,
+        consultationNotes: idexxConsultNotes ?? pimsConsultNotes ?? undefined,
+        metadata: approveMetadata,
       });
       if (blockedCheck.blocked) {
         console.warn("[Approve] Blocked extreme case", {
