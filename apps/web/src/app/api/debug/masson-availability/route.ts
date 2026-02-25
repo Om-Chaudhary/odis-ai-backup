@@ -67,13 +67,15 @@ export async function GET(request: NextRequest) {
   const supabase = await createServiceClient();
 
   // ── Section 1: pims_appointments for the date ──
+  // Query both date and next date to catch late-afternoon PT appointments stored with UTC next-day date
+  const nextDate = shiftDate(date, 1);
   const { data: pimsRows, error: pimsError } = await supabase
     .from("pims_appointments")
     .select(
       "time_range, date, status, deleted_at, provider_name, room_id, appointment_type, patient_name",
     )
     .eq("clinic_id", CLINIC_ID)
-    .eq("date", date)
+    .in("date", [date, nextDate])
     .is("deleted_at", null)
     .not("status", "in", '("cancelled","no_show")');
 

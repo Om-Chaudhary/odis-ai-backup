@@ -133,11 +133,14 @@ async function fetchBookingsForDate(
   const bookings: TimeRange[] = [];
 
   // 1. PIMS appointments (synced from IDEXX, already room-filtered by pims-sync)
+  // Query both `date` and `date+1` because late-afternoon Pacific appointments
+  // (after 4pm PT = midnight UTC) are stored with the next UTC date.
+  const nextDate = shiftDateByOne(date);
   const { data: pimsData, error: pimsError } = await supabase
     .from("pims_appointments")
     .select("time_range, status, deleted_at, provider_name, appointment_type")
     .eq("clinic_id", clinicId)
-    .eq("date", date)
+    .in("date", [date, nextDate])
     .is("deleted_at", null)
     .not("status", "in", '("cancelled","no_show")');
 
@@ -175,11 +178,12 @@ async function fetchBookingsForDate(
   }
 
   // 2. Active appointment bookings (VAPI holds + confirmed bookings)
+  // Also query next date for UTC boundary (same reason as above)
   const { data: holdData, error: holdError } = await supabase
     .from("appointment_bookings")
     .select("time_range, status, hold_expires_at")
     .eq("clinic_id", clinicId)
-    .eq("date", date)
+    .in("date", [date, nextDate])
     .or("status.eq.confirmed,and(status.eq.pending,hold_expires_at.gt.now())");
 
   if (holdError) {
@@ -208,4 +212,11 @@ async function fetchBookingsForDate(
   }
 
   return bookings;
+}
+
+/** Shift a YYYY-MM-DD date string forward by one day */
+function shiftDateByOne(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00Z"); // noon UTC to avoid DST edge
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
 }
