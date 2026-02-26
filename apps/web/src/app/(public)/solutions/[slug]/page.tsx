@@ -38,7 +38,8 @@ export async function generateMetadata({
     return { title: "Solution Not Found" };
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://odisai.net";
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://odis-ai-web.vercel.app";
 
   return {
     title: data.metaTitle,

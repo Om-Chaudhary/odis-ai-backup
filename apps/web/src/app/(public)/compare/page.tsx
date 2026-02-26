@@ -14,7 +14,8 @@ const contentNavigation = [
   { name: "Compare", href: "/compare" },
 ];
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://odisai.net";
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://odis-ai-web.vercel.app";
 
 export const metadata: Metadata = {
   title:

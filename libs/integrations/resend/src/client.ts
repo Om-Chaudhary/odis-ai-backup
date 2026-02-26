@@ -18,7 +18,7 @@ async function getResendClient() {
  */
 async function getSiteUrl(): Promise<string> {
   const { env } = await import("@odis-ai/shared/env");
-  return env.NEXT_PUBLIC_SITE_URL ?? "https://odisai.net";
+  return env.NEXT_PUBLIC_SITE_URL ?? "https://odis-ai-web.vercel.app";
 }
 
 /**

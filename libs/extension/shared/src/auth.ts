@@ -27,7 +27,7 @@ const CLERK_PUBLISHABLE_KEY =
 export function getClerkPublishableKey(): string {
   if (!CLERK_PUBLISHABLE_KEY) {
     console.warn(
-      "[ODIS Extension] VITE_CLERK_PUBLISHABLE_KEY is not configured"
+      "[ODIS Extension] VITE_CLERK_PUBLISHABLE_KEY is not configured",
     );
   }
   return CLERK_PUBLISHABLE_KEY;
@@ -37,11 +37,9 @@ export function getClerkPublishableKey(): string {
  * Dashboard URL for the ODIS AI web app
  */
 export function getDashboardUrl(): string {
-  return (
-    typeof VITE_DASHBOARD_URL !== "undefined"
-      ? VITE_DASHBOARD_URL
-      : "https://odisai.net/dashboard"
-  );
+  return typeof VITE_DASHBOARD_URL !== "undefined"
+    ? VITE_DASHBOARD_URL
+    : "https://odis-ai-web.vercel.app/dashboard";
 }
 
 /**
@@ -50,7 +48,7 @@ export function getDashboardUrl(): string {
 export function getApiBaseUrl(): string {
   return typeof VITE_API_BASE_URL !== "undefined"
     ? VITE_API_BASE_URL
-    : "https://odisai.net/api";
+    : "https://odis-ai-web.vercel.app/api";
 }
 
 /**
@@ -59,7 +57,7 @@ export function getApiBaseUrl(): string {
 export function createAuthState(
   isAuthenticated: boolean,
   userId?: string,
-  email?: string
+  email?: string,
 ): AuthState {
   return { isAuthenticated, userId, email };
 }

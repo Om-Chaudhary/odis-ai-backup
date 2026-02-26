@@ -128,7 +128,10 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_ENV: z
       .enum(["development", "staging", "production"])
       .default(currentEnv),
-    NEXT_PUBLIC_SITE_URL: z.string().url().default("https://odisai.net"),
+    NEXT_PUBLIC_SITE_URL: z
+      .string()
+      .url()
+      .default("https://odis-ai-web.vercel.app"),
 
     // =========================================================================
     // SUPABASE

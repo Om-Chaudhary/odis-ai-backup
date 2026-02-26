@@ -22,7 +22,7 @@ import { getVapiApiKey, getVapiClient } from "./utils";
  *
  * @example
  * await updateAssistantServer('ae3e6a54-...', {
- *   url: 'https://odisai.net/api/webhooks/vapi',
+ *   url: 'https://odis-ai-web.vercel.app/api/webhooks/vapi',
  *   secret: process.env.VAPI_WEBHOOK_SECRET
  * });
  */

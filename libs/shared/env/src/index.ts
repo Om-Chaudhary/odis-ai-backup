@@ -70,7 +70,10 @@ export const env = createEnv({
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
     // Site URL for SEO and canonical links
-    NEXT_PUBLIC_SITE_URL: z.string().url().default("https://odisai.net"),
+    NEXT_PUBLIC_SITE_URL: z
+      .string()
+      .url()
+      .default("https://odis-ai-web.vercel.app"),
     // Environment identifier for client-side
     NEXT_PUBLIC_APP_ENV: z
       .enum(["development", "staging", "production"])

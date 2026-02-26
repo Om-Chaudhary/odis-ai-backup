@@ -8,7 +8,8 @@ import {
 import { cn } from "@odis-ai/shared/util";
 import { getPublicPageRobots } from "~/lib/metadata";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://odisai.net";
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://odis-ai-web.vercel.app";
 
 export const metadata: Metadata = {
   title: "Integrations | Connect OdisAI with Your Practice Software",

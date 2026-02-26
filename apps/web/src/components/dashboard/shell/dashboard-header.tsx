@@ -224,7 +224,7 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
                   asChild
                 >
                   <a
-                    href="https://odisai.net/support"
+                    href="https://odis-ai-web.vercel.app/support"
                     target="_blank"
                     rel="noopener noreferrer"
                   >

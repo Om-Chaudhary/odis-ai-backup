@@ -556,7 +556,8 @@ export async function generateMetadata({
     };
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://odisai.net";
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://odis-ai-web.vercel.app";
 
   return {
     title: `OdisAI + ${integration.name} Integration | Veterinary AI Voice Agents`,
