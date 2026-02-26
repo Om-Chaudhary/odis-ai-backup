@@ -14,7 +14,7 @@ import {
 } from "@odis-ai/shared/ui/navigation-menu";
 import { Button } from "@odis-ai/shared/ui/button";
 import { cn } from "@odis-ai/shared/util";
-import { Logo } from "@odis-ai/shared/ui/Logo";
+import Image from "next/image";
 import { trackBookDemoClick } from "./landing-analytics";
 import { createClient } from "@odis-ai/data-access/db/client";
 import type { User } from "@supabase/supabase-js";
@@ -103,10 +103,22 @@ export const LandingNavbar = () => {
         <div className="flex items-center justify-between">
           <button
             onClick={() => handleLinkClick("#home")}
-            className="font-display hover:text-primary flex items-center gap-2 text-xl font-semibold tracking-tight text-slate-800 transition-colors"
+            className="flex items-center gap-1.5 transition-opacity hover:opacity-80"
           >
-            <Logo size="lg" className="h-8 w-8" />
-            OdisAI
+            <Image
+              src="/images/odis-icon.png"
+              alt="Odis"
+              width={258}
+              height={242}
+              className="h-8 w-8"
+            />
+            <Image
+              src="/images/odis-text-logo.png"
+              alt="Odis"
+              width={436}
+              height={176}
+              className="h-7 w-auto"
+            />
           </button>
 
           {/* Desktop Navigation using shadcn NavigationMenu */}
