@@ -103,21 +103,21 @@ export const LandingNavbar = () => {
         <div className="flex items-center justify-between">
           <button
             onClick={() => handleLinkClick("#home")}
-            className="flex items-center gap-1.5 transition-opacity hover:opacity-80"
+            className="flex items-center gap-2 transition-opacity hover:opacity-80"
           >
             <Image
               src="/images/odis-icon.png"
               alt="Odis"
               width={258}
               height={242}
-              className="h-8 w-8"
+              className="h-10 w-10"
             />
             <Image
               src="/images/odis-text-logo.png"
               alt="Odis"
               width={436}
               height={176}
-              className="h-7 w-auto"
+              className="h-8 w-auto"
             />
           </button>
 
