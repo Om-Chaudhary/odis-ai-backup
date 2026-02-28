@@ -25,8 +25,7 @@ import type { AvailableSlot } from "../../schemas/appointments";
  * When set, overrides capacity AND recounts bookings from the database.
  */
 const CLINIC_CAPACITY_OVERRIDES: Record<string, number> = {
-  // Masson: single exam room = capacity 1
-  "efcc1733-7a7b-4eab-8104-a6f49defd7a6": 1,
+  // Removed — SQL handles capacity correctly via clinic_schedule_config
 };
 
 const LOG_PREFIX = "[room-availability-filter]";
@@ -34,10 +33,7 @@ const LOG_PREFIX = "[room-availability-filter]";
 /**
  * Safely parse a time_range value, logging on failure.
  */
-function safeParseTimeRange(
-  raw: unknown,
-  source: string,
-): TimeRange | null {
+function safeParseTimeRange(raw: unknown, source: string): TimeRange | null {
   if (typeof raw !== "string" || raw.length < 5) {
     console.warn(
       `${LOG_PREFIX} Unparseable time_range from ${source}: type=${typeof raw}, value=${JSON.stringify(raw)}`,
@@ -48,7 +44,7 @@ function safeParseTimeRange(
     return parsePostgresTimeRange(raw);
   } catch (err) {
     console.error(
-      `${LOG_PREFIX} Failed to parse time_range from ${source}: raw=${JSON.stringify(raw)}, error=${err}`,
+      `${LOG_PREFIX} Failed to parse time_range from ${source}: raw=${JSON.stringify(raw)}, error=${String(err)}`,
     );
     return null;
   }
@@ -83,9 +79,7 @@ export async function applyRoomFilterToSlots(
     date,
   );
 
-  console.log(
-    `${LOG_PREFIX} Total bookings found: ${bookings.length}`,
-  );
+  console.log(`${LOG_PREFIX} Total bookings found: ${bookings.length}`);
 
   return slots.map((slot) => {
     // Don't modify blocked slots
