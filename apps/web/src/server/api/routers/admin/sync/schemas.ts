@@ -17,8 +17,8 @@ export const triggerSyncSchema = z.object({
 
 export const triggerFullSyncSchema = z.object({
   clinicId: z.string().uuid(),
-  lookbackDays: z.number().int().min(1).max(60).default(14),
-  forwardDays: z.number().int().min(1).max(60).default(14),
+  lookbackDays: z.number().int().min(1).max(60).default(7),
+  forwardDays: z.number().int().min(1).max(60).default(7),
 });
 
 export const triggerScheduleSlotsSchema = z.object({
@@ -59,7 +59,7 @@ export const cancelSyncSchema = z.object({
 
 // Individual sync schedule item
 export const syncScheduleItemSchema = z.object({
-  type: z.enum(["cases", "enrich", "reconciliation"]),
+  type: z.enum(["inbound", "cases", "enrich", "reconciliation"]),
   cron: z.string().min(9).max(100), // Cron expression (e.g., "0 9 * * *")
   enabled: z.boolean(),
 });

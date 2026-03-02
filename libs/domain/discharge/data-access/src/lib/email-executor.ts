@@ -101,6 +101,34 @@ export async function executeScheduledEmail(
             error: `Blocked: ${blockedCheck.reason}`,
           };
         }
+
+        // Check for no-show/cancelled PIMS appointment status
+        const pimsAppt = metadata.pimsAppointment as
+          | Record<string, unknown>
+          | undefined;
+        const pimsApptStatus = (pimsAppt?.status as string)?.toLowerCase();
+        if (pimsApptStatus === "no-show" || pimsApptStatus === "cancelled") {
+          console.warn(
+            "[EMAIL_EXECUTOR] No-show/cancelled appointment detected at execution time",
+            { emailId, caseId: email.case_id, pimsApptStatus },
+          );
+          await supabase
+            .from("scheduled_discharge_emails")
+            .update({
+              status: "cancelled",
+              metadata: {
+                ...(email.metadata as Record<string, unknown>),
+                blocked_reason: `Patient appointment was ${pimsApptStatus}`,
+                cancelled_at: new Date().toISOString(),
+              },
+            })
+            .eq("id", emailId);
+          return {
+            success: false,
+            emailId,
+            error: `Blocked: patient appointment was ${pimsApptStatus}`,
+          };
+        }
       }
     } catch (blockCheckError) {
       console.warn("[EMAIL_EXECUTOR] Failed to check blocked status", {
@@ -152,22 +180,24 @@ export async function executeScheduledEmail(
     // Update auto-scheduled item status if applicable
     try {
       // eslint-disable-next-line @nx/enforce-module-boundaries -- Dynamic import avoids build-time circular dependency
-      const { updateAutoScheduledItemStatus } = await import(
-        "@odis-ai/domain/auto-scheduling"
-      );
+      const { updateAutoScheduledItemStatus } =
+        await import("@odis-ai/domain/auto-scheduling");
       await updateAutoScheduledItemStatus(supabase, {
         scheduledEmailId: emailId,
         status: "failed",
       });
     } catch (autoScheduleError) {
       // Log but don't fail - auto-scheduling tracking is optional
-      console.warn("[EMAIL_EXECUTOR] Failed to update auto-scheduled item status", {
-        emailId,
-        error:
-          autoScheduleError instanceof Error
-            ? autoScheduleError.message
-            : String(autoScheduleError),
-      });
+      console.warn(
+        "[EMAIL_EXECUTOR] Failed to update auto-scheduled item status",
+        {
+          emailId,
+          error:
+            autoScheduleError instanceof Error
+              ? autoScheduleError.message
+              : String(autoScheduleError),
+        },
+      );
     }
 
     return { success: false, emailId, error: errorMessage };
@@ -195,22 +225,24 @@ export async function executeScheduledEmail(
   // 5. Update auto-scheduled item status if applicable
   try {
     // eslint-disable-next-line @nx/enforce-module-boundaries -- Dynamic import avoids build-time circular dependency
-    const { updateAutoScheduledItemStatus } = await import(
-      "@odis-ai/domain/auto-scheduling"
-    );
+    const { updateAutoScheduledItemStatus } =
+      await import("@odis-ai/domain/auto-scheduling");
     await updateAutoScheduledItemStatus(supabase, {
       scheduledEmailId: emailId,
       status: "completed",
     });
   } catch (autoScheduleError) {
     // Log but don't fail - auto-scheduling tracking is optional
-    console.warn("[EMAIL_EXECUTOR] Failed to update auto-scheduled item status", {
-      emailId,
-      error:
-        autoScheduleError instanceof Error
-          ? autoScheduleError.message
-          : String(autoScheduleError),
-    });
+    console.warn(
+      "[EMAIL_EXECUTOR] Failed to update auto-scheduled item status",
+      {
+        emailId,
+        error:
+          autoScheduleError instanceof Error
+            ? autoScheduleError.message
+            : String(autoScheduleError),
+      },
+    );
   }
 
   return {

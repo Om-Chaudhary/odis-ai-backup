@@ -468,7 +468,7 @@ export const adminSyncRouter = createTRPCRouter({
         for (const s of data.sync_schedules) {
           if (s && typeof s === "object" && "type" in s && "cron" in s) {
             schedules.push({
-              type: s.type as "cases" | "enrich" | "reconciliation",
+              type: s.type as SyncScheduleItem["type"],
               cron: s.cron as string,
               enabled: (s.enabled as boolean) ?? true,
             });

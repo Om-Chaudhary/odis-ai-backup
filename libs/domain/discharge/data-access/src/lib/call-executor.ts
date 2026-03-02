@@ -111,15 +111,19 @@ export async function executeScheduledCall(
   }
 
   // 5. Enrich variables with fresh case data AND check for blocked cases
-  const { variables: dynamicVariables, blockedReason } = await enrichCallVariablesWithBlockCheck(call, supabase);
+  const { variables: dynamicVariables, blockedReason } =
+    await enrichCallVariablesWithBlockCheck(call, supabase);
 
   // 5b. Block execution for extreme cases (euthanasia, deceased, etc.)
   // This catches cases where notes were updated AFTER scheduling
   if (blockedReason) {
-    console.warn("[CALL_EXECUTOR] Blocked extreme case detected at execution time", {
-      callId,
-      reason: blockedReason,
-    });
+    console.warn(
+      "[CALL_EXECUTOR] Blocked extreme case detected at execution time",
+      {
+        callId,
+        reason: blockedReason,
+      },
+    );
 
     // Mark as cancelled (not failed) - this is an intentional block
     await supabase
@@ -211,22 +215,24 @@ export async function executeScheduledCall(
     // 11. Update auto-scheduled item status if applicable
     try {
       // eslint-disable-next-line @nx/enforce-module-boundaries -- Dynamic import avoids build-time circular dependency
-      const { updateAutoScheduledItemStatus } = await import(
-        "@odis-ai/domain/auto-scheduling"
-      );
+      const { updateAutoScheduledItemStatus } =
+        await import("@odis-ai/domain/auto-scheduling");
       await updateAutoScheduledItemStatus(supabase, {
         scheduledCallId: callId,
         status: "completed",
       });
     } catch (autoScheduleError) {
       // Log but don't fail - auto-scheduling tracking is optional
-      console.warn("[CALL_EXECUTOR] Failed to update auto-scheduled item status", {
-        callId,
-        error:
-          autoScheduleError instanceof Error
-            ? autoScheduleError.message
-            : String(autoScheduleError),
-      });
+      console.warn(
+        "[CALL_EXECUTOR] Failed to update auto-scheduled item status",
+        {
+          callId,
+          error:
+            autoScheduleError instanceof Error
+              ? autoScheduleError.message
+              : String(autoScheduleError),
+        },
+      );
     }
 
     return {
@@ -261,22 +267,24 @@ export async function executeScheduledCall(
     // Update auto-scheduled item status if applicable
     try {
       // eslint-disable-next-line @nx/enforce-module-boundaries -- Dynamic import avoids build-time circular dependency
-      const { updateAutoScheduledItemStatus } = await import(
-        "@odis-ai/domain/auto-scheduling"
-      );
+      const { updateAutoScheduledItemStatus } =
+        await import("@odis-ai/domain/auto-scheduling");
       await updateAutoScheduledItemStatus(supabase, {
         scheduledCallId: callId,
         status: "failed",
       });
     } catch (autoScheduleError) {
       // Log but don't fail - auto-scheduling tracking is optional
-      console.warn("[CALL_EXECUTOR] Failed to update auto-scheduled item status", {
-        callId,
-        error:
-          autoScheduleError instanceof Error
-            ? autoScheduleError.message
-            : String(autoScheduleError),
-      });
+      console.warn(
+        "[CALL_EXECUTOR] Failed to update auto-scheduled item status",
+        {
+          callId,
+          error:
+            autoScheduleError instanceof Error
+              ? autoScheduleError.message
+              : String(autoScheduleError),
+        },
+      );
     }
 
     return { success: false, callId, error: errorMessage };
@@ -350,11 +358,15 @@ async function enrichCallVariablesWithBlockCheck(
 
     // CRITICAL: Check for blocked extreme cases using FRESH case data
     // This catches cases where notes were updated after scheduling
-    const caseMetadata = caseInfo.case.metadata as Record<string, unknown> | null;
+    const caseMetadata = caseInfo.case.metadata as Record<
+      string,
+      unknown
+    > | null;
     const idexxConsultNotes = (caseMetadata?.idexx as Record<string, unknown>)
       ?.consultation_notes as string | undefined;
-    const pimsConsultNotes = (caseMetadata?.pimsConsultation as Record<string, unknown>)
-      ?.notes as string | undefined;
+    const pimsConsultNotes = (
+      caseMetadata?.pimsConsultation as Record<string, unknown>
+    )?.notes as string | undefined;
     const blockedCheck = isBlockedExtremeCase({
       caseType: caseInfo.entities.caseType,
       dischargeSummary: caseInfo.dischargeSummaries?.[0]?.content,
@@ -366,6 +378,18 @@ async function enrichCallVariablesWithBlockCheck(
       return {
         variables: dynamicVariables ?? {},
         blockedReason: blockedCheck.reason ?? "Blocked extreme case",
+      };
+    }
+
+    // Check for no-show/cancelled PIMS appointment status
+    const pimsAppt = caseMetadata?.pimsAppointment as
+      | Record<string, unknown>
+      | undefined;
+    const pimsApptStatus = (pimsAppt?.status as string)?.toLowerCase();
+    if (pimsApptStatus === "no-show" || pimsApptStatus === "cancelled") {
+      return {
+        variables: dynamicVariables ?? {},
+        blockedReason: `Patient appointment was ${pimsApptStatus}`,
       };
     }
 

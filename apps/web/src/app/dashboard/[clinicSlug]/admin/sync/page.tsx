@@ -12,6 +12,7 @@ import {
 } from "~/components/admin/sync/sync-history-table";
 import { SyncTriggerPanel } from "~/components/admin/sync/sync-trigger-panel";
 import { ClinicSyncScheduleCard } from "~/components/admin/sync/clinic-sync-schedule-card";
+import { AutoSyncStatus } from "~/components/admin/sync/auto-sync-status";
 import { useSyncAuditRealtime } from "~/components/admin/sync/hooks";
 
 export default function AdminSyncPage() {
@@ -89,6 +90,11 @@ export default function AdminSyncPage() {
           clinicTimezone={selectedClinic.timezone ?? undefined}
           isIdexxClinic={isIdexxClinic}
         />
+      )}
+
+      {/* Automated Sync Status - shows health of nightly syncs */}
+      {selectedClinicId && isIdexxClinic && (
+        <AutoSyncStatus clinicId={selectedClinicId} />
       )}
 
       {/* Manual Sync Trigger - only for IDEXX clinics */}

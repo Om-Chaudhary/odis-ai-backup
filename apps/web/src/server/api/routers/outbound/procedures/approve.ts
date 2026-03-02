@@ -11,9 +11,13 @@
  */
 
 import { TRPCError } from "@trpc/server";
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import {
   getClinicUserIds,
   getClinicByUserId,
+  getClinicBySlug,
+  getUserIdsByClinicName,
+  getClinicVapiConfig,
   buildClinicScopeFilter,
 } from "@odis-ai/domain/clinics";
 import { normalizeToE164, normalizeEmail } from "@odis-ai/shared/util/phone";
@@ -62,9 +66,30 @@ export const approveRouter = createTRPCRouter({
       const testContactPhone = userSettings?.test_contact_phone ?? null;
       const testContactName = userSettings?.test_contact_name ?? null;
 
-      // Get all user IDs in the same clinic for shared access
-      const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
-      const clinic = await getClinicByUserId(userId, ctx.supabase);
+      // Resolve clinic context: if clinicSlug is provided (admin), use that clinic
+      // Otherwise fall back to the authenticated user's clinic
+      let clinic: Awaited<ReturnType<typeof getClinicBySlug>>;
+      let clinicUserIds: string[];
+      if (input.clinicSlug) {
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (clinic) {
+          clinicUserIds = await getUserIdsByClinicName(
+            clinic.name,
+            ctx.supabase,
+          );
+        } else {
+          clinic = await getClinicByUserId(userId, ctx.supabase);
+          clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+        }
+      } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
+        clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+      }
+
+      // Get VAPI config from resolved clinic (ensures correct phone number for admin users)
+      const vapiConfig = clinic?.name
+        ? await getClinicVapiConfig(clinic.name, ctx.supabase)
+        : null;
 
       // Verify case belongs to clinic
       const { data: caseCheck, error: caseCheckError } = await ctx.supabase
@@ -97,11 +122,16 @@ export const approveRouter = createTRPCRouter({
 
       // Block scheduling for extreme cases (euthanasia, DOA, deceased, humane ending)
       // These cases should never receive follow-up calls
-      const approveMetadata = caseInfo.case.metadata as Record<string, unknown> | null;
-      const idexxConsultNotes = (approveMetadata?.idexx as Record<string, unknown>)
-        ?.consultation_notes as string | undefined;
-      const pimsConsultNotes = (approveMetadata?.pimsConsultation as Record<string, unknown>)
-        ?.notes as string | undefined;
+      const approveMetadata = caseInfo.case.metadata as Record<
+        string,
+        unknown
+      > | null;
+      const idexxConsultNotes = (
+        approveMetadata?.idexx as Record<string, unknown>
+      )?.consultation_notes as string | undefined;
+      const pimsConsultNotes = (
+        approveMetadata?.pimsConsultation as Record<string, unknown>
+      )?.notes as string | undefined;
       const blockedCheck = isBlockedExtremeCase({
         caseType: caseInfo.entities?.caseType,
         dischargeSummary: caseInfo.dischargeSummaries?.[0]?.content,
@@ -120,6 +150,19 @@ export const approveRouter = createTRPCRouter({
         });
       }
 
+      // Block scheduling for no-show/cancelled appointments
+      const pimsAppt = approveMetadata?.pimsAppointment as Record<
+        string,
+        unknown
+      >;
+      const pimsStatus = (pimsAppt?.status as string)?.toLowerCase();
+      if (pimsStatus === "no-show" || pimsStatus === "cancelled") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Cannot schedule — patient appointment was ${pimsStatus}`,
+        });
+      }
+
       const patient = Array.isArray(caseInfo.patient)
         ? caseInfo.patient[0]
         : caseInfo.patient;
@@ -134,32 +177,42 @@ export const approveRouter = createTRPCRouter({
       // Test mode: Override with test contacts
       // CRITICAL: Require BOTH test contacts to prevent accidentally contacting real patients
       if (testModeEnabled) {
-        const hasTestPhone = testContactPhone && normalizeToE164(testContactPhone);
-        const hasTestEmail = testContactEmail && normalizeEmail(testContactEmail);
+        const hasTestPhone =
+          testContactPhone && normalizeToE164(testContactPhone);
+        const hasTestEmail =
+          testContactEmail && normalizeEmail(testContactEmail);
 
         // If user enables test mode but only has partial test contacts,
         // throw an error to prevent accidentally calling/emailing real patients
         if (input.phoneEnabled && !hasTestPhone) {
-          console.error("[Approve] BLOCKED: Test mode enabled but no valid test phone configured", {
-            caseId: input.caseId,
-            testContactPhone,
-            realPatientPhone: patient?.owner_phone,
-          });
+          console.error(
+            "[Approve] BLOCKED: Test mode enabled but no valid test phone configured",
+            {
+              caseId: input.caseId,
+              testContactPhone,
+              realPatientPhone: patient?.owner_phone,
+            },
+          );
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "Test mode is enabled but no valid test phone is configured. Configure a test phone in Settings or disable test mode to use the patient's phone.",
+            message:
+              "Test mode is enabled but no valid test phone is configured. Configure a test phone in Settings or disable test mode to use the patient's phone.",
           });
         }
 
         if (input.emailEnabled && !hasTestEmail) {
-          console.error("[Approve] BLOCKED: Test mode enabled but no valid test email configured", {
-            caseId: input.caseId,
-            testContactEmail,
-            realPatientEmail: patient?.owner_email,
-          });
+          console.error(
+            "[Approve] BLOCKED: Test mode enabled but no valid test email configured",
+            {
+              caseId: input.caseId,
+              testContactEmail,
+              realPatientEmail: patient?.owner_email,
+            },
+          );
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "Test mode is enabled but no valid test email is configured. Configure a test email in Settings or disable test mode to use the patient's email.",
+            message:
+              "Test mode is enabled but no valid test email is configured. Configure a test email in Settings or disable test mode to use the patient's email.",
           });
         }
 
@@ -449,8 +502,7 @@ export const approveRouter = createTRPCRouter({
 
         const structuredContent = dischargeSummaryData?.structured_content;
 
-        // Get clinic branding for email template
-        const clinic = await getClinicByUserId(userId, ctx.supabase);
+        // Get clinic branding for email template (uses clinic already resolved above)
         const { data: userData } = await ctx.supabase
           .from("users")
           .select("clinic_name, clinic_phone, clinic_email")
@@ -564,9 +616,6 @@ export const approveRouter = createTRPCRouter({
           ? new Date(now.getTime() + 2 * 60 * 1000) // 2 minute delay for immediate (after email)
           : calculateScheduleTime(now, callDelayDays, preferredCallTime);
 
-        // Get clinic data for call variables
-        const clinic = await getClinicByUserId(userId, ctx.supabase);
-
         // Get user's first name for agent name
         const { data: userInfo } = await ctx.supabase
           .from("users")
@@ -617,7 +666,8 @@ export const approveRouter = createTRPCRouter({
             });
           } else {
             // Fall back to building entities from IDEXX metadata directly
-            const buildEntitiesFromIdexxMetadata = await getBuildEntitiesFromIdexxMetadata();
+            const buildEntitiesFromIdexxMetadata =
+              await getBuildEntitiesFromIdexxMetadata();
             entities = buildEntitiesFromIdexxMetadata(
               idexxMetadata.idexx,
               patient ?? null,
@@ -682,6 +732,12 @@ export const approveRouter = createTRPCRouter({
               clinicPhone,
               emergencyPhone: clinicPhone, // Use clinic phone as emergency phone
               agentName,
+              ...(vapiConfig?.outboundAssistantId && {
+                assistantId: vapiConfig.outboundAssistantId,
+              }),
+              ...(vapiConfig?.phoneNumberId && {
+                phoneNumberId: vapiConfig.phoneNumberId,
+              }),
             },
           );
 

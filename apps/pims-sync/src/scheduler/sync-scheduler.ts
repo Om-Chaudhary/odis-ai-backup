@@ -6,6 +6,11 @@ import cron from "node-cron";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@odis-ai/shared/types";
 import type { IPimsProvider } from "@odis-ai/domain/sync";
+import {
+  InboundSyncService,
+  CaseSyncService,
+  CaseReconciler,
+} from "@odis-ai/domain/sync";
 import { createLogger } from "@odis-ai/shared/logger";
 import type { ClinicScheduleConfig } from "./config-loader";
 import { loadClinicSchedules } from "./config-loader";
@@ -266,7 +271,6 @@ export class SyncScheduler {
 
       switch (type) {
         case "inbound": {
-          const { InboundSyncService } = await import("@odis-ai/domain/sync");
           const syncService = new InboundSyncService(
             this.supabase,
             provider,
@@ -288,7 +292,6 @@ export class SyncScheduler {
         }
 
         case "cases": {
-          const { CaseSyncService } = await import("@odis-ai/domain/sync");
           const syncService = new CaseSyncService(
             this.supabase,
             provider,
@@ -313,7 +316,6 @@ export class SyncScheduler {
         }
 
         case "reconciliation": {
-          const { CaseReconciler } = await import("@odis-ai/domain/sync");
           const reconciler = new CaseReconciler(
             this.supabase,
             provider,

@@ -21,10 +21,7 @@ export function SyncTriggerPanel({ clinicId }: SyncTriggerPanelProps) {
 
   const triggerFullSyncMutation = api.admin.sync.triggerFullSync.useMutation({
     onSuccess: (result) => {
-      toast.success(result.message ?? "Full sync triggered successfully", {
-        description: "Syncing past 14 days + next 14 days",
-      });
-
+      toast.success(result.message ?? "Full sync triggered successfully");
       void utils.admin.sync.getActiveSyncs.invalidate();
       void utils.admin.sync.getSyncHistory.invalidate();
     },
@@ -98,8 +95,8 @@ export function SyncTriggerPanel({ clinicId }: SyncTriggerPanelProps) {
           onClick={() => {
             triggerFullSyncMutation.mutate({
               clinicId,
-              lookbackDays: 14,
-              forwardDays: 14,
+              lookbackDays: 1,
+              forwardDays: 1,
             });
           }}
           disabled={anyPending}
@@ -111,8 +108,30 @@ export function SyncTriggerPanel({ clinicId }: SyncTriggerPanelProps) {
               triggerFullSyncMutation.isPending ? "animate-spin" : ""
             }`}
           />
-          Full Sync
-          <span className="text-xs opacity-80">(Past 14d + Next 14d)</span>
+          Daily Outbound Sync
+          <span className="text-xs opacity-80">(1d back + 1d ahead)</span>
+        </Button>
+
+        <Button
+          onClick={() => {
+            triggerFullSyncMutation.mutate({
+              clinicId,
+              lookbackDays: 7,
+              forwardDays: 7,
+            });
+          }}
+          disabled={anyPending}
+          variant="outline"
+          size="lg"
+          className="gap-2"
+        >
+          <RefreshCw
+            className={`h-5 w-5 ${
+              triggerFullSyncMutation.isPending ? "animate-spin" : ""
+            }`}
+          />
+          Full Outbound Sync
+          <span className="text-xs opacity-80">(7d back + 7d ahead)</span>
         </Button>
       </div>
 

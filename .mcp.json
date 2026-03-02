@@ -6,7 +6,7 @@
         "mcp-remote",
         "https://mcp.vapi.ai/mcp",
         "--header",
-        "Authorization: Bearer eb6d0702-e660-46a7-9fe4-71c4a5264e23"
+        "Authorization: Bearer a9c6508c-c7fb-467f-8b00-ca5ddb3bf848"
       ]
     },
     "github": {

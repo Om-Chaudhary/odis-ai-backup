@@ -35,7 +35,7 @@
  *
  * ## Current Shared Assistant
  *
- * Assistant ID: 0309c629-a3f2-43aa-b479-e2e783e564a7
+ * Assistant ID: 92634ca6-a31c-4656-962e-9ca45cbb0ffb
  * Set this in your .env.local as VAPI_ASSISTANT_ID
  *
  * @see https://docs.vapi.ai/assistants/concepts/transient-vs-permanent-configurations
@@ -64,9 +64,9 @@ const logger = loggers.vapi.child("clinic-config");
  * - Tools (voicemail, transfer, etc.)
  * - Voicemail detection settings
  *
- * Set in .env.local: VAPI_ASSISTANT_ID=0309c629-a3f2-43aa-b479-e2e783e564a7
+ * Set in .env.local: VAPI_ASSISTANT_ID=92634ca6-a31c-4656-962e-9ca45cbb0ffb
  */
-export const SHARED_VAPI_ASSISTANT_ID = "0309c629-a3f2-43aa-b479-e2e783e564a7";
+export const SHARED_VAPI_ASSISTANT_ID = "92634ca6-a31c-4656-962e-9ca45cbb0ffb";
 
 /**
  * VAPI configuration for a clinic

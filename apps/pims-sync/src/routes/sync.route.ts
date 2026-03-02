@@ -29,6 +29,12 @@ import { config } from "../config";
 import { createSupabaseServiceClient } from "../lib/supabase";
 import type { IdexxProvider } from "@odis-ai/integrations/idexx";
 import type { PimsCredentials } from "@odis-ai/domain/sync";
+import {
+  SyncOrchestrator,
+  CaseSyncService,
+  CaseReconciler,
+  InboundSyncService,
+} from "@odis-ai/domain/sync";
 
 export const syncRouter: ReturnType<typeof Router> = Router();
 
@@ -165,9 +171,9 @@ interface OutboundFullRequest {
   endDate?: string;
   daysAhead?: number;
   lookbackDays?: number;
-  /** Number of days to look backward (default: 14) */
+  /** Number of days to look backward (default: 7) */
   backwardDays?: number;
-  /** Number of days to look forward (default: 14) */
+  /** Number of days to look forward (default: 7) */
   forwardDays?: number;
   /** Use bidirectional sync (backward + forward) instead of simple forward sync */
   bidirectional?: boolean;
@@ -218,9 +224,9 @@ interface FullSyncRequest {
   clinicId: string;
 
   // Outbound options
-  /** Number of days to look backward for cases (default: 14) */
+  /** Number of days to look backward for cases (default: 7) */
   backwardDays?: number;
-  /** Number of days to look forward for cases (default: 14) */
+  /** Number of days to look forward for cases (default: 7) */
   forwardDays?: number;
   /** Days for reconciliation lookback (default: 7) */
   reconciliationLookbackDays?: number;
@@ -307,7 +313,6 @@ async function handleOutboundCasesSync(
       const supabase = createSupabaseServiceClient();
 
       // Create sync service
-      const { InboundSyncService } = await import("@odis-ai/domain/sync");
       const syncService = new InboundSyncService(supabase, provider, clinicId);
 
       // Build date range - support both flat (startDate/endDate) and nested (dateRange.start/end) formats
@@ -399,7 +404,6 @@ async function handleOutboundEnrichSync(
       const supabase = createSupabaseServiceClient();
 
       // Create sync service with userId for AI generation
-      const { CaseSyncService } = await import("@odis-ai/domain/sync");
       const syncService = new CaseSyncService(
         supabase,
         provider,
@@ -518,7 +522,6 @@ async function handleReconciliation(
       const supabase = createSupabaseServiceClient();
 
       // Create reconciler
-      const { CaseReconciler } = await import("@odis-ai/domain/sync");
       const reconciler = new CaseReconciler(supabase, provider, clinicId);
 
       // Run reconciliation
@@ -606,7 +609,6 @@ async function handleOutboundFullSync(
       const supabase = createSupabaseServiceClient();
 
       // Create orchestrator with userId for AI generation
-      const { SyncOrchestrator } = await import("@odis-ai/domain/sync");
       const orchestrator = new SyncOrchestrator(
         supabase,
         provider,
@@ -621,8 +623,8 @@ async function handleOutboundFullSync(
 
       if (useBidirectional) {
         // Bidirectional sync: backward (past cases) + forward (future appointments)
-        const backwardDays = body.backwardDays ?? body.lookbackDays ?? 14;
-        const forwardDays = body.forwardDays ?? body.daysAhead ?? 14;
+        const backwardDays = body.backwardDays ?? body.lookbackDays ?? 7;
+        const forwardDays = body.forwardDays ?? body.daysAhead ?? 7;
 
         logger.info("Running bidirectional sync", {
           clinicId,
@@ -793,7 +795,6 @@ async function handleFullSync(
               durationMs: Date.now() - outboundStart,
             };
           } else {
-            const { SyncOrchestrator } = await import("@odis-ai/domain/sync");
             const orchestrator = new SyncOrchestrator(
               supabase,
               provider,
@@ -801,8 +802,8 @@ async function handleFullSync(
               userId,
             );
 
-            const backwardDays = body.backwardDays ?? 14;
-            const forwardDays = body.forwardDays ?? 14;
+            const backwardDays = body.backwardDays ?? 7;
+            const forwardDays = body.forwardDays ?? 7;
 
             const outboundResult = await orchestrator.runBidirectionalSync({
               lookbackDays: backwardDays,
@@ -1475,4 +1476,3 @@ async function handleInboundAppointmentSync(
     });
   }
 }
-

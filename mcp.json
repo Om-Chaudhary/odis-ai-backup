@@ -9,7 +9,7 @@
         "Authorization: Bearer ${VAPI_TOKEN}"
       ],
       "env": {
-        "VAPI_TOKEN": "eb6d0702-e660-46a7-9fe4-71c4a5264e23"
+        "VAPI_TOKEN": "a9c6508c-c7fb-467f-8b00-ca5ddb3bf848"
       }
     }
   }

@@ -15,9 +15,13 @@
 
 import { TRPCError } from "@trpc/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import {
   getClinicUserIds,
   getClinicByUserId,
+  getClinicBySlug,
+  getUserIdsByClinicName,
+  getClinicVapiConfig,
   buildClinicScopeFilter,
 } from "@odis-ai/domain/clinics";
 import { normalizeToE164, normalizeEmail } from "@odis-ai/shared/util/phone";
@@ -415,11 +419,34 @@ export const batchScheduleRouter = createTRPCRouter({
         .eq("id", userId)
         .single();
 
-      const clinic = await getClinicByUserId(userId, ctx.supabase);
+      // Resolve clinic context: if clinicSlug is provided (admin), use that clinic
+      // Otherwise fall back to the authenticated user's clinic
+      let clinic: Awaited<ReturnType<typeof getClinicBySlug>>;
+      let clinicUserIds: string[];
+      if (input.clinicSlug) {
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (clinic) {
+          clinicUserIds = await getUserIdsByClinicName(
+            clinic.name,
+            ctx.supabase,
+          );
+        } else {
+          clinic = await getClinicByUserId(userId, ctx.supabase);
+          clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+        }
+      } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
+        clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+      }
+
       const config = buildSchedulingConfig(userSettings, clinic);
 
+      // Get VAPI config from resolved clinic (ensures correct phone number for admin users)
+      const vapiConfig = clinic?.name
+        ? await getClinicVapiConfig(clinic.name, ctx.supabase)
+        : null;
+
       // Validate cases belong to clinic
-      const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
       const { data: validCases, error: caseCheckError } = await ctx.supabase
         .from("cases")
         .select("id")
@@ -598,6 +625,7 @@ export const batchScheduleRouter = createTRPCRouter({
             CasesService,
             baseEmailTime,
             baseCallTime,
+            vapiConfig,
           });
           results.push(result);
         } catch (error) {
@@ -659,6 +687,7 @@ interface ProcessCaseParams {
   CasesService: Awaited<ReturnType<typeof getCasesService>>;
   baseEmailTime: Date | null;
   baseCallTime: Date | null;
+  vapiConfig: Awaited<ReturnType<typeof getClinicVapiConfig>> | null;
 }
 
 async function processSingleCase({
@@ -675,16 +704,19 @@ async function processSingleCase({
   CasesService,
   baseEmailTime,
   baseCallTime,
+  vapiConfig,
 }: ProcessCaseParams): Promise<BatchScheduleResult> {
   // Check for blocked extreme cases
   const caseMetadata = caseInfo.case.metadata as Record<string, unknown> | null;
   const idexxMetadata = getIdexxMetadata(caseMetadata);
-  const pimsConsultNotes = (caseMetadata?.pimsConsultation as Record<string, unknown>)
-    ?.notes as string | undefined;
+  const pimsConsultNotes = (
+    caseMetadata?.pimsConsultation as Record<string, unknown>
+  )?.notes as string | undefined;
   const blockedCheck = isBlockedExtremeCase({
     caseType: caseInfo.entities?.caseType,
     dischargeSummary: caseInfo.dischargeSummaries?.[0]?.content,
-    consultationNotes: idexxMetadata?.consultation_notes ?? pimsConsultNotes ?? undefined,
+    consultationNotes:
+      idexxMetadata?.consultation_notes ?? pimsConsultNotes ?? undefined,
     metadata: caseMetadata,
   });
 
@@ -696,6 +728,22 @@ async function processSingleCase({
     return createErrorResult(
       caseId,
       "Discharge calls cannot be scheduled for euthanasia or deceased cases",
+    );
+  }
+
+  // Block scheduling for no-show/cancelled appointments
+  const pimsAppt = caseMetadata?.pimsAppointment as
+    | Record<string, unknown>
+    | undefined;
+  const pimsStatus = (pimsAppt?.status as string)?.toLowerCase();
+  if (pimsStatus === "no-show" || pimsStatus === "cancelled") {
+    console.warn("[BatchSchedule] Skipping no-show/cancelled case", {
+      caseId,
+      pimsStatus,
+    });
+    return createErrorResult(
+      caseId,
+      `Cannot schedule — patient appointment was ${pimsStatus}`,
     );
   }
 
@@ -787,6 +835,7 @@ async function processSingleCase({
           : undefined,
       ctx,
       CasesService,
+      vapiConfig,
     });
 
     if (callResult.success) {
@@ -1047,6 +1096,7 @@ interface ScheduleCallParams {
   staggerIndex?: number;
   ctx: ProcessCaseParams["ctx"];
   CasesService: ProcessCaseParams["CasesService"];
+  vapiConfig: Awaited<ReturnType<typeof getClinicVapiConfig>> | null;
 }
 
 async function scheduleCall({
@@ -1061,6 +1111,7 @@ async function scheduleCall({
   staggerIndex,
   ctx,
   CasesService,
+  vapiConfig,
 }: ScheduleCallParams): Promise<ScheduleResult> {
   // Ensure entities exist
   let entities = caseInfo.entities;
@@ -1097,6 +1148,12 @@ async function scheduleCall({
         clinicPhone: config.clinicPhone,
         emergencyPhone: config.clinicPhone,
         agentName: config.agentName,
+        ...(vapiConfig?.outboundAssistantId && {
+          assistantId: vapiConfig.outboundAssistantId,
+        }),
+        ...(vapiConfig?.phoneNumberId && {
+          phoneNumberId: vapiConfig.phoneNumberId,
+        }),
       },
     );
 

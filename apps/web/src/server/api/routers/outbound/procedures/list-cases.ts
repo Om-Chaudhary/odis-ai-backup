@@ -6,6 +6,7 @@
  */
 
 import { TRPCError } from "@trpc/server";
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import {
   getClinicUserIds,
   getClinicByUserId,
@@ -153,6 +154,10 @@ interface CaseMetadata {
   idexx?: {
     notes?: string;
     consultation_notes?: string;
+  };
+  pimsAppointment?: {
+    status?: string;
+    [key: string]: unknown;
   };
   [key: string]: unknown;
 }
@@ -388,9 +393,16 @@ export const listCasesRouter = createTRPCRouter({
         const hasPhone = !!patient?.owner_phone;
         const hasEmail = !!patient?.owner_email;
 
+        // Extract PIMS appointment status (no-show, cancelled, etc.)
+        const metadata = c.metadata;
+        const pimsAppointmentStatus =
+          metadata?.pimsAppointment?.status?.toLowerCase() ?? null;
+        const isNoShow =
+          pimsAppointmentStatus === "no-show" ||
+          pimsAppointmentStatus === "cancelled";
+
         // Extract IDEXX notes from metadata
         // Priority: consultation_notes (rich clinical data) > notes (short appointment note)
-        const metadata = c.metadata;
         const rawConsultationNotes = metadata?.idexx?.consultation_notes;
         const idexxNotes = rawConsultationNotes
           ? rawConsultationNotes
@@ -563,6 +575,9 @@ export const listCasesRouter = createTRPCRouter({
           ownerSentimentData: scheduledCall?.owner_sentiment_data ?? null,
           escalationData: scheduledCall?.escalation_data ?? null,
           followUpData: scheduledCall?.follow_up_data ?? null,
+          // PIMS appointment status for no-show/cancelled indicator
+          pimsAppointmentStatus,
+          isNoShow,
         };
       });
 

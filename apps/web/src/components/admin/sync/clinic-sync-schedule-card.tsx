@@ -14,6 +14,7 @@ import {
   Loader2,
   CalendarClock,
   Database as DatabaseIcon,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ScheduleBuilder } from "./schedule-builder";
@@ -25,7 +26,7 @@ interface ClinicSyncScheduleCardProps {
   isIdexxClinic: boolean;
 }
 
-type SyncType = "cases" | "enrich" | "reconciliation";
+type SyncType = "inbound" | "cases" | "enrich" | "reconciliation";
 
 interface ScheduleConfig {
   type: SyncType;
@@ -43,6 +44,11 @@ const SYNC_TYPE_INFO: Record<
   SyncType,
   { label: string; description: string; icon: typeof DatabaseIcon }
 > = {
+  inbound: {
+    label: "Appointments Pull",
+    description: "Pull appointments from IDEXX",
+    icon: Download,
+  },
   cases: {
     label: "Cases Sync",
     description: "Pull appointments from IDEXX to create cases",
@@ -194,6 +200,7 @@ export function ClinicSyncScheduleCard({
         <div className="space-y-4">
           {schedules.map((schedule) => {
             const info = SYNC_TYPE_INFO[schedule.type];
+            if (!info) return null;
             const Icon = info.icon;
             return (
               <div
@@ -251,7 +258,8 @@ export function ClinicSyncScheduleCard({
           {syncConfig?.config?.schedules &&
           syncConfig.config.schedules.length > 0 ? (
             syncConfig.config.schedules.map((schedule) => {
-              const info = SYNC_TYPE_INFO[schedule.type];
+              const info = SYNC_TYPE_INFO[schedule.type as SyncType];
+              if (!info) return null;
               const Icon = info.icon;
               return (
                 <div
