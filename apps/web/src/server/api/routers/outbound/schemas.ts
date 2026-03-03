@@ -106,6 +106,8 @@ export const approveAndScheduleInput = z.object({
   emailEnabled: z.boolean().default(true),
   /** When true, sends immediately instead of using scheduled delays (useful for test mode) */
   immediateDelivery: z.boolean().default(false),
+  /** Clinic slug for admin users scheduling on behalf of a specific clinic */
+  clinicSlug: z.string().optional(),
 });
 
 export const skipCaseInput = z.object({
@@ -178,6 +180,8 @@ export const batchScheduleInput = z.object({
   staggerIntervalSeconds: z.number().min(30).max(300).default(60),
   /** Base time for stagger calculations in immediate mode (ISO string). If not provided, uses current time. */
   scheduleBaseTime: z.string().datetime().optional(),
+  /** Clinic slug for admin users scheduling on behalf of a specific clinic */
+  clinicSlug: z.string().optional(),
 });
 
 export const updateScheduleDelaysInput = z.object({
