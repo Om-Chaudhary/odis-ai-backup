@@ -5,43 +5,67 @@ import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { CheckCircle2, Clock, Mail } from "lucide-react";
 import { Button } from "@odis-ai/shared/ui";
 import { AutoSelectOrg } from "./auto-select-org";
+import { ClinicPreferencesForm } from "~/components/onboarding/clinic-preferences-form";
+import {
+  PMS_LABELS,
+  PHONE_SYSTEM_LABELS,
+  type PmsType,
+  type PhoneSystemType,
+} from "~/app/api/onboarding/schemas";
 
 /**
  * Pending Approval Page
  *
  * Shows a friendly message to users who have completed onboarding
  * but are waiting for admin to assign them to a clinic organization.
+ * Also displays the clinic preferences form.
  */
 export default async function PendingPage() {
   const authState = await auth();
 
-  // Must be authenticated
   if (!authState.userId) {
     redirect("/sign-in");
   }
 
-  // If user has an org, they should go to dashboard
-  if (authState.orgId) {
-    redirect("/dashboard");
-  }
-
-  // Check if user completed onboarding
   const supabase = await createServiceClient();
   const { data: userData } = await supabase
     .from("users")
-    .select("onboarding_completed, email")
+    .select("id, onboarding_completed, email, pims_type, phone_system_type")
     .eq("clerk_user_id", authState.userId)
     .single();
 
-  // If not completed onboarding, redirect to onboarding
   if (!userData?.onboarding_completed) {
     redirect("/onboarding");
   }
 
+  // Only redirect to dashboard if the user has an active org AND actually has clinic access.
+  // Without this check, users with an org but no clinics bounce between /pending and /dashboard.
+  if (authState.orgId) {
+    const { getUserClinics } = await import("@odis-ai/domain/clinics");
+    const clinics = await getUserClinics(userData.id, supabase);
+    if (clinics.length > 0 && clinics[0]?.slug) {
+      redirect(`/dashboard/${clinics[0].slug}`);
+    }
+    // Has org but no clinics — fall through to show the pending page
+  }
+
+  const pmsType = userData.pims_type as PmsType | null;
+  const phoneSystemType = userData.phone_system_type as PhoneSystemType | null;
+  const pmsLabel = pmsType ? PMS_LABELS[pmsType] : "IDEXX Neo";
+  const phoneLabel = phoneSystemType
+    ? PHONE_SYSTEM_LABELS[phoneSystemType]
+    : "Weave";
+
+  // Fetch existing clinic preferences
+  const { data: preferencesData } = await supabase
+    .from("clinic_onboarding_preferences")
+    .select("*")
+    .eq("user_id", userData.id)
+    .single();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4">
-      {/* Auto-select organization if user has one */}
-      <AutoSelectOrg />
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-12">
+      {!authState.orgId && <AutoSelectOrg />}
       <div className="w-full max-w-2xl">
         {/* Main card */}
         <div className="rounded-xl bg-white p-8 shadow-lg md:p-12">
@@ -55,7 +79,7 @@ export default async function PendingPage() {
           {/* Heading */}
           <div className="mb-8 text-center">
             <h1 className="mb-2 text-3xl font-bold text-slate-900">
-              Welcome to ODIS AI! 🎉
+              Welcome to ODIS AI!
             </h1>
             <p className="text-lg text-slate-600">
               Your account setup is complete and ready for review.
@@ -65,18 +89,20 @@ export default async function PendingPage() {
           {/* Status */}
           <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-6">
             <h2 className="mb-4 font-semibold text-slate-900">
-              Credentials Stored:
+              Setup Summary:
             </h2>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-green-600" />
                 <span className="text-slate-700">
-                  IDEXX Neo account connected
+                  {pmsLabel} selected as PMS
                 </span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-green-600" />
-                <span className="text-slate-700">Weave account connected</span>
+                <span className="text-slate-700">
+                  {phoneLabel} selected as phone system
+                </span>
               </div>
             </div>
           </div>
@@ -133,6 +159,20 @@ export default async function PendingPage() {
               </Button>
             </SignOutButton>
           </div>
+        </div>
+
+        {/* Clinic Preferences Form */}
+        <div className="mt-8 rounded-xl bg-white p-8 shadow-lg md:p-12">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-slate-900">
+              Help Us Set Up Your AI Assistant
+            </h2>
+            <p className="mt-2 text-slate-600">
+              Fill out these preferences so we can configure Odis for your
+              clinic. This is optional and can be completed later.
+            </p>
+          </div>
+          <ClinicPreferencesForm existingData={preferencesData} />
         </div>
 
         {/* Footer note */}

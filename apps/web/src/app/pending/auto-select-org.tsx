@@ -17,13 +17,10 @@ export function AutoSelectOrg() {
   const [attempted, setAttempted] = useState(false);
 
   useEffect(() => {
-    // Already has active org - redirect to dashboard
-    if (orgId) {
-      router.replace("/dashboard");
-      return;
-    }
-
-    if (!isLoaded || attempted) return;
+    // If user already has an active org, the server-side page handles the redirect.
+    // Do NOT redirect to /dashboard here — the user may have an org but no clinic access,
+    // which would cause an infinite redirect loop.
+    if (orgId || !isLoaded || attempted) return;
 
     const memberships = userMemberships.data ?? [];
 
@@ -32,13 +29,14 @@ export function AutoSelectOrg() {
       return;
     }
 
-    // Has at least one org - auto-select the first one
+    // Has at least one org - auto-select the first one, then refresh
+    // so the server-side pending page re-evaluates and redirects if clinics exist.
     setAttempted(true);
     const membership = memberships[0];
     if (!membership) return;
     setActive?.({ organization: membership.organization.id })
       .then(() => {
-        router.replace("/dashboard");
+        router.refresh();
       })
       .catch((err) => {
         console.error("Failed to set active org:", err);

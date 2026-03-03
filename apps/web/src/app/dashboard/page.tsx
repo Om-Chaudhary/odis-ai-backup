@@ -2,7 +2,6 @@ import { getUser } from "~/server/actions/auth";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { createServiceClient } from "@odis-ai/data-access/db/server";
-import { getUserClinics } from "@odis-ai/domain/clinics";
 import { ExtensionAuthHandler } from "~/components/dashboard/shell/extension-auth-handler";
 import { AUTH_PARAMS } from "@odis-ai/shared/constants/auth";
 
@@ -56,6 +55,7 @@ export default async function DashboardPage({
 
   // Use service client to bypass RLS (needed for Clerk users who don't have Supabase session)
   const serviceClient = await createServiceClient();
+  const { getUserClinics } = await import("@odis-ai/domain/clinics");
 
   // Check onboarding status for Clerk users
   const clerkAuth = await auth();
@@ -74,9 +74,29 @@ export default async function DashboardPage({
     // Get user's clinics (admins get ALL clinics, regular users get their assigned clinics)
     const clinics = await getUserClinics(user.id, serviceClient);
 
-    // If completed onboarding but no clinics yet, show pending state
+    // If completed onboarding but no clinics yet, show inline message.
+    // Do NOT redirect to /pending — that creates an infinite loop when the user
+    // has an active org (orgId) but no clinic access records.
     if (clinics.length === 0) {
-      redirect("/pending");
+      return (
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold text-slate-700">
+              Waiting for Clinic Assignment
+            </h2>
+            <p className="mt-2 text-slate-500">
+              Your account is set up, but you haven't been assigned to a clinic
+              yet. Please contact your administrator or{" "}
+              <a
+                href="mailto:support@odis-ai.com"
+                className="text-teal-600 underline hover:text-teal-700"
+              >
+                support@odis-ai.com
+              </a>
+            </p>
+          </div>
+        </div>
+      );
     }
 
     // Redirect to first clinic if available
