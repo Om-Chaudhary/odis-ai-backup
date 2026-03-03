@@ -32,7 +32,7 @@ interface ClinicSyncTabProps {
   clinicId: string;
 }
 
-type SyncType = "cases" | "enrich" | "reconciliation";
+type SyncType = "inbound" | "cases" | "enrich" | "reconciliation";
 
 interface ScheduleConfig {
   type: SyncType;
@@ -50,6 +50,11 @@ const SYNC_TYPE_INFO: Record<
   SyncType,
   { label: string; description: string; icon: typeof DatabaseIcon }
 > = {
+  inbound: {
+    label: "Appointments Pull",
+    description: "Pull appointments from IDEXX for inbound scheduling",
+    icon: CalendarClock,
+  },
   cases: {
     label: "Cases Sync",
     description: "Pull appointments from IDEXX to create cases",
@@ -141,6 +146,10 @@ export function ClinicSyncTab({ clinic, clinicId }: ClinicSyncTabProps) {
   };
 
   const handleTriggerSync = (type: SyncType) => {
+    if (type === "inbound") {
+      triggerAppointmentSyncMutation.mutate({ clinicId, daysAhead: 7 });
+      return;
+    }
     triggerSyncMutation.mutate({ clinicId, type });
   };
 

@@ -130,6 +130,6 @@ export const config = {
      * - images/ (public images)
      * - fonts/ (public fonts)
      */
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|images/|fonts/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|images/|fonts/|api/webhooks/|api/vapi/|api/public/|api/health|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
