@@ -30,6 +30,7 @@
         "external": ["playwright"],
         "esbuildOptions": {
           "sourcemap": true,
+          "keepNames": true,
           "outExtension": {
             ".js": ".js"
           }
@@ -41,6 +42,7 @@
           "generateLockfile": true,
           "esbuildOptions": {
             "sourcemap": false,
+            "keepNames": true,
             "outExtension": {
               ".js": ".js"
             }
