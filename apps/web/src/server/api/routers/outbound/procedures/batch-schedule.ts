@@ -567,6 +567,8 @@ export const batchScheduleRouter = createTRPCRouter({
         }
       }
 
+      const webhookBaseUrl =
+        process.env.NEXT_PUBLIC_SITE_URL ?? "https://odisai.co";
       console.log("[BatchSchedule] Starting batch scheduling", {
         totalCases: caseIdsToProcess.length,
         timingMode: input.timingMode,
@@ -579,6 +581,11 @@ export const batchScheduleRouter = createTRPCRouter({
         latestEmailTime: latestEmailTime?.toISOString() ?? null,
         adjustedBaseEmailTime: baseEmailTime?.toISOString() ?? null,
         adjustedBaseCallTime: baseCallTime?.toISOString() ?? null,
+        webhookBaseUrl,
+        callWebhookUrl: `${webhookBaseUrl}/api/webhooks/execute-call`,
+        emailWebhookUrl: `${webhookBaseUrl}/api/webhooks/execute-discharge-email`,
+        clinicSlug: input.clinicSlug ?? null,
+        clinicName: clinic?.name ?? null,
       });
 
       // Process cases in parallel batches of CONCURRENCY to avoid Vercel timeout
@@ -683,10 +690,18 @@ export const batchScheduleRouter = createTRPCRouter({
       const totalSuccess = results.filter((r) => r.success).length;
       const totalFailed = results.filter((r) => !r.success).length;
 
+      const emailsScheduled = results.filter((r) => r.emailScheduled).length;
+      const callsScheduled = results.filter((r) => r.callScheduled).length;
+
       console.log("[BatchSchedule] Completed batch scheduling", {
         totalProcessed: results.length,
         totalSuccess,
         totalFailed,
+        emailsScheduled,
+        callsScheduled,
+        failedCaseIds: results
+          .filter((r) => !r.success)
+          .map((r) => ({ id: r.caseId, error: r.error })),
       });
 
       return {
@@ -748,6 +763,8 @@ async function processSingleCase({
   baseCallTime,
   vapiConfig,
 }: ProcessCaseParams): Promise<BatchScheduleResult> {
+  console.log("[BatchSchedule] Processing case", { caseId });
+
   // Check for blocked extreme cases
   const caseMetadata = caseInfo.case.metadata as Record<string, unknown> | null;
   const idexxMetadata = getIdexxMetadata(caseMetadata);
@@ -888,8 +905,23 @@ async function processSingleCase({
 
   // Verify at least one delivery was scheduled
   if (!result.emailScheduled && !result.callScheduled) {
+    console.error("[BatchSchedule] No delivery methods scheduled for case", {
+      caseId,
+      phoneEnabled: input.phoneEnabled,
+      emailEnabled: input.emailEnabled,
+      hasPhone: !!contacts.phone,
+      hasEmail: !!contacts.email,
+    });
     return createErrorResult(caseId, "Failed to schedule any delivery methods");
   }
+
+  console.log("[BatchSchedule] Case processed successfully", {
+    caseId,
+    emailScheduled: result.emailScheduled ?? false,
+    callScheduled: result.callScheduled ?? false,
+    emailScheduledFor: result.emailScheduledFor ?? null,
+    callScheduledFor: result.callScheduledFor ?? null,
+  });
 
   return result;
 }

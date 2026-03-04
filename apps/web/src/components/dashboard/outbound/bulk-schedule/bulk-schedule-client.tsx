@@ -200,6 +200,7 @@ export function BulkScheduleClient() {
           timingMode: startNow ? "immediate" : "scheduled",
           staggerIntervalSeconds: 60,
           scheduleBaseTime,
+          clinicSlug: clinicSlug ?? undefined,
         });
 
         // Update counts from results
@@ -289,177 +290,177 @@ export function BulkScheduleClient() {
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-3xl px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleBack}
-          disabled={step === "processing"}
-          className="mb-4"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
+        {/* Header */}
+        <div className="mb-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBack}
+            disabled={step === "processing"}
+            className="mb-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
 
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100">
-            <Send className="h-6 w-6 text-teal-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              Schedule {selectedCases.length} Discharge
-              {selectedCases.length === 1 ? "" : "s"}
-            </h1>
-            {settingsData?.testModeEnabled && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                <AlertTriangle className="h-3 w-3" />
-                Test Mode Active
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Step Indicator */}
-      <div className="mb-8 flex items-center justify-center gap-4">
-        {steps.map((s, i) => (
-          <div key={s.key} className="flex items-center">
-            <div
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors",
-                i < currentStepIndex
-                  ? "bg-teal-500 text-white"
-                  : i === currentStepIndex
-                    ? "bg-teal-100 text-teal-700 ring-2 ring-teal-500"
-                    : "bg-slate-100 text-slate-400",
-              )}
-            >
-              {i < currentStepIndex ? (
-                <CheckCircle2 className="h-4 w-4" />
-              ) : (
-                i + 1
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100">
+              <Send className="h-6 w-6 text-teal-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">
+                Schedule {selectedCases.length} Discharge
+                {selectedCases.length === 1 ? "" : "s"}
+              </h1>
+              {settingsData?.testModeEnabled && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                  <AlertTriangle className="h-3 w-3" />
+                  Test Mode Active
+                </span>
               )}
             </div>
-            <span
-              className={cn(
-                "ml-2 hidden text-sm font-medium sm:inline",
-                i === currentStepIndex ? "text-slate-900" : "text-slate-400",
+          </div>
+        </div>
+
+        {/* Step Indicator */}
+        <div className="mb-8 flex items-center justify-center gap-4">
+          {steps.map((s, i) => (
+            <div key={s.key} className="flex items-center">
+              <div
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors",
+                  i < currentStepIndex
+                    ? "bg-teal-500 text-white"
+                    : i === currentStepIndex
+                      ? "bg-teal-100 text-teal-700 ring-2 ring-teal-500"
+                      : "bg-slate-100 text-slate-400",
+                )}
+              >
+                {i < currentStepIndex ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  i + 1
+                )}
+              </div>
+              <span
+                className={cn(
+                  "ml-2 hidden text-sm font-medium sm:inline",
+                  i === currentStepIndex ? "text-slate-900" : "text-slate-400",
+                )}
+              >
+                {s.label}
+              </span>
+              {i < steps.length - 1 && (
+                <ChevronRight className="mx-4 h-4 w-4 text-slate-300" />
               )}
-            >
-              {s.label}
-            </span>
-            {i < steps.length - 1 && (
-              <ChevronRight className="mx-4 h-4 w-4 text-slate-300" />
+            </div>
+          ))}
+        </div>
+
+        {/* Step Content */}
+        <Card>
+          <CardContent className="p-6">
+            {step === "options" && (
+              <OptionsStep
+                phoneEnabled={phoneEnabled}
+                onPhoneEnabledChange={setPhoneEnabled}
+                emailEnabled={emailEnabled}
+                onEmailEnabledChange={setEmailEnabled}
+                startNow={startNow}
+                onStartNowChange={setStartNow}
+                scheduledDate={scheduledDate}
+                onScheduledDateChange={setScheduledDate}
+                scheduledTime={scheduledTime}
+                onScheduledTimeChange={setScheduledTime}
+                selectedStats={selectedStats}
+                testModeEnabled={settingsData?.testModeEnabled ?? false}
+              />
+            )}
+
+            {step === "review" && (
+              <ReviewStep
+                selectedStats={selectedStats}
+                phoneEnabled={phoneEnabled}
+                emailEnabled={emailEnabled}
+                startNow={startNow}
+                scheduledDateTime={scheduledDateTime}
+                testModeEnabled={settingsData?.testModeEnabled ?? false}
+                selectedCases={selectedCases}
+              />
+            )}
+
+            {step === "processing" && (
+              <ProcessingStep
+                total={selectedStats.total}
+                processed={processedCount}
+              />
+            )}
+
+            {step === "complete" && (
+              <CompleteStep
+                total={selectedStats.total}
+                successCount={successCount}
+                failedCount={failedCount}
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Footer Actions */}
+        <div className="mt-6 flex items-center justify-between">
+          <div className="text-sm text-slate-500">
+            {step === "options" && <span>Configure delivery options</span>}
+            {step === "review" && (
+              <span>Ready to send {selectedStats.total} cases</span>
+            )}
+            {step === "processing" && <span>Please wait...</span>}
+            {step === "complete" && <span>All done!</span>}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {step === "review" && (
+              <Button variant="outline" onClick={handleBack}>
+                <ChevronLeft className="mr-1 h-4 w-4" />
+                Back
+              </Button>
+            )}
+
+            {step !== "processing" && step !== "complete" && (
+              <Button
+                onClick={handleNext}
+                disabled={!canProceed || batchSchedule.isPending}
+                className="bg-teal-600 hover:bg-teal-700"
+              >
+                {batchSchedule.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : step === "review" ? (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    Send Now
+                  </>
+                ) : (
+                  <>
+                    Next
+                    <ChevronRight className="ml-1 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            )}
+
+            {step === "complete" && (
+              <Button
+                onClick={handleFinish}
+                className="bg-teal-600 hover:bg-teal-700"
+              >
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Done
+              </Button>
             )}
           </div>
-        ))}
-      </div>
-
-      {/* Step Content */}
-      <Card>
-        <CardContent className="p-6">
-          {step === "options" && (
-            <OptionsStep
-              phoneEnabled={phoneEnabled}
-              onPhoneEnabledChange={setPhoneEnabled}
-              emailEnabled={emailEnabled}
-              onEmailEnabledChange={setEmailEnabled}
-              startNow={startNow}
-              onStartNowChange={setStartNow}
-              scheduledDate={scheduledDate}
-              onScheduledDateChange={setScheduledDate}
-              scheduledTime={scheduledTime}
-              onScheduledTimeChange={setScheduledTime}
-              selectedStats={selectedStats}
-              testModeEnabled={settingsData?.testModeEnabled ?? false}
-            />
-          )}
-
-          {step === "review" && (
-            <ReviewStep
-              selectedStats={selectedStats}
-              phoneEnabled={phoneEnabled}
-              emailEnabled={emailEnabled}
-              startNow={startNow}
-              scheduledDateTime={scheduledDateTime}
-              testModeEnabled={settingsData?.testModeEnabled ?? false}
-              selectedCases={selectedCases}
-            />
-          )}
-
-          {step === "processing" && (
-            <ProcessingStep
-              total={selectedStats.total}
-              processed={processedCount}
-            />
-          )}
-
-          {step === "complete" && (
-            <CompleteStep
-              total={selectedStats.total}
-              successCount={successCount}
-              failedCount={failedCount}
-            />
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Footer Actions */}
-      <div className="mt-6 flex items-center justify-between">
-        <div className="text-sm text-slate-500">
-          {step === "options" && <span>Configure delivery options</span>}
-          {step === "review" && (
-            <span>Ready to send {selectedStats.total} cases</span>
-          )}
-          {step === "processing" && <span>Please wait...</span>}
-          {step === "complete" && <span>All done!</span>}
         </div>
-
-        <div className="flex items-center gap-2">
-          {step === "review" && (
-            <Button variant="outline" onClick={handleBack}>
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Back
-            </Button>
-          )}
-
-          {step !== "processing" && step !== "complete" && (
-            <Button
-              onClick={handleNext}
-              disabled={!canProceed || batchSchedule.isPending}
-              className="bg-teal-600 hover:bg-teal-700"
-            >
-              {batchSchedule.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : step === "review" ? (
-                <>
-                  <Send className="mr-2 h-4 w-4" />
-                  Send Now
-                </>
-              ) : (
-                <>
-                  Next
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </>
-              )}
-            </Button>
-          )}
-
-          {step === "complete" && (
-            <Button
-              onClick={handleFinish}
-              className="bg-teal-600 hover:bg-teal-700"
-            >
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              Done
-            </Button>
-          )}
-        </div>
-      </div>
       </div>
     </div>
   );

@@ -688,31 +688,51 @@ export async function scheduleDischargeCall(
         );
       }
     } else {
-      // Dynamic import to avoid lazy-load constraint
-      const { scheduleCallExecution } =
-        await import("@odis-ai/integrations/qstash/client");
-      const qstashMessageId = await scheduleCallExecution(
-        scheduledCall.id,
-        scheduledAt,
-      );
-
-      const updatedMetadata: ScheduledCallMetadata = {
-        ...(scheduledCall.metadata ?? {}),
-        qstash_message_id: qstashMessageId,
-      };
-
-      const { error: updateError } = await supabase
-        .from("scheduled_discharge_calls")
-        .update({
-          metadata: updatedMetadata as Json,
-        })
-        .eq("id", scheduledCall.id);
-
-      if (updateError) {
-        console.error(
-          "[CallScheduling] Error updating QStash message ID:",
-          updateError,
+      try {
+        // Dynamic import to avoid lazy-load constraint
+        const { scheduleCallExecution } =
+          await import("@odis-ai/integrations/qstash/client");
+        const qstashMessageId = await scheduleCallExecution(
+          scheduledCall.id,
+          scheduledAt,
         );
+
+        const updatedMetadata: ScheduledCallMetadata = {
+          ...(scheduledCall.metadata ?? {}),
+          qstash_message_id: qstashMessageId,
+        };
+
+        const { error: updateError } = await supabase
+          .from("scheduled_discharge_calls")
+          .update({
+            metadata: updatedMetadata as Json,
+          })
+          .eq("id", scheduledCall.id);
+
+        if (updateError) {
+          console.error(
+            "[CallScheduling] Error updating QStash message ID:",
+            updateError,
+          );
+        }
+      } catch (qstashError) {
+        console.error(
+          "[CallScheduling] QStash scheduling failed — rolling back DB record",
+          {
+            callId: scheduledCall.id,
+            caseId,
+            error:
+              qstashError instanceof Error
+                ? qstashError.message
+                : String(qstashError),
+          },
+        );
+        // Roll back the DB record so it doesn't show as "Scheduled"
+        await supabase
+          .from("scheduled_discharge_calls")
+          .delete()
+          .eq("id", scheduledCall.id);
+        throw qstashError;
       }
     }
   }

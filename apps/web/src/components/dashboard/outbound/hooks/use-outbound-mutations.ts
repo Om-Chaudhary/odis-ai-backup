@@ -8,6 +8,8 @@ import { api } from "~/trpc/client";
 
 interface UseOutboundMutationsOptions {
   onSuccess?: () => void;
+  /** Clinic slug for admin users acting on behalf of a specific clinic */
+  clinicSlug?: string;
 }
 
 /**
@@ -16,7 +18,7 @@ interface UseOutboundMutationsOptions {
 export function useOutboundMutations(
   options: UseOutboundMutationsOptions = {},
 ) {
-  const { onSuccess } = options;
+  const { onSuccess, clinicSlug } = options;
 
   // Track which cases are being scheduled (supports concurrent scheduling)
   const [schedulingCaseIds, setSchedulingCaseIds] = useState<Set<string>>(
@@ -209,9 +211,10 @@ export function useOutboundMutations(
         emailEnabled: deliveryToggles.emailEnabled,
         immediateDelivery:
           immediate ?? deliveryToggles.immediateDelivery ?? false,
+        clinicSlug,
       });
     },
-    [approveAndSchedule],
+    [approveAndSchedule, clinicSlug],
   );
 
   const handleSkip = useCallback(
@@ -281,6 +284,7 @@ export function useOutboundMutations(
           caseId: caseItem.id,
           phoneEnabled: !!caseItem.owner.phone,
           emailEnabled: !!caseItem.owner.email,
+          clinicSlug,
         });
       } finally {
         setSchedulingCaseIds((prev) => {
@@ -290,7 +294,7 @@ export function useOutboundMutations(
         });
       }
     },
-    [approveAndSchedule],
+    [approveAndSchedule, clinicSlug],
   );
 
   // Toggle star on a case
@@ -327,6 +331,7 @@ export function useOutboundMutations(
           emailEnabled: true,
           timingMode: "scheduled", // Use user's delay settings
           staggerIntervalSeconds: 60,
+          clinicSlug,
         });
       } finally {
         // Remove all case IDs from scheduling state
@@ -337,7 +342,7 @@ export function useOutboundMutations(
         });
       }
     },
-    [batchSchedule],
+    [batchSchedule, clinicSlug],
   );
 
   // Bulk schedule multiple cases immediately with 1-minute stagger
@@ -361,6 +366,7 @@ export function useOutboundMutations(
           timingMode: "immediate", // Send now, staggered
           staggerIntervalSeconds: 60, // 1 minute between each case
           scheduleBaseTime, // Start scheduling 1 minute from now
+          clinicSlug,
         });
       } finally {
         // Remove all case IDs from scheduling state
@@ -371,7 +377,7 @@ export function useOutboundMutations(
         });
       }
     },
-    [batchSchedule],
+    [batchSchedule, clinicSlug],
   );
 
   /**
@@ -425,6 +431,7 @@ export function useOutboundMutations(
           timingMode: "immediate",
           staggerIntervalSeconds: 60,
           scheduleBaseTime,
+          clinicSlug,
         });
 
         // Report individual case results
@@ -457,7 +464,7 @@ export function useOutboundMutations(
         });
       }
     },
-    [batchSchedule],
+    [batchSchedule, clinicSlug],
   );
 
   // Cancel a single case's scheduled deliveries

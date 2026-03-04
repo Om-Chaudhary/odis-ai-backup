@@ -170,6 +170,7 @@ function OutboundDashboardInner() {
     cancellingEmailCaseIds,
     reschedulingCaseIds,
   } = useOutboundMutations({
+    clinicSlug,
     onSuccess: () => {
       // Only clear selection for non-cancel operations
       // Cancel operations should keep the panel open so user can cancel the other channel

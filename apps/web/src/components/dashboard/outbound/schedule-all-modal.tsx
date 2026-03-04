@@ -53,6 +53,8 @@ interface ScheduleAllModalProps {
   cases: ScheduleableCase[];
   testModeEnabled: boolean;
   onComplete: () => void;
+  /** Clinic slug for admin users scheduling on behalf of a specific clinic */
+  clinicSlug?: string;
 }
 
 type TimingMode = "scheduled" | "immediate";
@@ -75,6 +77,7 @@ export function ScheduleAllModal({
   cases,
   testModeEnabled,
   onComplete,
+  clinicSlug,
 }: ScheduleAllModalProps) {
   // Wizard state
   const [step, setStep] = useState<WizardStep>("select");
@@ -196,6 +199,7 @@ export function ScheduleAllModal({
         emailEnabled,
         timingMode,
         staggerIntervalSeconds: staggerInterval,
+        clinicSlug,
       });
 
       clearInterval(progressInterval);
@@ -226,6 +230,7 @@ export function ScheduleAllModal({
     timingMode,
     staggerInterval,
     batchSchedule,
+    clinicSlug,
   ]);
 
   const handleClose = useCallback(() => {
