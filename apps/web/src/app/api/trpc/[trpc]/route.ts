@@ -4,6 +4,9 @@ import { appRouter } from "~/server/api/root";
 import { createTRPCContext } from "~/server/api/trpc";
 import { env } from "~/env";
 
+// Allow up to 5 minutes for batch scheduling mutations with AI generation
+export const maxDuration = 300;
+
 const handler = async (request: Request) => {
   // Validate environment variables at runtime
   try {
@@ -38,7 +41,8 @@ const handler = async (request: Request) => {
     endpoint: "/api/trpc",
     req: request,
     router: appRouter,
-    createContext: async () => (ctx = await createTRPCContext({ headers: request.headers })),
+    createContext: async () =>
+      (ctx = await createTRPCContext({ headers: request.headers })),
     onError({ error, path, type }) {
       console.error(`tRPC failed on ${path ?? "<no-path>"} (${type}):`, {
         error: error.message,
@@ -61,7 +65,7 @@ const handler = async (request: Request) => {
         Sentry.withScope((scope) => {
           scope.setTag("trpc_path", path ?? "unknown");
           scope.setTag("trpc_type", type);
-          
+
           if (ctx) {
             scope.setTag("auth_type", ctx.isClerkAuth ? "clerk" : "supabase");
             if (ctx.orgId) scope.setTag("org_id", ctx.orgId);
@@ -69,7 +73,7 @@ const handler = async (request: Request) => {
               scope.setUser({ id: ctx.userId });
             }
           }
-          
+
           Sentry.captureException(error);
         });
       }

@@ -567,13 +567,6 @@ export const batchScheduleRouter = createTRPCRouter({
         }
       }
 
-      const staggerState: StaggerState = {
-        emailOffset: 0,
-        callOffset: 0,
-        scheduledEmailIndex: 0,
-        scheduledCallIndex: 0,
-      };
-
       console.log("[BatchSchedule] Starting batch scheduling", {
         totalCases: caseIdsToProcess.length,
         timingMode: input.timingMode,
@@ -588,53 +581,102 @@ export const batchScheduleRouter = createTRPCRouter({
         adjustedBaseCallTime: baseCallTime?.toISOString() ?? null,
       });
 
-      // Process each case
-      for (let i = 0; i < caseIdsToProcess.length; i++) {
-        const caseId = caseIdsToProcess[i]!;
-        const caseInfoResult = caseInfoResults[i];
+      // Process cases in parallel batches of CONCURRENCY to avoid Vercel timeout
+      // Each case gets a pre-calculated stagger position based on its index,
+      // ensuring correct 2-min call spacing regardless of parallel execution order.
+      const CONCURRENCY = 5;
+      const orderedResults: (BatchScheduleResult | null)[] = new Array(
+        caseIdsToProcess.length,
+      ).fill(null);
 
-        // Handle fetch failures
-        if (!caseInfoResult || caseInfoResult.status === "rejected") {
-          const errorMessage =
-            caseInfoResult?.status === "rejected"
-              ? (caseInfoResult.reason as Error).message
-              : "Failed to fetch case data";
-          results.push(createErrorResult(caseId, errorMessage));
-          continue;
-        }
+      for (
+        let batchStart = 0;
+        batchStart < caseIdsToProcess.length;
+        batchStart += CONCURRENCY
+      ) {
+        const batchEnd = Math.min(
+          batchStart + CONCURRENCY,
+          caseIdsToProcess.length,
+        );
+        const batchPromises: Promise<void>[] = [];
 
-        const caseInfo = caseInfoResult.value;
-        if (!caseInfo) {
-          results.push(createErrorResult(caseId, "Case not found"));
-          continue;
-        }
+        for (let i = batchStart; i < batchEnd; i++) {
+          const caseId = caseIdsToProcess[i]!;
+          const caseInfoResult = caseInfoResults[i];
 
-        try {
-          const result = await processSingleCase({
-            caseId,
-            caseInfo,
-            userId,
-            config,
-            clinic,
-            input,
-            staggerState,
-            immediateBaseTime,
-            staggerMs,
-            now,
-            ctx,
-            CasesService,
-            baseEmailTime,
-            baseCallTime,
-            vapiConfig,
-          });
-          results.push(result);
-        } catch (error) {
-          results.push(
-            createErrorResult(
+          // Handle fetch failures synchronously — no need to parallelize these
+          if (!caseInfoResult || caseInfoResult.status === "rejected") {
+            const errorMessage =
+              caseInfoResult?.status === "rejected"
+                ? (caseInfoResult.reason as Error).message
+                : "Failed to fetch case data";
+            orderedResults[i] = createErrorResult(caseId, errorMessage);
+            continue;
+          }
+
+          const caseInfo = caseInfoResult.value;
+          if (!caseInfo) {
+            orderedResults[i] = createErrorResult(caseId, "Case not found");
+            continue;
+          }
+
+          // Each case gets its own stagger state based on its global position (i)
+          // so call/email times are correctly spaced even when processed in parallel.
+          const perCaseStaggerState: StaggerState = {
+            emailOffset: i * staggerMs,
+            callOffset: i * staggerMs,
+            scheduledEmailIndex: i,
+            scheduledCallIndex: i,
+          };
+
+          const idx = i;
+          batchPromises.push(
+            processSingleCase({
               caseId,
-              error instanceof Error ? error.message : "Unknown error occurred",
-            ),
+              caseInfo,
+              userId,
+              config,
+              clinic,
+              input,
+              staggerState: perCaseStaggerState,
+              immediateBaseTime,
+              staggerMs,
+              now,
+              ctx,
+              CasesService,
+              baseEmailTime,
+              baseCallTime,
+              vapiConfig,
+            })
+              .then((result) => {
+                orderedResults[idx] = result;
+              })
+              .catch((error) => {
+                orderedResults[idx] = createErrorResult(
+                  caseId,
+                  error instanceof Error
+                    ? error.message
+                    : "Unknown error occurred",
+                );
+              }),
           );
+        }
+
+        if (batchPromises.length > 0) {
+          await Promise.allSettled(batchPromises);
+        }
+
+        const batchNum = Math.floor(batchStart / CONCURRENCY) + 1;
+        const totalBatches = Math.ceil(caseIdsToProcess.length / CONCURRENCY);
+        console.log(
+          `[BatchSchedule] Completed batch ${batchNum}/${totalBatches}`,
+        );
+      }
+
+      // Collect results in original order
+      for (const r of orderedResults) {
+        if (r) {
+          results.push(r);
         }
       }
 
