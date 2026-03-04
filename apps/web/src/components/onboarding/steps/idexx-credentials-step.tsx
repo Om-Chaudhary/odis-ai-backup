@@ -1,7 +1,6 @@
 "use client";
 
-import { Input } from "@odis-ai/shared/ui";
-import { Label } from "@odis-ai/shared/ui";
+import { Input, Label } from "@odis-ai/shared/ui";
 import { Info } from "lucide-react";
 
 interface IdexxCredentialsStepProps {
@@ -11,20 +10,14 @@ interface IdexxCredentialsStepProps {
   onUsernameChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
   onCompanyIdChange: (value: string) => void;
-  errors?: {
-    username?: string;
-    password?: string;
-    companyId?: string;
-  };
+  onSkip: () => void;
 }
 
 /**
- * Step 1: IDEXX Neo Credentials
+ * Step 2 (IDEXX): IDEXX Neo Credentials
  *
- * Collects IDEXX Neo credentials during onboarding:
- * - Username
- * - Password
- * - Company ID
+ * Collects IDEXX Neo credentials during onboarding.
+ * All fields are optional - user can skip.
  */
 export function IdexxCredentialsStep({
   username,
@@ -33,7 +26,7 @@ export function IdexxCredentialsStep({
   onUsernameChange,
   onPasswordChange,
   onCompanyIdChange,
-  errors,
+  onSkip,
 }: IdexxCredentialsStepProps) {
   return (
     <div className="space-y-6">
@@ -62,62 +55,52 @@ export function IdexxCredentialsStep({
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="idexx-username">
-            Username <span className="text-red-500">*</span>
-          </Label>
+          <Label htmlFor="idexx-username">Username</Label>
           <Input
             id="idexx-username"
             type="text"
             placeholder="Enter your IDEXX Neo username"
             value={username}
             onChange={(e) => onUsernameChange(e.target.value)}
-            className={errors?.username ? "border-red-500" : ""}
             autoComplete="username"
           />
-          {errors?.username && (
-            <p className="text-sm text-red-600">{errors.username}</p>
-          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="idexx-password">
-            Password <span className="text-red-500">*</span>
-          </Label>
+          <Label htmlFor="idexx-password">Password</Label>
           <Input
             id="idexx-password"
             type="password"
             placeholder="Enter your IDEXX Neo password"
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
-            className={errors?.password ? "border-red-500" : ""}
             autoComplete="current-password"
           />
-          {errors?.password && (
-            <p className="text-sm text-red-600">{errors.password}</p>
-          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="idexx-company-id">
-            Company ID <span className="text-red-500">*</span>
-          </Label>
+          <Label htmlFor="idexx-company-id">Company ID</Label>
           <Input
             id="idexx-company-id"
             type="text"
             placeholder="Enter your IDEXX Neo company ID"
             value={companyId}
             onChange={(e) => onCompanyIdChange(e.target.value)}
-            className={errors?.companyId ? "border-red-500" : ""}
             autoComplete="organization"
           />
-          {errors?.companyId && (
-            <p className="text-sm text-red-600">{errors.companyId}</p>
-          )}
           <p className="text-sm text-slate-500">
             You can find your company ID in your IDEXX Neo account settings.
           </p>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={onSkip}
+        className="text-sm text-slate-500 underline hover:text-slate-700"
+      >
+        Skip for now - I'll provide these later
+      </button>
     </div>
   );
 }

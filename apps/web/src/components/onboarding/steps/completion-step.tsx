@@ -2,18 +2,34 @@
 
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@odis-ai/shared/ui";
+import {
+  PMS_LABELS,
+  PHONE_SYSTEM_LABELS,
+  type PmsType,
+  type PhoneSystemType,
+} from "~/app/api/onboarding/schemas";
 
 interface CompletionStepProps {
+  pmsType: PmsType;
+  phoneSystemType: PhoneSystemType;
+  hasCredentials: {
+    pms: boolean;
+    phone: boolean;
+  };
   onContinue: () => void;
 }
 
 /**
- * Step 3: Completion
+ * Step 5: Completion
  *
- * Shows success message after onboarding is complete.
- * Redirects user to pending approval page.
+ * Dynamic summary showing what was selected and saved.
  */
-export function CompletionStep({ onContinue }: CompletionStepProps) {
+export function CompletionStep({
+  pmsType,
+  phoneSystemType,
+  hasCredentials,
+  onContinue,
+}: CompletionStepProps) {
   return (
     <div className="space-y-6 text-center">
       <div className="flex justify-center">
@@ -25,23 +41,33 @@ export function CompletionStep({ onContinue }: CompletionStepProps) {
       <div>
         <h2 className="text-2xl font-bold text-slate-900">Setup Complete!</h2>
         <p className="mt-2 text-slate-600">
-          Thank you for providing your credentials. Your account is now ready
+          Thank you for providing your information. Your account is now ready
           for review.
         </p>
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-6 text-left">
-        <h3 className="mb-3 font-semibold text-slate-900">
-          Credentials Saved:
-        </h3>
+        <h3 className="mb-3 font-semibold text-slate-900">Your Selections:</h3>
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-slate-700">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <span>IDEXX Neo account</span>
+            <span>
+              PMS: {PMS_LABELS[pmsType]}
+              {hasCredentials.pms
+                ? " (credentials saved)"
+                : " (credentials skipped)"}
+            </span>
           </div>
           <div className="flex items-center gap-2 text-sm text-slate-700">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <span>Weave account</span>
+            <span>
+              Phone: {PHONE_SYSTEM_LABELS[phoneSystemType]}
+              {hasCredentials.phone
+                ? phoneSystemType === "weave"
+                  ? " (credentials saved)"
+                  : " (details saved)"
+                : " (details skipped)"}
+            </span>
           </div>
         </div>
       </div>

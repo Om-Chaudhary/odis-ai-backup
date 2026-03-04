@@ -1,7 +1,6 @@
 "use client";
 
-import { Input } from "@odis-ai/shared/ui";
-import { Label } from "@odis-ai/shared/ui";
+import { Input, Label } from "@odis-ai/shared/ui";
 import { Info } from "lucide-react";
 
 interface WeaveCredentialsStepProps {
@@ -9,25 +8,21 @@ interface WeaveCredentialsStepProps {
   password: string;
   onUsernameChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
-  errors?: {
-    username?: string;
-    password?: string;
-  };
+  onSkip: () => void;
 }
 
 /**
- * Step 2: Weave Credentials
+ * Step 4 (Weave): Weave Credentials
  *
- * Collects Weave credentials during onboarding:
- * - Username
- * - Password
+ * Collects Weave credentials during onboarding.
+ * All fields are optional - user can skip.
  */
 export function WeaveCredentialsStep({
   username,
   password,
   onUsernameChange,
   onPasswordChange,
-  errors,
+  onSkip,
 }: WeaveCredentialsStepProps) {
   return (
     <div className="space-y-6">
@@ -55,41 +50,37 @@ export function WeaveCredentialsStep({
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="weave-username">
-            Username <span className="text-red-500">*</span>
-          </Label>
+          <Label htmlFor="weave-username">Username</Label>
           <Input
             id="weave-username"
             type="text"
             placeholder="Enter your Weave username"
             value={username}
             onChange={(e) => onUsernameChange(e.target.value)}
-            className={errors?.username ? "border-red-500" : ""}
             autoComplete="username"
           />
-          {errors?.username && (
-            <p className="text-sm text-red-600">{errors.username}</p>
-          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="weave-password">
-            Password <span className="text-red-500">*</span>
-          </Label>
+          <Label htmlFor="weave-password">Password</Label>
           <Input
             id="weave-password"
             type="password"
             placeholder="Enter your Weave password"
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
-            className={errors?.password ? "border-red-500" : ""}
             autoComplete="current-password"
           />
-          {errors?.password && (
-            <p className="text-sm text-red-600">{errors.password}</p>
-          )}
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={onSkip}
+        className="text-sm text-slate-500 underline hover:text-slate-700"
+      >
+        Skip for now - I'll provide these later
+      </button>
     </div>
   );
 }
