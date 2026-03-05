@@ -261,6 +261,7 @@ async function handleRetryLogic(
       maxRetries,
     });
 
+    updateData.status = "failed";
     updateData.metadata = {
       ...metadata,
       final_failure: true,
