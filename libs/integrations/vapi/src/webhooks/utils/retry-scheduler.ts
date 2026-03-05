@@ -29,7 +29,7 @@ export const RETRYABLE_REASONS = [
 /**
  * Default maximum number of retries
  */
-export const DEFAULT_MAX_RETRIES = 3;
+export const DEFAULT_MAX_RETRIES = 1;
 
 /**
  * Determine if a call should be retried based on ended reason
@@ -61,14 +61,13 @@ export function shouldRetry(
 }
 
 /**
- * Calculate retry delay with exponential backoff
+ * Calculate retry delay
  *
- * @param retryCount - Current retry count (0-indexed)
- * @returns Delay in minutes
+ * @param _retryCount - Current retry count (0-indexed), unused since we only retry once
+ * @returns Delay in minutes (fixed 10 minutes)
  */
-export function calculateRetryDelay(retryCount: number): number {
-  // Exponential backoff: 5, 10, 20 minutes
-  return Math.pow(2, retryCount) * 5;
+export function calculateRetryDelay(_retryCount: number): number {
+  return 10;
 }
 
 /**

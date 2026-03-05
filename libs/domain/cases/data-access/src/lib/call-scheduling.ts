@@ -215,7 +215,7 @@ function buildUpdateData(
     metadata: {
       notes,
       retry_count: 0,
-      max_retries: 3,
+      max_retries: 1,
     } as Json,
   };
 }
@@ -687,7 +687,7 @@ export async function scheduleDischargeCall(
         metadata: {
           notes: options.notes,
           retry_count: 0,
-          max_retries: 3,
+          max_retries: 1,
         } as Json,
       };
 
