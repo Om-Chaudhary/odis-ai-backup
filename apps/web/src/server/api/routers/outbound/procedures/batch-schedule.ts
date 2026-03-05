@@ -389,6 +389,22 @@ function calculateScheduleTimes(
     }
   }
 
+  console.log("[BatchSchedule] calculateScheduleTimes result", {
+    timingMode,
+    canScheduleEmail,
+    canSchedulePhone,
+    immediateBaseTime: immediateBaseTime.toISOString(),
+    effectiveBase:
+      timingMode === "immediate"
+        ? new Date(
+            Math.max(immediateBaseTime.getTime(), Date.now() + 15_000),
+          ).toISOString()
+        : undefined,
+    serverNow: new Date().toISOString(),
+    emailScheduledFor: emailScheduledFor?.toISOString() ?? null,
+    callScheduledFor: callScheduledFor?.toISOString() ?? null,
+  });
+
   return { emailScheduledFor, callScheduledFor };
 }
 
@@ -404,6 +420,19 @@ export const batchScheduleRouter = createTRPCRouter({
   batchSchedule: protectedProcedure
     .input(batchScheduleInput)
     .mutation(async ({ ctx, input }) => {
+      const mutationStartTime = Date.now();
+      console.log("[BatchSchedule] Mutation entry", {
+        timestamp: new Date().toISOString(),
+        serverTime: Date.now(),
+        caseCount: input.caseIds.length,
+        timingMode: input.timingMode,
+        phoneEnabled: input.phoneEnabled,
+        emailEnabled: input.emailEnabled,
+        staggerIntervalSeconds: input.staggerIntervalSeconds,
+        scheduleBaseTime: input.scheduleBaseTime ?? null,
+        clinicSlug: input.clinicSlug ?? null,
+      });
+
       const userId: string = ctx.user.id;
       if (!userId) {
         throw new TRPCError({
@@ -697,12 +726,15 @@ export const batchScheduleRouter = createTRPCRouter({
       const emailsScheduled = results.filter((r) => r.emailScheduled).length;
       const callsScheduled = results.filter((r) => r.callScheduled).length;
 
+      const elapsedMs = Date.now() - mutationStartTime;
       console.log("[BatchSchedule] Completed batch scheduling", {
         totalProcessed: results.length,
         totalSuccess,
         totalFailed,
         emailsScheduled,
         callsScheduled,
+        elapsedMs,
+        elapsedSeconds: (elapsedMs / 1000).toFixed(1),
         failedCaseIds: results
           .filter((r) => !r.success)
           .map((r) => ({ id: r.caseId, error: r.error })),
@@ -857,6 +889,7 @@ async function processSingleCase({
   };
 
   // Schedule email
+  let emailError: string | undefined;
   if (canScheduleEmail && scheduleTimes.emailScheduledFor) {
     const emailResult = await scheduleEmail({
       caseId,
@@ -878,10 +911,17 @@ async function processSingleCase({
     if (emailResult.success) {
       result.emailScheduled = true;
       result.emailScheduledFor = emailResult.scheduledFor;
+    } else {
+      emailError = emailResult.error ?? "Unknown email error";
+      console.error("[BatchSchedule] Email scheduling failed for case", {
+        caseId,
+        emailError,
+      });
     }
   }
 
   // Schedule call
+  let callError: string | undefined;
   if (canSchedulePhone && scheduleTimes.callScheduledFor) {
     const callResult = await scheduleCall({
       caseId,
@@ -904,19 +944,34 @@ async function processSingleCase({
     if (callResult.success) {
       result.callScheduled = true;
       result.callScheduledFor = callResult.scheduledFor;
+    } else {
+      callError = callResult.error ?? "Unknown call error";
+      console.error("[BatchSchedule] Call scheduling failed for case", {
+        caseId,
+        callError,
+      });
     }
   }
 
   // Verify at least one delivery was scheduled
   if (!result.emailScheduled && !result.callScheduled) {
+    const errorParts: string[] = [];
+    if (emailError) errorParts.push(`Email: ${emailError}`);
+    if (callError) errorParts.push(`Call: ${callError}`);
+    const combinedError =
+      errorParts.length > 0
+        ? errorParts.join("; ")
+        : "No delivery methods could be scheduled (unknown reason)";
     console.error("[BatchSchedule] No delivery methods scheduled for case", {
       caseId,
       phoneEnabled: input.phoneEnabled,
       emailEnabled: input.emailEnabled,
       hasPhone: !!contacts.phone,
       hasEmail: !!contacts.email,
+      emailError,
+      callError,
     });
-    return createErrorResult(caseId, "Failed to schedule any delivery methods");
+    return createErrorResult(caseId, combinedError);
   }
 
   console.log("[BatchSchedule] Case processed successfully", {
@@ -1054,6 +1109,7 @@ interface ScheduleEmailParams {
 interface ScheduleResult {
   success: boolean;
   scheduledFor?: string;
+  error?: string;
 }
 
 async function scheduleEmail({
@@ -1116,7 +1172,15 @@ async function scheduleEmail({
     .single();
 
   if (emailError || !emailData) {
-    return { success: false };
+    const errMsg = emailError?.message ?? "No data returned from insert";
+    console.error("[BatchSchedule] Email DB insert failed", {
+      caseId,
+      error: errMsg,
+      code: emailError?.code,
+      details: emailError?.details,
+      hint: emailError?.hint,
+    });
+    return { success: false, error: `Email DB insert failed: ${errMsg}` };
   }
 
   try {
@@ -1146,15 +1210,15 @@ async function scheduleEmail({
       .delete()
       .eq("id", emailData.id);
 
+    const qstashErrMsg =
+      qstashError instanceof Error ? qstashError.message : String(qstashError);
     console.error("[BatchSchedule] Failed to schedule email via QStash:", {
       caseId,
-      error:
-        qstashError instanceof Error
-          ? qstashError.message
-          : String(qstashError),
+      error: qstashErrMsg,
+      stack: qstashError instanceof Error ? qstashError.stack : undefined,
     });
 
-    return { success: false };
+    return { success: false, error: `QStash email failed: ${qstashErrMsg}` };
   }
 }
 
@@ -1244,14 +1308,16 @@ async function scheduleCall({
 
     return { success: true, scheduledFor: scheduledCall.scheduled_for };
   } catch (scheduleError) {
+    const callErrMsg =
+      scheduleError instanceof Error
+        ? scheduleError.message
+        : String(scheduleError);
     console.error("[BatchSchedule] Failed to schedule call:", {
       caseId,
-      error:
-        scheduleError instanceof Error
-          ? scheduleError.message
-          : String(scheduleError),
+      error: callErrMsg,
+      stack: scheduleError instanceof Error ? scheduleError.stack : undefined,
     });
 
-    return { success: false };
+    return { success: false, error: `Call scheduling failed: ${callErrMsg}` };
   }
 }

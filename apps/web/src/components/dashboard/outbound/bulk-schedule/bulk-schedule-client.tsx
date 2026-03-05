@@ -193,6 +193,15 @@ export function BulkScheduleClient() {
           ? new Date(Date.now() + 60 * 1000).toISOString()
           : scheduledDateTime?.toISOString();
 
+        console.log("[BulkSchedule] Sending mutation", {
+          caseIds,
+          phoneEnabled,
+          emailEnabled,
+          timingMode: startNow ? "immediate" : "scheduled",
+          scheduleBaseTime,
+          clientTime: new Date().toISOString(),
+        });
+
         const result = await batchSchedule.mutateAsync({
           caseIds,
           phoneEnabled,
@@ -203,9 +212,16 @@ export function BulkScheduleClient() {
           clinicSlug: clinicSlug ?? undefined,
         });
 
+        // Log full results to browser console for debugging
+        console.log(
+          "[BulkSchedule] Full results:",
+          JSON.stringify(result, null, 2),
+        );
+
         // Update counts from results
         const successes = result.results.filter((r) => r.success).length;
         const failures = result.results.filter((r) => !r.success).length;
+        const failedResults = result.results.filter((r) => !r.success);
 
         setProcessedCount(result.results.length);
         setSuccessCount(successes);
@@ -215,7 +231,12 @@ export function BulkScheduleClient() {
         if (failures === 0) {
           toast.success(`Successfully scheduled ${successes} discharges`);
         } else {
-          toast.warning(`Scheduled ${successes}, ${failures} failed`);
+          const firstError = failedResults[0]?.error ?? "Unknown error";
+          console.error("[BulkSchedule] Failed cases:", failedResults);
+          toast.warning(`Scheduled ${successes}, ${failures} failed`, {
+            description: firstError,
+            duration: 10000,
+          });
         }
       } catch (error) {
         setStep("complete");

@@ -53,22 +53,34 @@ export async function scheduleCallExecution(
     webhookUrl,
   });
 
-  const response = await qstashClient.publishJSON({
-    url: webhookUrl,
-    body: { callId },
-    delay: effectiveDelay, // seconds until execution
-    retries: 0, // No retries - VAPI failures should not trigger duplicate calls
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  try {
+    const response = await qstashClient.publishJSON({
+      url: webhookUrl,
+      body: { callId },
+      delay: effectiveDelay, // seconds until execution
+      retries: 0, // No retries - VAPI failures should not trigger duplicate calls
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-  console.log("[QSTASH_CLIENT] Call scheduled successfully", {
-    callId,
-    messageId: response.messageId,
-  });
+    console.log("[QSTASH_CLIENT] Call scheduled successfully", {
+      callId,
+      messageId: response.messageId,
+      fullResponse: JSON.stringify(response),
+    });
 
-  return response.messageId;
+    return response.messageId;
+  } catch (error) {
+    console.error("[QSTASH_CLIENT] Call scheduling FAILED", {
+      callId,
+      webhookUrl,
+      delay: effectiveDelay,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw error;
+  }
 }
 
 /**
@@ -108,22 +120,34 @@ export async function scheduleEmailExecution(
     webhookUrl,
   });
 
-  const response = await qstashClient.publishJSON({
-    url: webhookUrl,
-    body: { emailId },
-    delay: effectiveDelay, // seconds until execution
-    retries: 0, // No retries - email failures should not trigger duplicate sends
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  try {
+    const response = await qstashClient.publishJSON({
+      url: webhookUrl,
+      body: { emailId },
+      delay: effectiveDelay, // seconds until execution
+      retries: 0, // No retries - email failures should not trigger duplicate sends
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-  console.log("[QSTASH_CLIENT] Email scheduled successfully", {
-    emailId,
-    messageId: response.messageId,
-  });
+    console.log("[QSTASH_CLIENT] Email scheduled successfully", {
+      emailId,
+      messageId: response.messageId,
+      fullResponse: JSON.stringify(response),
+    });
 
-  return response.messageId;
+    return response.messageId;
+  } catch (error) {
+    console.error("[QSTASH_CLIENT] Email scheduling FAILED", {
+      emailId,
+      webhookUrl,
+      delay: effectiveDelay,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw error;
+  }
 }
 
 /**

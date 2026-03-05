@@ -230,6 +230,16 @@ export async function scheduleDischargeCall(
   options: CaseScheduleOptions,
   callExecutor?: ICallExecutor,
 ): Promise<ScheduledDischargeCall> {
+  const scheduleCallStartTime = Date.now();
+  console.log("[CallScheduling] scheduleDischargeCall ENTRY", {
+    caseId,
+    userId,
+    scheduledAt: options.scheduledAt?.toISOString() ?? "not provided",
+    hasAssistantId: !!options.assistantId,
+    hasPhoneNumberId: !!options.phoneNumberId,
+    timestamp: new Date().toISOString(),
+  });
+
   // 1. Fetch Case Data to build variables
   let caseInfo = await getCaseWithEntities(supabase, caseId);
   if (!caseInfo) throw new Error("Case not found");
@@ -345,6 +355,14 @@ export async function scheduleDischargeCall(
 
   if (!entities) throw new Error("Case has no entities");
 
+  console.log("[CallScheduling] Entity extraction complete", {
+    caseId,
+    hasPatient: !!entities.patient,
+    patientName: entities.patient?.name ?? "unknown",
+    hasClinical: !!entities.clinical,
+    elapsedMs: Date.now() - scheduleCallStartTime,
+  });
+
   // 2. Extract AI-extracted variables (species, breed, age, diagnoses, etc.)
   // Dynamic import to avoid lazy-load constraint
   const { extractVapiVariablesFromEntities } =
@@ -411,6 +429,14 @@ export async function scheduleDischargeCall(
     strict: false,
     useDefaults: false,
     aiGeneratedIntelligence: aiIntelligence ?? undefined,
+  });
+
+  console.log("[CallScheduling] Variable building complete", {
+    caseId,
+    variableCount: Object.keys(variablesResult.variables ?? {}).length,
+    hasWarnings:
+      variablesResult.warnings && variablesResult.warnings.length > 0,
+    elapsedMs: Date.now() - scheduleCallStartTime,
   });
 
   // 4. Merge extracted variables with buildDynamicVariables result
@@ -655,12 +681,24 @@ export async function scheduleDischargeCall(
       .single();
 
     if (error || !newCall) {
+      console.error("[CallScheduling] DB insert failed for new call", {
+        caseId,
+        error: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+      });
       throw new Error(
         `Failed to schedule call: ${error?.message ?? "Unknown error"}`,
       );
     }
 
     scheduledCall = newCall as ScheduledDischargeCall;
+    console.log("[CallScheduling] DB insert success for new call", {
+      caseId,
+      callId: scheduledCall.id,
+      scheduledFor: scheduledCall.scheduled_for,
+    });
 
     // 4. Execute immediately in test mode, otherwise trigger QStash for new call
     if (testModeEnabled) {
@@ -743,6 +781,14 @@ export async function scheduleDischargeCall(
       }
     }
   }
+
+  console.log("[CallScheduling] scheduleDischargeCall EXIT — success", {
+    caseId,
+    callId: scheduledCall.id,
+    scheduledFor: scheduledCall.scheduled_for,
+    status: scheduledCall.status,
+    elapsedMs: Date.now() - scheduleCallStartTime,
+  });
 
   return scheduledCall;
 }
