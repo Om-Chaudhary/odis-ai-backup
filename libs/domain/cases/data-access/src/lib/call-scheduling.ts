@@ -93,9 +93,16 @@ function determineScheduledTime(
 ): Date {
   if (optionsScheduledAt) {
     if (optionsScheduledAt <= serverNow) {
-      throw new Error(
-        `Scheduled time must be in the future. Provided: ${optionsScheduledAt.toISOString()}, Server now: ${serverNow.toISOString()}`,
+      const adjusted = new Date(serverNow.getTime() + 30_000);
+      console.warn(
+        "[CallScheduling] Scheduled time was in the past, adjusting forward",
+        {
+          provided: optionsScheduledAt.toISOString(),
+          serverNow: serverNow.toISOString(),
+          adjusted: adjusted.toISOString(),
+        },
       );
+      return adjusted;
     }
     return optionsScheduledAt;
   }

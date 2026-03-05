@@ -350,19 +350,23 @@ function calculateScheduleTimes(
   let callScheduledFor: Date | null = null;
 
   if (timingMode === "immediate") {
+    // Rebase to current time if original base has fallen into the past
+    // (batch processing with AI generation can take minutes)
+    const MIN_FUTURE_BUFFER_MS = 15_000;
+    const effectiveBase = Math.max(
+      immediateBaseTime.getTime(),
+      Date.now() + MIN_FUTURE_BUFFER_MS,
+    );
+
     if (canScheduleEmail) {
-      emailScheduledFor = new Date(
-        immediateBaseTime.getTime() + staggerState.emailOffset,
-      );
+      emailScheduledFor = new Date(effectiveBase + staggerState.emailOffset);
       staggerState.emailOffset += staggerMs;
     }
     if (canSchedulePhone) {
       const baseOffset = canScheduleEmail
         ? staggerState.emailOffset
         : staggerState.callOffset;
-      callScheduledFor = new Date(
-        immediateBaseTime.getTime() + baseOffset + staggerMs,
-      );
+      callScheduledFor = new Date(effectiveBase + baseOffset + staggerMs);
       staggerState.callOffset = canScheduleEmail
         ? staggerState.emailOffset
         : staggerState.callOffset + staggerMs;

@@ -33,26 +33,30 @@ export async function scheduleCallExecution(
   const delay = Math.floor((scheduledFor.getTime() - serverNow) / 1000); // seconds
 
   if (delay < 0) {
-    throw new Error(
-      `Cannot schedule call in the past. Scheduled: ${scheduledFor.toISOString()}, Server now: ${new Date(
-        serverNow,
-      ).toISOString()}`,
+    console.warn(
+      `[QSTASH_CLIENT] Scheduled time was in the past, using delay=0 for immediate execution`,
+      {
+        scheduledFor: scheduledFor.toISOString(),
+        serverNow: new Date(serverNow).toISOString(),
+        originalDelay: delay,
+      },
     );
   }
+  const effectiveDelay = Math.max(0, delay);
 
   const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/execute-call`;
 
   console.log("[QSTASH_CLIENT] Scheduling call execution", {
     callId,
     scheduledFor: scheduledFor.toISOString(),
-    delay,
+    delay: effectiveDelay,
     webhookUrl,
   });
 
   const response = await qstashClient.publishJSON({
     url: webhookUrl,
     body: { callId },
-    delay, // seconds until execution
+    delay: effectiveDelay, // seconds until execution
     retries: 0, // No retries - VAPI failures should not trigger duplicate calls
     headers: {
       "Content-Type": "application/json",
@@ -84,26 +88,30 @@ export async function scheduleEmailExecution(
   const delay = Math.floor((scheduledFor.getTime() - serverNow) / 1000); // seconds
 
   if (delay < 0) {
-    throw new Error(
-      `Cannot schedule email in the past. Scheduled: ${scheduledFor.toISOString()}, Server now: ${new Date(
-        serverNow,
-      ).toISOString()}`,
+    console.warn(
+      `[QSTASH_CLIENT] Scheduled time was in the past, using delay=0 for immediate execution`,
+      {
+        scheduledFor: scheduledFor.toISOString(),
+        serverNow: new Date(serverNow).toISOString(),
+        originalDelay: delay,
+      },
     );
   }
+  const effectiveDelay = Math.max(0, delay);
 
   const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/execute-discharge-email`;
 
   console.log("[QSTASH_CLIENT] Scheduling email delivery", {
     emailId,
     scheduledFor: scheduledFor.toISOString(),
-    delay,
+    delay: effectiveDelay,
     webhookUrl,
   });
 
   const response = await qstashClient.publishJSON({
     url: webhookUrl,
     body: { emailId },
-    delay, // seconds until execution
+    delay: effectiveDelay, // seconds until execution
     retries: 0, // No retries - email failures should not trigger duplicate sends
     headers: {
       "Content-Type": "application/json",
