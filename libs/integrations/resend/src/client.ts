@@ -54,7 +54,7 @@ export async function sendDischargeEmail({
   try {
     const resend = await getResendClient();
     const response = await resend.emails.send({
-      from: "OdisAI <noreply@odisai.net>",
+      from: "OdisAI <noreply@odisai.co>",
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
@@ -128,7 +128,7 @@ export async function sendInvitationEmail({
 
     const resend = await getResendClient();
     const response = await resend.emails.send({
-      from: "OdisAI <noreply@odisai.net>",
+      from: "OdisAI <noreply@odisai.co>",
       to: [to],
       subject: `You've been invited to join ${clinicName} on OdisAI`,
       html,

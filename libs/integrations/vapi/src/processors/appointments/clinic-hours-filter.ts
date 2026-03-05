@@ -38,10 +38,10 @@ const CLINIC_HOURS_CONFIG: Record<string, ClinicHoursConfig> = {
   // Masson Veterinary Hospital
   "efcc1733-7a7b-4eab-8104-a6f49defd7a6": {
     slotIntervalMinutes: 30, // Only :00 and :30 slots
-    defaultHours: { open: "08:00", close: "18:00" }, // Mon-Fri
+    defaultHours: { open: "09:00", close: "18:00" }, // Mon-Fri
     dayOverrides: {
       0: null, // Sunday: CLOSED
-      6: { open: "08:00", close: "17:00" }, // Saturday: 8am-5pm
+      6: { open: "09:00", close: "17:00" }, // Saturday: 9am-5pm
     },
     lunchBreak: { start: "12:00", end: "14:00" },
   },
@@ -97,9 +97,7 @@ export function applyClinicHoursFilter(
     const reason = getFilterReason(slot.slot_start, timezone, config);
     if (reason) {
       filteredCount++;
-      console.log(
-        `${LOG_PREFIX} Slot ${slot.slot_start} BLOCKED: ${reason}`,
-      );
+      console.log(`${LOG_PREFIX} Slot ${slot.slot_start} BLOCKED: ${reason}`);
       return {
         ...slot,
         is_blocked: true,
