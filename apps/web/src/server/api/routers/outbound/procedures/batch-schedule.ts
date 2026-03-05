@@ -472,7 +472,41 @@ export const batchScheduleRouter = createTRPCRouter({
         clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
       }
 
-      const config = buildSchedulingConfig(userSettings, clinic);
+      // When an admin schedules on behalf of a clinic (via clinicSlug),
+      // the admin's userId may not exist in auth.users (Clerk-only user).
+      // Use a valid clinic user ID for DB record ownership (FK constraints
+      // on scheduled_discharge_calls/emails reference auth.users).
+      let effectiveUserId = userId;
+      if (
+        input.clinicSlug &&
+        clinicUserIds.length > 0 &&
+        !clinicUserIds.includes(userId)
+      ) {
+        effectiveUserId = clinicUserIds[0]!;
+        console.log(
+          "[BatchSchedule] Admin scheduling for clinic — using clinic user ID for DB records",
+          {
+            adminUserId: userId,
+            effectiveUserId,
+            clinicSlug: input.clinicSlug,
+          },
+        );
+      }
+
+      // If admin user settings weren't found, fetch from the effective user
+      let effectiveUserSettings = userSettings;
+      if (!userSettings && effectiveUserId !== userId) {
+        const { data: clinicUserSettings } = await ctx.supabase
+          .from("users")
+          .select(
+            "email_delay_days, call_delay_days, preferred_email_start_time, preferred_call_start_time, test_mode_enabled, test_contact_email, test_contact_phone, test_contact_name, first_name, clinic_name, clinic_phone",
+          )
+          .eq("id", effectiveUserId)
+          .single();
+        effectiveUserSettings = clinicUserSettings;
+      }
+
+      const config = buildSchedulingConfig(effectiveUserSettings, clinic);
 
       // Get VAPI config from resolved clinic (ensures correct phone number for admin users)
       const vapiConfig = clinic?.name
@@ -674,7 +708,7 @@ export const batchScheduleRouter = createTRPCRouter({
             processSingleCase({
               caseId,
               caseInfo,
-              userId,
+              userId: effectiveUserId,
               config,
               clinic,
               input,
