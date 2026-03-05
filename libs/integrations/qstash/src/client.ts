@@ -5,13 +5,15 @@ import { Client } from "@upstash/qstash";
  * Only use this on the server side
  */
 function getQStashClient() {
-  const token = process.env.QSTASH_TOKEN;
+  const token = process.env.QSTASH_TOKEN?.trim();
 
   if (!token) {
     throw new Error("QSTASH_TOKEN is not defined in environment variables");
   }
 
-  return new Client({ token });
+  const baseUrl = process.env.QSTASH_URL?.trim() ?? undefined;
+
+  return new Client({ token, baseUrl });
 }
 
 export const qstashClient = getQStashClient();
