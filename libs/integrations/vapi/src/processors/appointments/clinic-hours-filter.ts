@@ -52,10 +52,10 @@ const CLINIC_HOURS_CONFIG: Record<string, ClinicHoursConfig> = {
   // Masson Veterinary Hospital
   "efcc1733-7a7b-4eab-8104-a6f49defd7a6": {
     slotIntervalMinutes: 30, // Only :00 and :30 slots
-    defaultHours: { open: "09:00", close: "18:00" }, // Mon-Fri 9am-6pm
+    defaultHours: { open: "08:00", close: "18:00" }, // Mon-Fri 8am-6pm
     dayOverrides: {
       0: null, // Sunday: CLOSED
-      6: { open: "09:00", close: "18:00" }, // Saturday: 9am-6pm
+      6: { open: "08:00", close: "17:00" }, // Saturday: 8am-5pm
     },
     appointmentBlocks: {
       // Mon-Fri: Exam Room 1 — 9am-10:30am, 2pm-4:30pm
