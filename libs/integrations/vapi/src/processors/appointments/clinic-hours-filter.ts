@@ -19,6 +19,11 @@ interface DayHours {
   close: string; // "HH:MM" 24h
 }
 
+interface TimeBlock {
+  start: string; // "HH:MM" 24h — first valid slot start
+  end: string; // "HH:MM" 24h — no slots start at or after this time
+}
+
 interface ClinicHoursConfig {
   /** Only allow slots on these minute marks (e.g. 30 → :00 and :30 only) */
   slotIntervalMinutes?: number;
@@ -28,6 +33,15 @@ interface ClinicHoursConfig {
   dayOverrides?: Record<number, DayHours | null>;
   /** Lunch break — slots during this window are blocked */
   lunchBreak?: { start: string; end: string };
+  /**
+   * Specific appointment windows. When set, slots are ONLY allowed within
+   * these time blocks (replaces open/close + lunchBreak filtering).
+   * Closed-day overrides and slot alignment still apply.
+   */
+  appointmentBlocks?: {
+    default: TimeBlock[];
+    dayOverrides?: Record<number, TimeBlock[]>;
+  };
 }
 
 /**
@@ -38,12 +52,25 @@ const CLINIC_HOURS_CONFIG: Record<string, ClinicHoursConfig> = {
   // Masson Veterinary Hospital
   "efcc1733-7a7b-4eab-8104-a6f49defd7a6": {
     slotIntervalMinutes: 30, // Only :00 and :30 slots
-    defaultHours: { open: "09:00", close: "18:00" }, // Mon-Fri
+    defaultHours: { open: "09:00", close: "18:00" }, // Mon-Fri 9am-6pm
     dayOverrides: {
       0: null, // Sunday: CLOSED
-      6: { open: "09:00", close: "17:00" }, // Saturday: 9am-5pm
+      6: { open: "09:00", close: "18:00" }, // Saturday: 9am-6pm
     },
-    lunchBreak: { start: "12:00", end: "14:00" },
+    appointmentBlocks: {
+      // Mon-Fri: Exam Room 1 — 9am-10:30am, 2pm-4:30pm
+      default: [
+        { start: "09:00", end: "10:30" },
+        { start: "14:00", end: "16:30" },
+      ],
+      dayOverrides: {
+        // Saturday: 9am-12pm, 2pm-3:30pm
+        6: [
+          { start: "09:00", end: "12:00" },
+          { start: "14:00", end: "15:30" },
+        ],
+      },
+    },
   },
 
   // Alum Rock Animal Hospital
@@ -146,7 +173,21 @@ function getFilterReason(
     }
   }
 
-  // 3. Get effective hours for this day
+  // 3. If appointmentBlocks defined, use block-based filtering (replaces open/close + lunch)
+  if (config.appointmentBlocks) {
+    const blocks = getAppointmentBlocks(dayOfWeek, config.appointmentBlocks);
+    const inBlock = blocks.some((block) => {
+      const blockStart = parseTimeToMinutes(block.start);
+      const blockEnd = parseTimeToMinutes(block.end);
+      return slotMinutes >= blockStart && slotMinutes < blockEnd;
+    });
+    if (!inBlock) {
+      return `outside appointment blocks (${formatMinutes(slotMinutes)})`;
+    }
+    return null;
+  }
+
+  // 4. Fallback: open/close + lunch filtering
   const dayHours = getDayHours(dayOfWeek, config);
   if (!dayHours) {
     return `no hours configured (day=${dayOfWeek})`;
@@ -155,7 +196,6 @@ function getFilterReason(
   const openMinutes = parseTimeToMinutes(dayHours.open);
   const closeMinutes = parseTimeToMinutes(dayHours.close);
 
-  // 4. Check open/close bounds
   if (slotMinutes < openMinutes) {
     return `before open (${formatMinutes(slotMinutes)} < ${dayHours.open})`;
   }
@@ -163,7 +203,6 @@ function getFilterReason(
     return `at or after close (${formatMinutes(slotMinutes)} >= ${dayHours.close})`;
   }
 
-  // 5. Check lunch break
   if (config.lunchBreak) {
     const lunchStart = parseTimeToMinutes(config.lunchBreak.start);
     const lunchEnd = parseTimeToMinutes(config.lunchBreak.end);
@@ -173,6 +212,19 @@ function getFilterReason(
   }
 
   return null;
+}
+
+/**
+ * Get appointment blocks for a day, considering per-day overrides.
+ */
+function getAppointmentBlocks(
+  dayOfWeek: number,
+  blocks: NonNullable<ClinicHoursConfig["appointmentBlocks"]>,
+): TimeBlock[] {
+  if (blocks.dayOverrides && dayOfWeek in blocks.dayOverrides) {
+    return blocks.dayOverrides[dayOfWeek] ?? blocks.default;
+  }
+  return blocks.default;
 }
 
 /**
