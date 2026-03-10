@@ -31,7 +31,7 @@ export function ClerkProvider({ children }: ClerkProviderProps) {
       appearance={clerkAppearance}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/dashboard"
+      signInFallbackRedirectUrl="/onboarding"
       signUpFallbackRedirectUrl="/onboarding"
       afterSignOutUrl="/"
     >
