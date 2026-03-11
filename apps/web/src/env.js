@@ -48,11 +48,11 @@ export const env = createEnv({
     // =========================================================================
     // VAPI (Voice AI Platform)
     // =========================================================================
-    VAPI_PRIVATE_KEY: z.string().min(1),
-    VAPI_ASSISTANT_ID: z.string().optional(),
-    VAPI_PHONE_NUMBER_ID: z.string().optional(),
-    VAPI_WEBHOOK_SECRET: z.string().min(1),
-    VAPI_DEFAULT_INBOUND_ASSISTANT_ID: z.string().optional(),
+    VAPI_PRIVATE_KEY: z.string().trim().min(1),
+    VAPI_ASSISTANT_ID: z.string().trim().optional(),
+    VAPI_PHONE_NUMBER_ID: z.string().trim().optional(),
+    VAPI_WEBHOOK_SECRET: z.string().trim().min(1),
+    VAPI_DEFAULT_INBOUND_ASSISTANT_ID: z.string().trim().optional(),
 
     // =========================================================================
     // QSTASH (Upstash Message Queue)

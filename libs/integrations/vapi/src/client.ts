@@ -261,11 +261,11 @@ export async function createPhoneCall(
   // The assistantOverrides can include voicemailDetection which the SDK accepts
   // but TypeScript may not fully recognize all valid override options
   const callPayload = {
-    phoneNumberId: params.phoneNumberId,
+    phoneNumberId: params.phoneNumberId.trim(),
     customer: {
       number: params.phoneNumber,
     },
-    assistantId: params.assistantId,
+    assistantId: params.assistantId.trim(),
     // Cast to allow voicemailDetection and voicemailMessage in overrides
     // These are valid VAPI API properties as per docs.vapi.ai/calls/voicemail-detection
     assistantOverrides: params.assistantOverrides as Record<string, unknown>,

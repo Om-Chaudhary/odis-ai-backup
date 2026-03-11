@@ -31,11 +31,11 @@ export const env = createEnv({
     // AI Configuration
     ANTHROPIC_API_KEY: z.string().optional(),
     // VAPI Configuration
-    VAPI_PRIVATE_KEY: z.string().optional(),
-    VAPI_ASSISTANT_ID: z.string().optional(),
-    VAPI_PHONE_NUMBER_ID: z.string().optional(),
-    VAPI_WEBHOOK_SECRET: z.string().optional(),
-    VAPI_DEFAULT_INBOUND_ASSISTANT_ID: z.string().optional(),
+    VAPI_PRIVATE_KEY: z.string().trim().optional(),
+    VAPI_ASSISTANT_ID: z.string().trim().optional(),
+    VAPI_PHONE_NUMBER_ID: z.string().trim().optional(),
+    VAPI_WEBHOOK_SECRET: z.string().trim().optional(),
+    VAPI_DEFAULT_INBOUND_ASSISTANT_ID: z.string().trim().optional(),
     // Email Configuration
     RESEND_API_KEY: z.string().min(1),
     // IDEXX Credential Encryption

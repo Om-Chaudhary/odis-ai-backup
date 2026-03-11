@@ -197,8 +197,8 @@ function buildUpdateData(
     currentStatus && activeStatuses.includes(currentStatus);
 
   return {
-    assistant_id: assistantId ?? "",
-    outbound_phone_number_id: phoneNumberId ?? "",
+    assistant_id: assistantId ?? null,
+    outbound_phone_number_id: phoneNumberId ?? null,
     customer_phone: customerPhone,
     user_id: userId,
     scheduled_for: scheduledAt.toISOString(),
@@ -678,8 +678,8 @@ export async function scheduleDischargeCall(
       const scheduledCallInsert: ScheduledCallInsert = {
         user_id: userId,
         case_id: caseId,
-        assistant_id: assistantId ?? "",
-        outbound_phone_number_id: phoneNumberId ?? "",
+        assistant_id: assistantId ?? null,
+        outbound_phone_number_id: phoneNumberId ?? null,
         customer_phone: customerPhone,
         scheduled_for: scheduledAt.toISOString(),
         status: "queued" as const,

@@ -86,28 +86,56 @@ export async function executeScheduledCall(
   const customerPhone = call.customer_phone;
 
   if (!assistantId) {
+    const errorMsg = "Missing assistant_id configuration";
     console.error("[CALL_EXECUTOR] Missing assistant_id", { callId });
-    return {
-      success: false,
-      callId,
-      error: "Missing assistant_id configuration",
-    };
+    await supabase
+      .from("scheduled_discharge_calls")
+      .update({
+        status: "failed",
+        metadata: {
+          ...metadata,
+          error: errorMsg,
+          failed_at: new Date().toISOString(),
+        },
+      })
+      .eq("id", callId);
+    return { success: false, callId, error: errorMsg };
   }
 
   if (!phoneNumberId) {
+    const errorMsg = "Missing outbound_phone_number_id configuration";
     console.error("[CALL_EXECUTOR] Missing outbound_phone_number_id", {
       callId,
     });
-    return {
-      success: false,
-      callId,
-      error: "Missing outbound_phone_number_id configuration",
-    };
+    await supabase
+      .from("scheduled_discharge_calls")
+      .update({
+        status: "failed",
+        metadata: {
+          ...metadata,
+          error: errorMsg,
+          failed_at: new Date().toISOString(),
+        },
+      })
+      .eq("id", callId);
+    return { success: false, callId, error: errorMsg };
   }
 
   if (!customerPhone) {
+    const errorMsg = "Missing customer phone number";
     console.error("[CALL_EXECUTOR] Missing customer_phone", { callId });
-    return { success: false, callId, error: "Missing customer phone number" };
+    await supabase
+      .from("scheduled_discharge_calls")
+      .update({
+        status: "failed",
+        metadata: {
+          ...metadata,
+          error: errorMsg,
+          failed_at: new Date().toISOString(),
+        },
+      })
+      .eq("id", callId);
+    return { success: false, callId, error: errorMsg };
   }
 
   // 5. Enrich variables with fresh case data AND check for blocked cases

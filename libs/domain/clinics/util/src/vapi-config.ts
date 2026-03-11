@@ -113,7 +113,7 @@ export async function getClinicVapiConfig(
   const envFallback: ClinicVapiConfig = {
     outboundAssistantId: sharedAssistantId,
     inboundAssistantId: sharedAssistantId,
-    phoneNumberId: env.VAPI_PHONE_NUMBER_ID ?? null,
+    phoneNumberId: env.VAPI_PHONE_NUMBER_ID?.trim() ?? null,
     clinicName: null,
     source: "env_fallback",
   };
@@ -159,7 +159,9 @@ export async function getClinicVapiConfig(
     inboundAssistantId: clinic.inbound_assistant_id ?? sharedAssistantId,
     // Phone number ID is per-clinic (different SIP trunks)
     phoneNumberId:
-      clinic.outbound_phone_number_id ?? env.VAPI_PHONE_NUMBER_ID ?? null,
+      clinic.outbound_phone_number_id?.trim() ??
+      env.VAPI_PHONE_NUMBER_ID?.trim() ??
+      null,
     clinicName: clinic.name,
     source: "clinic",
   };
@@ -192,7 +194,7 @@ export async function getClinicVapiConfigByUserId(
   const envFallback: ClinicVapiConfig = {
     outboundAssistantId: sharedAssistantId,
     inboundAssistantId: sharedAssistantId,
-    phoneNumberId: env.VAPI_PHONE_NUMBER_ID ?? null,
+    phoneNumberId: env.VAPI_PHONE_NUMBER_ID?.trim() ?? null,
     clinicName: null,
     source: "env_fallback",
   };
@@ -241,7 +243,9 @@ export async function getClinicVapiConfigByUserId(
     inboundAssistantId: clinic.inbound_assistant_id ?? sharedAssistantId,
     // Phone number ID is per-clinic (different SIP trunks)
     phoneNumberId:
-      clinic.outbound_phone_number_id ?? env.VAPI_PHONE_NUMBER_ID ?? null,
+      clinic.outbound_phone_number_id?.trim() ??
+      env.VAPI_PHONE_NUMBER_ID?.trim() ??
+      null,
     clinicName: clinic.name,
     source: "clinic",
   };
