@@ -237,8 +237,10 @@ export async function cleanTranscript(
     };
   }
 
-  // For very short transcripts, return as-is
-  if (transcript.trim().length < 20) {
+  // For very short transcripts, return as-is.
+  // Short transcripts (e.g. from 3-second calls where the customer hung up)
+  // are prone to hallucinated completions by the LLM.
+  if (transcript.trim().length < 100) {
     return {
       cleanedTranscript: transcript,
       wasModified: false,
