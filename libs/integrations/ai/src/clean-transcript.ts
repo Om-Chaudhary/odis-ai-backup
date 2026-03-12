@@ -1,8 +1,12 @@
 /**
  * AI Transcript Cleanup
  *
- * Uses a small LLM to clean up speech-to-text transcription errors
- * with veterinary domain knowledge and optional clinic-specific context.
+ * Uses a small LLM to fix speech-to-text transcription errors
+ * with veterinary domain knowledge and call-specific context.
+ *
+ * IMPORTANT: This is a CORRECTION-ONLY tool. It fixes mishearings
+ * and misspellings but does NOT remove, rephrase, or add content.
+ * The cleaned transcript must be faithful to what was actually said.
  */
 
 import { Anthropic } from "@llamaindex/anthropic";
@@ -14,38 +18,16 @@ import {
 } from "./llamaindex/utils";
 
 /**
- * Common transcription error patterns in veterinary context
- * These serve as examples for the LLM to learn the pattern
- * Optimized for Vapi/Deepgram transcription output
+ * Phonetic correction patterns for Vapi/Deepgram transcription
  */
-const COMMON_CORRECTIONS = `
-## Vapi/Deepgram Transcription Errors
+const TRANSCRIPTION_CORRECTIONS = `
+## Vapi/Deepgram Transcription Error Patterns
 
-### Phonetic Mishearings
-- "odis" or "oh dis" → "ODIS" (our company name)
-- "vee eye pee" or "v i p" → "V.I.P."
-- "alam rock" / "alumrock" / "allamrock" → "Alum Rock" (hospital name)
+### Phonetic Mishearings (Proper Nouns)
+- "alam rock" / "alumrock" / "allamrock" → "Alum Rock"
 - "dogtor" → "doctor"
 
-### Filler Words & Speech Disfluencies (REMOVE)
-- "um", "uh", "er", "ah" → remove
-- "like" (when used as filler, not comparison) → remove
-- "you know", "I mean", "so basically" → remove when meaningless
-- "gonna" → "going to"
-- "wanna" → "want to"
-- "kinda" → "kind of"
-- "gotta" → "got to"
-- "sorta" → "sort of"
-- "lemme" → "let me"
-- "gimme" → "give me"
-
-### Repetitions & False Starts
-- "I I want" → "I want"
-- "Can you-- Can you help" → "Can you help"
-- "We we we have" → "We have"
-- "The the appointment" → "The appointment"
-
-### Veterinary Medical Terms (Correct Spellings)
+### Veterinary Medical Terms
 - "sub q" / "sub Q taneous" / "subq" → "subcutaneous"
 - "intra muscular" / "I M" → "intramuscular"
 - "I V" / "eye vee" → "IV" (intravenous)
@@ -56,7 +38,6 @@ const COMMON_CORRECTIONS = `
 - "rabies" not "rabees"
 - "bordatella" / "bordetela" → "Bordetella"
 - "heart worm" → "heartworm"
-- "flea tick" → "flea and tick"
 
 ### Common Medication Names
 - "metronidazole" not "metro nida zole"
@@ -67,101 +48,78 @@ const COMMON_CORRECTIONS = `
 - "trazodone" not "trazo done"
 - "cerenia" not "sa renia" or "serenia"
 
-### Pet Breed Corrections
-- "golden lab" → "Golden Labrador" or "Golden Retriever" (use context)
-- "lab" → "Labrador" (when clearly referring to breed)
-- "pit" / "pitt" → "Pit Bull" or "Pitbull"
+### Pet Breed Names
 - "shih tzu" not "shitzu" or "shits oo"
 - "chihuahua" not "chi wawa"
 - "dachshund" not "dash hound" or "dock sind"
 - "rottweiler" not "rot wiler"
 - "german shepherd" not "german shepard"
 
-### Number/Phone Formatting
-- "one two three four" in phone context → format as phone number when obvious
-- Preserve spoken numbers naturally otherwise
-
-### Speaker Diarization Artifacts
-- "[inaudible]" → keep as-is (indicates unclear audio)
-- "[crosstalk]" → keep as-is (indicates overlapping speech)
-- Remove isolated single-word fragments that don't contribute meaning
-
-### Agent Mistakes & Corrections (CRITICAL - REMOVE THESE)
-- If AI provides wrong information then corrects itself, keep ONLY the correction
-  Example: "AI: The appointment is on Monday. Actually, I apologize, it's on Tuesday."
-  → "AI: The appointment is on Tuesday."
-- Remove ALL AI apologies and self-corrections ("I apologize", "Let me correct that", "Sorry, I meant", "My mistake")
-- Remove technical issues/system hiccups ("Can you hear me?", "Sorry, I lost you there", "Are you still there?")
-- Remove uncertain AI statements later clarified ("I think...", "I'm not sure, but...", "Let me see...")
-- If AI asks the same question twice, keep only the first instance
-- Remove AI acknowledgments of confusion ("I didn't catch that", "Could you repeat?", "What was that?")
-- Remove any "hold on" or "one moment" - present information as if immediately available
-
-### Professional Polish (Make AI Sound Expert)
-- Remove AI hesitations: "let me see", "one moment", "hold on", "give me a second"
-- Remove meta-commentary: "Let me check that", "I'm looking at your record", "Let me pull that up"
-- Remove qualifying language from AI: "I believe", "I think", "probably", "maybe"
-- If AI repeats information, consolidate to single clear statement
-- Remove indicators AI had to "figure something out" - present info confidently and directly
-- Transform uncertain language to confident: "I think it's Tuesday" → "It's Tuesday"
-
-### Conversation Flow Improvements
-- If AI asks same question multiple times due to misunderstanding, keep only final successful exchange
-- Remove false starts where AI begins sentence then restarts differently
-- Remove redundant acknowledgments ("Okay", "Alright", "Sure" used excessively)
-- Consolidate multiple attempts to explain same thing into clearest single version
+### Word Repetitions (Transcription Artifacts)
+- "I I want" → "I want"
+- "We we we have" → "We have"
+- "The the appointment" → "The appointment"
 `;
 
-const SYSTEM_PROMPT = `You are an expert transcript editor specializing in veterinary clinic phone calls transcribed by Vapi/Deepgram. Your task is to clean up speech-to-text transcription errors AND remove any agent mistakes or hiccups to make the transcript look spotless and professional for veterinarians to review.
+const SYSTEM_PROMPT = `You are a transcript corrector for veterinary clinic phone calls transcribed by Vapi/Deepgram. Your ONLY job is to fix speech-to-text transcription errors (mishearings, misspellings, word-split artifacts).
 
-${COMMON_CORRECTIONS}
+${TRANSCRIPTION_CORRECTIONS}
 
-## Editing Guidelines
+## Rules
 
-### DO:
-1. Fix phonetic mishearings and misspellings (especially proper nouns, medical terms, medications)
-2. Remove excessive filler words (um, uh, like, you know) that add no meaning
-3. Fix word repetitions and false starts ("I I want" → "I want")
-4. Correct veterinary terminology to proper medical spellings
-5. Preserve speaker labels EXACTLY as provided (AI:, User:, Assistant:, etc.)
-6. Maintain natural conversational tone - keep appropriate contractions ("I'm", "don't", "can't")
-7. Keep "[inaudible]" and "[crosstalk]" markers as-is
-8. If a clinic name is provided, correct any phonetic misspellings of that name
-9. Preserve the COMPLETE transcript - every meaningful exchange
-10. Remove AI mistakes, self-corrections, and uncertainties to present professional, confident communication
-11. If AI said something wrong then corrected it, show ONLY the correct information
+### ONLY fix these types of errors:
+1. Phonetic mishearings — words the transcriber heard wrong (e.g. "alam rock" → "Alum Rock")
+2. Medical term misspellings — veterinary terms the transcriber split or mangled
+3. Proper noun misspellings — clinic names, pet names, medication names the transcriber got wrong
+4. Word-split artifacts — single words the transcriber split into multiple (e.g. "gaba pentin" → "gabapentin")
+5. Obvious word repetitions from transcription glitches (e.g. "I I want" → "I want")
 
-### DO NOT:
-1. Change the meaning or intent of what was said
-2. Add information that wasn't in the original
-3. Summarize or shorten the conversation
-4. Remove meaningful pauses indicated by "..." 
-5. Change speaker attribution
-6. Over-correct casual speech that's grammatically correct
-7. Remove emotional expressions or emphasis ("Oh!", "Wow", "Great!") unless they're part of an error/correction
-
-### What to KEEP
-- Natural empathetic responses ("I'm sorry to hear that", "I understand your concern")
-- Appropriate thank yous and acknowledgments that show attentiveness
-- Clarifying questions that were part of proper conversation flow
-- Context that aids understanding (only remove actual mistakes, not helpful context)
+### NEVER do any of the following:
+1. Add words, phrases, or sentences that were not in the original
+2. Remove words, phrases, or sentences that were in the original
+3. Complete truncated or cut-off sentences
+4. Rephrase or reword anything
+5. Remove filler words (um, uh, like, you know) — these were actually spoken
+6. Remove hesitations, pauses, or self-corrections — these were actually spoken
+7. Change informal speech to formal (keep "gonna", "wanna", "kinda" etc.)
+8. Summarize or shorten any part of the conversation
+9. Change speaker attribution
 
 ### Output Format
-Output ONLY the cleaned transcript text. No explanations, headers, or JSON wrapping.
-Each speaker turn should start on a new line with the speaker label (e.g., "AI:", "User:").
-The transcript should read as if the AI agent was completely professional and error-free from the start.`;
+Output ONLY the corrected transcript. No explanations or commentary.
+Preserve speaker labels exactly as provided (AI:, User:, Assistant:, etc.).
+The output must contain the same number of speaker turns as the input.`;
 
 function createUserPrompt(
   transcript: string,
   clinicName?: string | null,
+  callContext?: CallContext | null,
 ): string {
-  let prompt = "";
+  const contextLines: string[] = [];
 
   if (clinicName) {
-    prompt += `Clinic Context: This call is for "${clinicName}". Correct any misspellings of this clinic name.\n\n`;
+    contextLines.push(`Clinic name (correct spelling): "${clinicName}"`);
+  }
+  if (callContext?.petName) {
+    contextLines.push(`Pet name (correct spelling): "${callContext.petName}"`);
+  }
+  if (callContext?.ownerName) {
+    contextLines.push(
+      `Owner name (correct spelling): "${callContext.ownerName}"`,
+    );
+  }
+  if (callContext?.agentName) {
+    contextLines.push(
+      `Agent name (correct spelling): "${callContext.agentName}"`,
+    );
   }
 
-  prompt += `Clean up this transcript:\n\n${transcript}`;
+  let prompt = "";
+  if (contextLines.length > 0) {
+    prompt += `Known names (use these exact spellings when the transcriber mishears them):\n${contextLines.join("\n")}\n\n`;
+  }
+
+  prompt += `Fix only transcription errors in this transcript:\n\n${transcript}`;
 
   return prompt;
 }
@@ -180,9 +138,21 @@ function getCleanupLLM() {
   return new Anthropic({
     apiKey: env.ANTHROPIC_API_KEY,
     model: "claude-haiku-4-5-20251001",
-    temperature: 0.1, // Low temperature for consistent corrections
-    maxTokens: 8192, // Allow for long transcripts
+    temperature: 0, // Zero temperature for maximum faithfulness
+    maxTokens: 8192,
   });
+}
+
+/**
+ * Call-specific context for more accurate corrections
+ */
+export interface CallContext {
+  /** Pet name from the call's dynamic variables */
+  petName?: string | null;
+  /** Owner name from the call's dynamic variables */
+  ownerName?: string | null;
+  /** AI agent name used in the call */
+  agentName?: string | null;
 }
 
 export interface CleanTranscriptInput {
@@ -190,6 +160,8 @@ export interface CleanTranscriptInput {
   transcript: string;
   /** Optional clinic name for context-aware corrections */
   clinicName?: string | null;
+  /** Optional call-specific context (pet name, owner name, etc.) */
+  callContext?: CallContext | null;
   /** Optional additional terms that should be preserved/corrected */
   knowledgeBase?: {
     /** Hospital/clinic names that might be misspelled */
@@ -213,6 +185,10 @@ export interface CleanTranscriptOutput {
 /**
  * Clean up a transcript using AI to fix transcription errors
  *
+ * This is a CORRECTION-ONLY tool. It fixes mishearings and misspellings
+ * but does NOT remove, rephrase, or add content. The cleaned transcript
+ * will be faithful to what was actually said.
+ *
  * @param input - The transcript and optional context
  * @returns Cleaned transcript
  *
@@ -221,6 +197,7 @@ export interface CleanTranscriptOutput {
  * const result = await cleanTranscript({
  *   transcript: "AI: Thank you for calling Alam rock animal hospital...",
  *   clinicName: "Alum Rock Animal Hospital",
+ *   callContext: { petName: "Bella", ownerName: "John Smith" },
  * });
  * // result.cleanedTranscript: "AI: Thank you for calling Alum Rock Animal Hospital..."
  * ```
@@ -228,7 +205,7 @@ export interface CleanTranscriptOutput {
 export async function cleanTranscript(
   input: CleanTranscriptInput,
 ): Promise<CleanTranscriptOutput> {
-  const { transcript, clinicName, knowledgeBase } = input;
+  const { transcript, clinicName, callContext, knowledgeBase } = input;
 
   if (!transcript || transcript.trim().length === 0) {
     return {
@@ -253,6 +230,7 @@ export async function cleanTranscript(
     console.log("[CLEAN_TRANSCRIPT_AI] Processing transcript", {
       transcriptLength: transcript.length,
       hasClinicName: !!clinicName,
+      hasCallContext: !!callContext,
       hasKnowledgeBase: !!knowledgeBase,
     });
 
@@ -293,7 +271,7 @@ export async function cleanTranscript(
       },
       {
         role: "user",
-        content: createUserPrompt(transcript, clinicName),
+        content: createUserPrompt(transcript, clinicName, callContext),
       },
     ];
 

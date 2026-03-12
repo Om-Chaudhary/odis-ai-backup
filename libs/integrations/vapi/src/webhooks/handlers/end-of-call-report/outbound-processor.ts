@@ -78,9 +78,20 @@ export async function handleOutboundCallEnd(
   const structuredOutputs =
     parseAllStructuredOutputs(artifact.structuredOutputs) ?? {};
 
-  // Get clinic name and transcript for cleaning
+  // Get clinic name, transcript, and call context for cleaning
   const clinicName = (metadata.clinic_name as string) ?? null;
   const transcript = call.transcript ?? null;
+  // Extract call context from artifact variable values (VAPI resolves these at call time)
+  const artifactVars =
+    ((artifact as Record<string, unknown>).variableValues as Record<
+      string,
+      unknown
+    >) ?? {};
+  const callContext = {
+    petName: (artifactVars.pet_name as string) ?? null,
+    ownerName: (artifactVars.owner_name as string) ?? null,
+    agentName: (artifactVars.agent_name as string) ?? null,
+  };
 
   // Build update data
   const updateData = buildOutboundUpdateData(
@@ -136,7 +147,13 @@ export async function handleOutboundCallEnd(
   }
 
   // Clean transcript in background (fire-and-forget)
-  cleanOutboundTranscript(transcript, clinicName, call.id, supabase);
+  cleanOutboundTranscript(
+    transcript,
+    clinicName,
+    callContext,
+    call.id,
+    supabase,
+  );
 }
 
 /**

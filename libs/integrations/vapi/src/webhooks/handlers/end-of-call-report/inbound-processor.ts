@@ -154,7 +154,18 @@ export async function handleInboundCallEnd(
   }
 
   // Trigger background jobs (fire-and-forget)
-  cleanInboundTranscript(callData.transcript, clinicName, call.id, supabase);
+  const inboundCallContext = {
+    petName: extractedCallerData.petName ?? null,
+    ownerName: extractedCallerData.callerName ?? null,
+    agentName: null,
+  };
+  cleanInboundTranscript(
+    callData.transcript,
+    clinicName,
+    inboundCallContext,
+    call.id,
+    supabase,
+  );
   extractAppointmentDateFromTranscript(call.id, callData.transcript, supabase);
   notifyAppointmentBooked(call.id, call.assistantId, supabase);
 }

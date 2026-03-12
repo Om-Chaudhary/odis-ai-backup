@@ -10,6 +10,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { loggers } from "@odis-ai/shared/logger";
+import type { CallContext } from "@odis-ai/integrations/ai";
 import { cleanTranscript } from "@odis-ai/integrations/ai";
 
 const logger = loggers.webhook.child("transcript-cleaner");
@@ -22,6 +23,8 @@ export interface TranscriptCleanerOptions {
   transcript: string | null | undefined;
   /** Clinic name for context */
   clinicName: string | null | undefined;
+  /** Call-specific context (pet name, owner name, agent name) */
+  callContext?: CallContext | null;
   /** VAPI call ID */
   callId: string;
   /** Database table name (inbound_vapi_calls or scheduled_discharge_calls) */
@@ -42,7 +45,8 @@ export interface TranscriptCleanerOptions {
 export function cleanTranscriptInBackground(
   options: TranscriptCleanerOptions,
 ): void {
-  const { transcript, clinicName, callId, tableName, supabase } = options;
+  const { transcript, clinicName, callContext, callId, tableName, supabase } =
+    options;
 
   if (!transcript || transcript.trim().length === 0) {
     return;
@@ -54,6 +58,7 @@ export function cleanTranscriptInBackground(
       const result = await cleanTranscript({
         transcript,
         clinicName,
+        callContext,
       });
 
       if (result.wasModified) {
@@ -96,18 +101,21 @@ export function cleanTranscriptInBackground(
  *
  * @param transcript - Raw transcript
  * @param clinicName - Clinic name for context
+ * @param callContext - Call-specific context (pet name, owner name, etc.)
  * @param callId - VAPI call ID
  * @param supabase - Supabase client
  */
 export function cleanOutboundTranscript(
   transcript: string | null | undefined,
   clinicName: string | null | undefined,
+  callContext: CallContext | null | undefined,
   callId: string,
   supabase: SupabaseClient,
 ): void {
   cleanTranscriptInBackground({
     transcript,
     clinicName,
+    callContext,
     callId,
     tableName: "scheduled_discharge_calls",
     supabase,
@@ -121,18 +129,21 @@ export function cleanOutboundTranscript(
  *
  * @param transcript - Raw transcript
  * @param clinicName - Clinic name for context
+ * @param callContext - Call-specific context (pet name, owner name, etc.)
  * @param callId - VAPI call ID
  * @param supabase - Supabase client
  */
 export function cleanInboundTranscript(
   transcript: string | null | undefined,
   clinicName: string | null | undefined,
+  callContext: CallContext | null | undefined,
   callId: string,
   supabase: SupabaseClient,
 ): void {
   cleanTranscriptInBackground({
     transcript,
     clinicName,
+    callContext,
     callId,
     tableName: "inbound_vapi_calls",
     supabase,
