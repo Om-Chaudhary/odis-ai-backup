@@ -21,6 +21,7 @@ import {
 } from "../inbound-call-helpers";
 import { handleInboundCallEnd } from "./inbound-processor";
 import { handleOutboundCallEnd } from "./outbound-processor";
+import { alertPipelineError, isPipelineError } from "../../background-jobs";
 
 const logger = loggers.webhook.child("end-of-call-report");
 
@@ -56,6 +57,18 @@ export async function handleEndOfCallReport(
 
   // Log the complete call payload for debugging
   logCallDetails(call, message, enrichedCall, isInbound);
+
+  // Alert on pipeline errors (e.g., OpenAI quota exceeded, rate limits)
+  const endedReason =
+    enrichedCall.endedReason ?? call.endedReason ?? message.endedReason;
+  if (endedReason && isPipelineError(endedReason)) {
+    alertPipelineError(
+      call.id,
+      endedReason,
+      call.customer?.number,
+      call.assistantId,
+    );
+  }
 
   const tableName = getCallTableName(isInbound);
 

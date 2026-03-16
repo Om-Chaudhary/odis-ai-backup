@@ -82,6 +82,8 @@ export const FAILED_ENDED_REASONS = [
   // Connection errors (partial match)
   "sip-outbound-call-failed",
   "failed-to-connect",
+  // Pipeline/provider errors (e.g., OpenAI quota exceeded, rate limits)
+  "pipeline-error",
 ];
 
 /**

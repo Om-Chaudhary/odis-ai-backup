@@ -28,3 +28,6 @@ export {
   notifyAppointmentBooked,
   type AppointmentNotificationOptions,
 } from "./slack-notifier";
+
+// Pipeline error alerting
+export { alertPipelineError, isPipelineError } from "./pipeline-error-alerter";
