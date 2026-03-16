@@ -63,11 +63,57 @@ export async function createInboundCallRecord(
     .select("id")
     .single();
 
-  if (upsertError || !upsertedCall) {
+  if (upsertError) {
+    // FK violation on user_id (code 23503): public.users.id doesn't exist in auth.users
+    // Retry without user_id so the call is still recorded rather than silently dropped
+    if (upsertError.code === "23503") {
+      logger.warn("FK violation on user_id — retrying with user_id: null", {
+        callId: call.id,
+        userId,
+        clinicName,
+        error: upsertError.message,
+      });
+
+      const { data: retryCall, error: retryError } = await supabase
+        .from("inbound_vapi_calls")
+        .upsert(
+          { ...callData, user_id: null },
+          { onConflict: "vapi_call_id", ignoreDuplicates: false },
+        )
+        .select("id")
+        .single();
+
+      if (retryError || !retryCall) {
+        logger.error("FK retry also failed for inbound call record", {
+          callId: call.id,
+          error: retryError?.message,
+          errorCode: retryError?.code,
+        });
+        return null;
+      }
+
+      logger.info("Upserted inbound call record (without user_id)", {
+        callId: call.id,
+        dbId: retryCall.id,
+        clinicName,
+        originalUserId: userId,
+      });
+
+      return retryCall.id;
+    }
+
     logger.error("Failed to create/update inbound call record", {
       callId: call.id,
-      error: upsertError?.message,
-      errorCode: upsertError?.code,
+      error: upsertError.message,
+      errorCode: upsertError.code,
+    });
+    return null;
+  }
+
+  if (!upsertedCall) {
+    logger.error("Failed to create/update inbound call record", {
+      callId: call.id,
+      error: "No data returned from upsert",
     });
     return null;
   }
