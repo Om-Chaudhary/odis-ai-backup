@@ -240,29 +240,25 @@ interface LatestScheduledTimes {
 async function getLatestScheduledTimes(
   supabase: SupabaseClient<Database>,
   clinicUserIds: string[],
-  clinicId: string | null,
 ): Promise<LatestScheduledTimes> {
-  const clinicFilter = buildClinicScopeFilter(clinicId, clinicUserIds);
-
-  // Get latest queued call
+  // These tables don't have clinic_id — scope by user_id only
   const { data: latestCall } = await supabase
     .from("scheduled_discharge_calls")
     .select("scheduled_for")
     .eq("status", "queued")
-    .or(clinicFilter)
+    .in("user_id", clinicUserIds)
     .order("scheduled_for", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
-  // Get latest queued email
   const { data: latestEmail } = await supabase
     .from("scheduled_discharge_emails")
     .select("scheduled_for")
     .eq("status", "queued")
-    .or(clinicFilter)
+    .in("user_id", clinicUserIds)
     .order("scheduled_for", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   return {
     latestCallTime: latestCall?.scheduled_for
@@ -283,16 +279,16 @@ const VAPI_MAX_CONCURRENT_CALLS = 7;
  */
 async function findSafeCallStartTime(
   supabase: SupabaseClient<Database>,
-  clinicFilter: string,
+  clinicUserIds: string[],
   proposedStartTime: Date,
   callsToSchedule: number,
 ): Promise<Date> {
-  // Get all queued calls for this clinic
+  // Get all queued calls for this clinic (table has no clinic_id — scope by user_id)
   const { data: queuedCalls } = await supabase
     .from("scheduled_discharge_calls")
     .select("scheduled_for")
     .eq("status", "queued")
-    .or(clinicFilter)
+    .in("user_id", clinicUserIds)
     .gte("scheduled_for", new Date().toISOString())
     .order("scheduled_for", { ascending: true });
 
@@ -533,7 +529,6 @@ export const batchScheduleRouter = createTRPCRouter({
       const { latestCallTime, latestEmailTime } = await getLatestScheduledTimes(
         ctx.supabase,
         clinicUserIds,
-        clinic?.id ?? null,
       );
 
       // For scheduled mode: calculate base times and adjust if existing items are later
@@ -566,15 +561,11 @@ export const batchScheduleRouter = createTRPCRouter({
 
         // Apply VAPI concurrency safety for calls
         if (input.phoneEnabled && baseCallTime) {
-          const clinicFilter = buildClinicScopeFilter(
-            clinic?.id,
-            clinicUserIds,
-          );
           const estimatedCallCount = caseIdsToProcess.length; // Conservative estimate
 
           baseCallTime = await findSafeCallStartTime(
             ctx.supabase,
-            clinicFilter,
+            clinicUserIds,
             baseCallTime,
             estimatedCallCount,
           );

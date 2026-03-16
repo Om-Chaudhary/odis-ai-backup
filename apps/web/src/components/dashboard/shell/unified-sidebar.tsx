@@ -43,9 +43,28 @@ interface MainNavItemProps {
   icon: React.ElementType;
   label: string;
   isActive: boolean;
+  disabled?: boolean;
 }
 
-function MainNavItem({ href, icon: Icon, label, isActive }: MainNavItemProps) {
+function MainNavItem({
+  href,
+  icon: Icon,
+  label,
+  isActive,
+  disabled,
+}: MainNavItemProps) {
+  if (disabled) {
+    return (
+      <div
+        className="group relative flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-500/60"
+        title="Coming soon"
+      >
+        <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.5} />
+        <span className="tracking-tight">{label}</span>
+      </div>
+    );
+  }
+
   return (
     <Link
       href={href}
@@ -267,12 +286,13 @@ export function UnifiedSidebar({
               isActive={!!isOnInbound}
             />
 
-            {/* Discharge - Simple nav item */}
+            {/* Discharge - Simple nav item (disabled for Masan non-admin users) */}
             <MainNavItem
               href={outboundUrl}
               icon={PhoneOutgoing}
               label="Discharge"
               isActive={!!isOnOutbound}
+              disabled={clinicSlug === "masson-veterinary-hospital" && !isAdmin}
             />
 
             <MainNavItem
