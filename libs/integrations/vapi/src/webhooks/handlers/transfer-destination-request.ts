@@ -9,6 +9,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { loggers } from "@odis-ai/shared/logger";
+import { normalizeToE164 } from "@odis-ai/shared/util";
 import type {
   TransferDestinationRequestMessage,
   TransferDestinationResponse,
@@ -41,41 +42,69 @@ export async function handleTransferDestinationRequest(
   });
 
   try {
-    // Look up transfer destination based on call context
-    // This could be based on:
-    // - The assistant ID (different departments)
-    // - The phone number called
-    // - Call metadata or variables
-    // - Time of day routing
-    // - etc.
+    // Dynamic imports to satisfy nx module boundary rules (lazy-loaded libraries)
+    const { getClinicByInboundAssistantId, getClinicByOutboundAssistantId } =
+      await import("@odis-ai/domain/clinics/vapi-config");
+    const { getClinicByUserId } =
+      await import("@odis-ai/domain/clinics/clinic-lookup");
 
-    // Example: Look up clinic's transfer number
+    let clinic: { name: string; phone: string | null } | null = null;
+    let lookupMethod = "none";
+
     if (call.assistantId) {
-      const { data: clinic, error } = await supabase
-        .from("clinics")
-        .select("name, phone, emergency_phone")
-        .eq("inbound_assistant_id", call.assistantId)
-        .single();
-
-      if (!error && clinic) {
-        logger.info("Found clinic for transfer", {
-          callId: call.id,
-          clinicName: clinic.name,
-          transferNumber: clinic.phone,
-        });
-
-        return {
-          destination: {
-            type: "number",
-            number: clinic.phone,
-            message: `Transferring you to ${clinic.name}. Please hold.`,
-          },
-          message: {
-            type: "request-start",
-            message: "I'm transferring you now. One moment please.",
-          },
-        };
+      // Tier 1: Try inbound assistant ID (handles inbound call transfers)
+      clinic = await getClinicByInboundAssistantId(call.assistantId, supabase);
+      if (clinic) {
+        lookupMethod = "inbound_assistant_id";
+      } else {
+        // Tier 2: Try outbound assistant ID (handles outbound call transfers)
+        clinic = await getClinicByOutboundAssistantId(
+          call.assistantId,
+          supabase,
+        );
+        if (clinic) {
+          lookupMethod = "outbound_assistant_id";
+        }
       }
+    }
+
+    // Tier 3: Look up via scheduled_discharge_calls → user → clinic
+    if (!clinic && call.id) {
+      const { data: scheduledCall } = await supabase
+        .from("scheduled_discharge_calls")
+        .select("user_id")
+        .eq("vapi_call_id", call.id)
+        .maybeSingle();
+
+      if (scheduledCall?.user_id) {
+        clinic = await getClinicByUserId(scheduledCall.user_id, supabase);
+        if (clinic) {
+          lookupMethod = "scheduled_discharge_call";
+        }
+      }
+    }
+
+    if (clinic?.phone) {
+      const transferNumber = normalizeToE164(clinic.phone) ?? clinic.phone;
+
+      logger.info("Found clinic for transfer", {
+        callId: call.id,
+        clinicName: clinic.name,
+        transferNumber,
+        lookupMethod,
+      });
+
+      return {
+        destination: {
+          type: "number",
+          number: transferNumber,
+          message: `Transferring you to ${clinic.name}. Please hold.`,
+        },
+        message: {
+          type: "request-start",
+          message: "I'm transferring you now. One moment please.",
+        },
+      };
     }
 
     // Fallback: Use default transfer number from environment
@@ -103,6 +132,7 @@ export async function handleTransferDestinationRequest(
     // No transfer destination available
     logger.warn("No transfer destination available", {
       callId: call.id,
+      assistantId: call.assistantId,
     });
 
     return {
