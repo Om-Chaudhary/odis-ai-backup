@@ -27,6 +27,10 @@ import {
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { listDischargeCasesInput } from "../schemas";
 import type { StructuredDischargeContent } from "~/components/dashboard/outbound";
+import {
+  shouldInjectDemoOutboundCases,
+  getDemoOutboundCases,
+} from "~/components/dashboard/outbound/demo-data";
 
 interface PatientData {
   id: string;
@@ -586,6 +590,36 @@ export const listCasesRouter = createTRPCRouter({
       let filteredCases = transformedCases;
       if (!testModeEnabled) {
         filteredCases = filteredCases.filter((c) => !c.isTestCall);
+      }
+
+      // Inject demo outbound cases for Happy Tales on March 15, 2026
+      // For needs_attention mode, always inject demo attention cases for Happy Tales
+      const clinicSlug = input.clinicSlug ?? clinic?.slug ?? undefined;
+      const clinicEmail = clinic?.email ?? undefined;
+      const isHappyTails =
+        clinicSlug === "happy-tails" ||
+        clinicSlug === "happy-tails-veterinary-clinic" ||
+        clinicEmail === "happytails@odisai.net";
+      if (
+        isHappyTails &&
+        (shouldInjectDemoOutboundCases(
+          clinicSlug,
+          clinicEmail,
+          input.startDate,
+          input.endDate,
+        ) ||
+          isNeedsAttentionMode)
+      ) {
+        const demoCases = getDemoOutboundCases();
+        // Add demo cases, deduplicating by pet name to avoid collisions with any real data
+        const existingPetNames = new Set(
+          filteredCases.map((c) => c.patient.name.toLowerCase()),
+        );
+        const newDemoCases = demoCases.filter(
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+          (dc) => !existingPetNames.has(dc.patient.name.toLowerCase()),
+        );
+        filteredCases = [...newDemoCases, ...filteredCases];
       }
 
       // Apply status filter (client-side since it's derived)

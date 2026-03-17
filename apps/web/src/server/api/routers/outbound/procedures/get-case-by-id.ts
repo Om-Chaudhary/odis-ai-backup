@@ -8,9 +8,13 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { deriveDeliveryStatus } from "@odis-ai/shared/util";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import {
+  isDemoOutboundCase,
+  getDemoOutboundCaseById,
+} from "~/components/dashboard/outbound/demo-data";
 
 const getCaseByIdInput = z.object({
-  id: z.string().uuid(),
+  id: z.string(), // Allow non-UUID for demo case IDs
 });
 
 interface PatientData {
@@ -112,6 +116,59 @@ export const getCaseByIdRouter = createTRPCRouter({
   getCaseById: protectedProcedure
     .input(getCaseByIdInput)
     .query(async ({ ctx, input }) => {
+      // Handle demo outbound cases (hardcoded data, no DB query needed)
+      if (isDemoOutboundCase(input.id)) {
+        const demoCase = getDemoOutboundCaseById(input.id);
+        if (!demoCase) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Demo case not found",
+          });
+        }
+        const call = demoCase.scheduledCall;
+        return {
+          caseId: demoCase.caseId,
+          status: demoCase.status,
+          caseType: demoCase.caseType,
+          timestamp: demoCase.timestamp,
+          phoneSent: demoCase.phoneSent,
+          emailSent: demoCase.emailSent,
+          scheduledTime: call?.scheduledFor ?? null,
+          patient: {
+            name: demoCase.patient.name,
+            ownerName: demoCase.owner.name ?? "Unknown",
+            phone: demoCase.owner.phone ?? null,
+            email: demoCase.owner.email ?? null,
+          },
+          scheduledCall: call
+            ? {
+                id: call.id,
+                durationSeconds: call.durationSeconds,
+                transcript: call.transcript,
+                cleanedTranscript: call.cleanedTranscript,
+                recordingUrl: call.recordingUrl,
+                summary: call.summary,
+                endedReason: call.endedReason,
+              }
+            : null,
+          needsAttention: demoCase.needsAttention,
+          attentionTypes: demoCase.attentionTypes ?? [],
+          attentionSeverity: demoCase.attentionSeverity ?? null,
+          attentionSummary: demoCase.attentionSummary ?? null,
+          sentimentScore: null,
+          appointment: {
+            type: demoCase.caseType ?? "Checkup",
+            endedAt: demoCase.createdAt,
+          },
+          callOutcomeData: demoCase.callOutcomeData ?? null,
+          petHealthData: demoCase.petHealthData ?? null,
+          medicationComplianceData: demoCase.medicationComplianceData ?? null,
+          ownerSentimentData: demoCase.ownerSentimentData ?? null,
+          escalationData: demoCase.escalationData ?? null,
+          followUpData: demoCase.followUpData ?? null,
+        };
+      }
+
       const { supabase } = ctx;
 
       const { data, error } = await supabase
@@ -179,8 +236,14 @@ export const getCaseByIdRouter = createTRPCRouter({
       const callStatus = call?.status ?? null;
       const emailStatus = email?.status ?? null;
 
-      const phoneSent = deriveDeliveryStatus(callStatus, !!patient?.owner_phone);
-      const emailSent = deriveDeliveryStatus(emailStatus, !!patient?.owner_email);
+      const phoneSent = deriveDeliveryStatus(
+        callStatus,
+        !!patient?.owner_phone,
+      );
+      const emailSent = deriveDeliveryStatus(
+        emailStatus,
+        !!patient?.owner_email,
+      );
 
       // Derive composite status
       let status = "pending_review";

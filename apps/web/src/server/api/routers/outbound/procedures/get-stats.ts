@@ -5,6 +5,7 @@
  */
 
 import { TRPCError } from "@trpc/server";
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import {
   getClinicUserIds,
   getClinicByUserId,
@@ -19,6 +20,10 @@ import {
 import { categorizeFailure } from "@odis-ai/shared/util";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { getDischargeCaseStatsInput } from "../schemas";
+import {
+  shouldInjectDemoOutboundCases,
+  getDemoOutboundStats,
+} from "~/components/dashboard/outbound/demo-data";
 
 interface ScheduledCallMetadata {
   test_call?: boolean;
@@ -431,6 +436,32 @@ export const getStatsRouter = createTRPCRouter({
         pendingReview++;
       }
 
+      // Inject demo stats for Happy Tales on March 15, 2026
+      const clinicSlug = input.clinicSlug ?? clinic?.slug ?? undefined;
+      const clinicEmail = clinic?.email ?? undefined;
+      let finalNeedsAttention = needsAttentionCount;
+      if (
+        shouldInjectDemoOutboundCases(
+          clinicSlug,
+          clinicEmail,
+          input.startDate,
+          input.endDate,
+        )
+      ) {
+        const demoStats = getDemoOutboundStats();
+        completed += demoStats.completed;
+        pendingReview += demoStats.pendingReview;
+      }
+      // Always add demo attention cases for Happy Tales
+      const isHappyTails =
+        clinicSlug === "happy-tails" ||
+        clinicSlug === "happy-tails-veterinary-clinic" ||
+        clinicEmail === "happytails@odisai.net";
+      if (isHappyTails) {
+        const demoStats = getDemoOutboundStats();
+        finalNeedsAttention += demoStats.needsAttention;
+      }
+
       return {
         pendingReview,
         scheduled,
@@ -439,10 +470,12 @@ export const getStatsRouter = createTRPCRouter({
         completed,
         failed,
         failureCategories,
-        needsAttention: needsAttentionCount,
+        needsAttention: finalNeedsAttention,
         total:
           pendingReview + scheduled + ready + inProgress + completed + failed,
-        allTimeTotal: allTimeTotal ?? 0,
+        allTimeTotal:
+          (allTimeTotal ?? 0) +
+          (isHappyTails ? getDemoOutboundStats().total : 0),
         // Call intelligence analytics
         callIntelligence: {
           callOutcomes,
